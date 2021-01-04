@@ -1,0 +1,45 @@
+{
+  "global": {
+    "allowed_users": [
+      "667155361970782244",
+      "402567749479432195"
+    ],
+    "allowed_roles": [
+      "433876575130222605"
+    ]
+  },
+  "commands": {
+    "start": {
+      "allowed_users": [],
+      "allowed_roles": []
+    },
+    "stop": {
+      "allowed_users": [],
+      "allowed_roles": []
+    },
+    "restart": {
+      "allowed_users": [],
+      "allowed_roles": []
+    },
+    "exec": {
+      "allowed_users": [],
+      "allowed_roles": []
+    },
+    "status": {
+      "allowed_users": [],
+      "allowed_roles": []
+    },
+    "help": {
+      "allowed_users": [],
+      "allowed_roles": []
+    },
+    "loghere": {
+      "allowed_users": [],
+      "allowed_roles": []
+    },
+    "restrictions": {
+      "allowed_users": [],
+      "allowed_roles": []
+    }
+  }
+}

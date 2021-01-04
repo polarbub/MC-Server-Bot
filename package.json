@@ -1,0 +1,23 @@
+{
+  "name": "protoskybot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/scripts/main.js",
+  "scripts": {
+    "start": "node ./bin/scripts/main.js",
+    "flow": "flow",
+    "flow:check": "flow check ./src/",
+    "flow:build": "flow-remove-types ./src/ -d ./bin/ --all --pretty; cp -r ./src/configs ./bin/"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.3.1",
+    "minecraft-server-util": "^3.0.1"
+  },
+  "devDependencies": {
+    "flow-bin": "^0.141.0",
+    "flow-remove-types": "^2.141.0"
+  }
+}
