@@ -7,9 +7,9 @@ const Discord = require('discord.js');
 
 class HelpCommand extends Command {
 
-    root : DiscordModule = null;
+    root = null;
 
-    constructor(root : DiscordModule) {
+    constructor(root) {
         super(root);
         this.root = root;
     }
@@ -23,24 +23,24 @@ class HelpCommand extends Command {
         delete this.root.commands['help'];
     }
 
-    isAllowed(msg: Discord.Message) {
+    isAllowed(msg) {
         return Permissions.isUserAllowed(msg,"commands.help");
     }
 
-    execute(msg: Discord.Message, args: string) {
+    execute(msg, args) {
         if(args.length < 1) {
             let Embed = new Discord.MessageEmbed();
 
             Embed.setTitle("Available Commands:");
             Embed.setFooter("this are all the commands you're allowed to perform, please contact the administrator if any is missing");
-            Object.entries(this.root.commands).filter((entry : [string,Command]) => entry[1].isAllowed(msg)
-            ).forEach((entry : [string,Command]) => {
+            Object.entries(this.root.commands).filter((entry) => entry[1].isAllowed(msg)
+            ).forEach((entry) => {
                 Embed.addField(entry[0],entry[1].getDescription(),false)
             })
             msg.channel.send(Embed).catch(console.error);
         }else{
             let cmd = args.split(" ")[0];
-            let cmdObj : Command = this.root.commands[cmd];
+            let cmdObj = this.root.commands[cmd];
             if(cmdObj !== undefined && cmdObj.isAllowed(msg)){
                 let Embed = cmdObj.getHelp();
                 msg.channel.send(Embed).catch(console.error);

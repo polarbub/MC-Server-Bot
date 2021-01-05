@@ -10,7 +10,7 @@ class Main {
 
     onStop(){};
 
-    reloadModule(module: Module){};
+    reloadModule(module){};
 
     reload(){};
 }

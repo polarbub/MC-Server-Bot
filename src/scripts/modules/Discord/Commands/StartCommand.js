@@ -11,9 +11,9 @@ let periodicCheck;
 
 class StartCommand extends Command {
 
-    root: DiscordBot;
+    root;
 
-    constructor(module: DiscordBot) {
+    constructor(module) {
         super(module);
         this.root = module;
     }
@@ -27,8 +27,8 @@ class StartCommand extends Command {
         delete this.root.commands['start'];
     }
 
-    execute(msg: Discord.Message, args: string) {
-        let mcModule: MinecraftServer = this.root.main.MinecraftServer;
+    execute(msg, args) {
+        let mcModule = this.root.main.MinecraftServer;
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
         Embed.setDescription("Starting the Server");
@@ -51,7 +51,7 @@ class StartCommand extends Command {
                         this.root.getBot().user.setActivity("Players on the Server", {type: "WATCHING"});
 
                         periodicCheck = setInterval(() => {
-                            Mc.status(config, Server, (res) => {
+                            mcModule.status((res) => {
                                 this.root.getBot().user.setActivity(res.onlinePlayers + " Players on the Server", {type: "WATCHING"});
                             })
                         }, 30000)
@@ -74,18 +74,18 @@ class StartCommand extends Command {
         }
     }
 
-    getDescription(): string {
+    getDescription() {
         return "start the Minecraft Server";
     }
 
-    getHelp(): Discord.MessageEmbed {
+    getHelp() {
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("Help for `start`");
         Embed.setDescription(this.getDescription());
         return Embed;
     }
 
-    isAllowed(msg: Discord.Message): boolean {
+    isAllowed(msg) {
         return Permissions.isUserAllowed(msg, 'commands.start');
     }
 }

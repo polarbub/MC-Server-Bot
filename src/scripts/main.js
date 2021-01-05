@@ -38,7 +38,7 @@ class Program extends Main {
                 if(path.extname(file) === ".js") {
                     file = path.resolve("./bin/scripts/modules") + "/" + file;
                     let mod = require(file);
-                    let instance: Module = new mod(this);
+                    let instance = new mod(this);
                     instance.onLoad();
                     this.modules[file] = instance;
                 }
@@ -47,7 +47,7 @@ class Program extends Main {
     }
 
     onStop() {
-        this.modules.forEach(function (mod : Module){
+        this.modules.forEach(function (mod){
             mod.onUnload();
         })
     }

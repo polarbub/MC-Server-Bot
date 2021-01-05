@@ -7,7 +7,7 @@
     "start": "node ./bin/scripts/main.js",
     "flow": "flow",
     "flow:check": "flow check ./src/",
-    "flow:build": "flow-remove-types ./src/ -d ./bin/ --all --pretty"
+    "flow:build": "rm -rf ./bin/* ;flow-remove-types ./src/ -d ./bin/ --all --pretty"
   },
   "keywords": [],
   "author": "",

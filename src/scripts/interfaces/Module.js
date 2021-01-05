@@ -6,7 +6,7 @@ class Module
 
     onUnload(){};
 
-    constructor(main : Main){};
+    constructor(main){};
 }
 
 module.exports = Module;

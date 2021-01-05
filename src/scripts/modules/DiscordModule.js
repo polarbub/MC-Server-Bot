@@ -8,7 +8,7 @@ const path = require('path');
 
 class DiscordBot extends Module {
 
-    main : Main = null;
+    main = null;
 
     commandFiles = {}
 
@@ -31,7 +31,7 @@ class DiscordBot extends Module {
                 if(path.extname(file) === ".js") {
                     file = path.resolve("./bin/scripts/modules/Discord/Commands") + "/" + file;
                     let command = require(file);
-                    let instance: Command = new command(this);
+                    let instance = new command(this);
                     instance.register(this.main.Bot);
                     this.commandFiles[file] = instance;
                 }
@@ -46,27 +46,31 @@ class DiscordBot extends Module {
             if(!msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES'))
                 return;
             let cmd = msg.cleanContent.substr(1).split(' ')[0];
-            let command : Command = this.commands[cmd];
+            let command = this.commands[cmd];
             if(command!==undefined){
                 if(command.isAllowed(msg))
                     command.execute(msg,msg.cleanContent.substr(cmd.length+2))
             }
         })
+
+        this.main.Bot.on('ready', ()=>{
+            this.main.Bot.user.setActivity("Commands", {type: "LISTENING"});
+        })
     }
 
     onUnload() {
-        Object.keys(this.commandFiles).forEach((key : string)=> {
-            let command : Command = this.commandFiles[key];
+        Object.keys(this.commandFiles).forEach((key)=> {
+            let command = this.commandFiles[key];
             command.unregister(this.main.Bot);
             delete require.cache[key];
         });
     }
 
-    getBot(): Discord.Client{
+    getBot(){
         return this.main.Bot;
     }
 
-    constructor(main : Main){
+    constructor(main){
         super(main);
         this.main = main;
     }

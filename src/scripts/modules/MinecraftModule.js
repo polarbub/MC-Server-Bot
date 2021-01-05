@@ -7,9 +7,9 @@ const exec = require('child_process').exec;
 
 class MinecraftServer extends Module {
 
-    main : Main ;
+    main ;
 
-    constructor(main: Main) {
+    constructor(main) {
         super(main);
         this.main = main;
     }
@@ -54,7 +54,7 @@ class MinecraftServer extends Module {
             let buffer = "";
             let reader = (chunk)=>buffer +=chunk;
             instance.stdout.on('data',reader);
-            instance.stdin.write(command.trim()+'\r\n');
+            instance.stdin.write(cmd.trim()+'\r\n');
             setTimeout(()=>{
                 instance.stdout.removeListener('data',reader);
                 if(buffer!=="")

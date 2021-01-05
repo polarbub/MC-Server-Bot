@@ -7,9 +7,9 @@ const Discord = require('discord.js');
 
 class PermissionsCommand extends Command {
 
-    root : DiscordModule = null;
+    root = null;
 
-    constructor(root : DiscordModule) {
+    constructor(root) {
         super(root);
         this.root = root;
     }
@@ -23,11 +23,11 @@ class PermissionsCommand extends Command {
         delete this.root.commands['permissions'];
     }
 
-    isAllowed(msg: Discord.Message) {
+    isAllowed(msg) {
         return Permissions.isUserAllowed(msg,"commands.permissions");
     }
 
-    execute(msg: Discord.Message, args: string) {
+    execute(msg, args) {
         let argList = args.split(" ");
         switch (argList[0]){
             case "list":{

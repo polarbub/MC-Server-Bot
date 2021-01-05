@@ -30,7 +30,9 @@
       "allowed_roles": []
     },
     "help": {
-      "allowed_users": [],
+      "allowed_users": [
+        "402567749479432195"
+      ],
       "allowed_roles": []
     },
     "loghere": {
@@ -38,6 +40,10 @@
       "allowed_roles": []
     },
     "restrictions": {
+      "allowed_users": [],
+      "allowed_roles": []
+    },
+    "permissions": {
       "allowed_users": [],
       "allowed_roles": []
     }
