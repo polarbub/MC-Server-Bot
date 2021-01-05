@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/scripts/main.js",
   "scripts": {
-    "start": "node ./bin/scripts/main.js",
+    "start": "node --harmony ./bin/scripts/main.js",
     "flow": "flow",
     "flow:check": "flow check ./src/",
     "flow:build": "rm -rf ./bin/* ;flow-remove-types ./src/ -d ./bin/ --all --pretty"

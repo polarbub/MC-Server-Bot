@@ -32,11 +32,16 @@ class SayCommand extends Command {
         Embed.setTitle("MC Server");
         if(mcModule.getServer() !== null) {
             if (args.trim().length > 1) {
+                let member = msg.member;
+                let username = (member!==undefined)?msg.member.displayName:msg.author.username + "#" + msg.author.discriminator;
+                //let color = (member!==undefined)?msg.member.displayHexColor.substr(0,7):"acqua"; not yet working so only acqua colors for now
+                let color = "aqua";
+
 
                 let command = "tellraw @a [\"\",{\"text\":\"[Discord]\",\"color\":\"dark_blue\"},{\"text\":\" <\"},{\"text\":\""+
-                    msg.author.username + "#" + msg.author.discriminator
+                    username
                     +"\",\"color\":\""+
-                    msg.member.displayHexColor
+                    color
                     +"\"},{\"text\":\"> \"},{\"text\":\""+
                     args
                     +"\"}]"

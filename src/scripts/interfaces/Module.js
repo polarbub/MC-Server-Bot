@@ -1,12 +1,16 @@
 const Main = require('./Main.js');
+const EventEmitter = require('events');
 
-class Module
+
+class Module extends EventEmitter
 {
     onLoad(){};
 
     onUnload(){};
 
-    constructor(main){};
+    constructor(main){
+        super();
+    };
 }
 
 module.exports = Module;

@@ -4,7 +4,6 @@ const fs = require("fs");
 const path = require('path');
 const util = require('minecraft-server-util');
 const exec = require('child_process').exec;
-
 class MinecraftServer extends Module {
 
     main ;
@@ -36,8 +35,10 @@ class MinecraftServer extends Module {
             instance.stderr.pipe(process.stderr);
             this.main.server = instance;
             instance.on('exit',()=>{
+                this.emit('stop',instance);
                 this.main.server = null;
             })
+            this.emit('start',instance);
         }
     }
 
@@ -63,8 +64,8 @@ class MinecraftServer extends Module {
         }
     }
 
-    status(callback = ()=>{}){
-        util.status(this.main.getConfigs().MC_SERVER.ip).then(callback).catch(callback)
+    status(callback = ()=>{}, error = ()=>{}){
+        util.status(this.main.getConfigs().MC_SERVER.ip).then(callback).catch(error)
     }
 }
 
