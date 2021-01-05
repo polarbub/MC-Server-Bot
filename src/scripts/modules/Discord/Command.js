@@ -11,9 +11,11 @@ class Command {
 
     getDescription(): string {} ;
 
-    getHelp(): string {} ;
+    getHelp(): Discord.MessageEmbed {} ;
 
     constructor(module: DiscordBot){};
+
+    isAllowed(msg : Discord.Message) : boolean {};
 }
 
 module.exports = Command;

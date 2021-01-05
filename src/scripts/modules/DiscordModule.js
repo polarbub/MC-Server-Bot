@@ -1,7 +1,7 @@
 const Module = require('../interfaces/Module.js');
 const Main = require('../interfaces/Main.js');
 const Command = require('./Discord/Command.js');
-const Permissions = require('./Discord/Permissions.js');
+const Permissions = require('../Permissions.js');
 const Discord = require('discord.js');
 const fs = require("fs");
 const path = require('path');
@@ -21,14 +21,15 @@ class DiscordBot extends Module {
             this.main.Bot.login(this.main.getConfigs().DISCORD_BOT.TOKEN).catch(console.error);
         }
 
-        fs.readdir('./lib/scripts/modules/Discord/Commands',(err,files) => {
+
+        fs.readdir('./bin/scripts/modules/Discord/Commands',(err,files) => {
             if (err) {
                 return console.log('Unable to scan Commands directory: ' + err);
             }
 
             files.forEach((file) => {
                 if(path.extname(file) === ".js") {
-                    file = path.resolve("./lib/scripts/modules/Discord/Commands") + "/" + file;
+                    file = path.resolve("./bin/scripts/modules/Discord/Commands") + "/" + file;
                     let command = require(file);
                     let instance: Command = new command(this);
                     instance.register(this.main.Bot);
@@ -47,7 +48,7 @@ class DiscordBot extends Module {
             let cmd = msg.cleanContent.substr(1).split(' ')[0];
             let command : Command = this.commands[cmd];
             if(command!==undefined){
-                if(Permissions.isUserAllowed(msg,cmd))
+                if(command.isAllowed(msg))
                     command.execute(msg,msg.cleanContent.substr(cmd.length+2))
             }
         })
@@ -59,6 +60,10 @@ class DiscordBot extends Module {
             command.unregister(this.main.Bot);
             delete require.cache[key];
         });
+    }
+
+    getBot(): Discord.Client{
+        return this.main.Bot;
     }
 
     constructor(main : Main){
