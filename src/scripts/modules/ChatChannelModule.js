@@ -6,7 +6,7 @@ const Discord = require('discord.js');
 const fs = require("fs");
 const path = require('path');
 
-const ipRegex = /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/gm;
+let chatRegex = null;
 
 class ConsoleChannelModule extends Module {
 
@@ -23,34 +23,38 @@ class ConsoleChannelModule extends Module {
         this.main = main;
     }
 
-    discordLogger = null;
     buffer: string = "";
 
     listeners = {};
 
     onLoad() {
-        this.main["ConsoleChannel"] = this;
+        this.main["ChatChannel"] = this;
         //wait next cycle to ensure all the modules are loaded
         setImmediate(() => {
-
             this.listeners['ready'] = this.getBot().on('ready', () => {
-                this.getBot().channels.fetch(this.main.getConfigs().DISCORD_BOT.CONSOLE_CHANNEL).then(
+                this.getBot().channels.fetch(this.main.getConfigs().DISCORD_BOT.CHAT_CHANNEL).then(
                     (channel) => {
                         this.channel = channel;
 
-                        this.discordLogger = setInterval(() => {
-                            if (this.channel != null && this.buffer !== "") {
-                                this.channel.send(this.buffer.replace(ipRegex, "||CENSORED IP||").replace(/([\\*`'_~])/gm, "\\$&"), {split: true}).catch(console.error);
-                                this.buffer = "";
-                            }
-                        }, 500);
-
                         this.listeners['start'] = this.main['MinecraftServer'].on('start', (instance) => {
                             this.listeners['data'] = instance.stdout.on('data', (data) => {
-                                this.buffer += data;
+                                if(chatRegex===null)
+                                    chatRegex = new RegExp(this.main.getConfigs().MC_SERVER.chat_regex,'gm');
+                                let res = chatRegex.exec(data);
+                                if(res!=null)
+                                    this.channel.send(res[0].replace(/([\\*`'_~])/gm, "\\$&"), {split: true}).catch(console.error);
                             })
                         })
 
+                        this.listeners['message'] = this.getBot().on('message',(msg)=>{
+                            if(msg.author.bot)
+                                return;
+                            if(msg.channel.id !== this.channel.id)
+                                return;
+                            if(msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES', 'VIEW_CHANNEL')){
+                                this.main['DiscordModule'].commands['say'].execute(msg,msg.cleanContent);
+                            }
+                        })
                     }
                 ).catch(console.error);
 
@@ -68,6 +72,9 @@ class ConsoleChannelModule extends Module {
         listener = this.listeners['data'];
         if(listener!==undefined)
             this.main['server'].removeListener('data',listener);
+        listener = this.listeners['message'];
+        if(listener!==undefined)
+            this.getBot().removeListener('message',listener);
     }
 }
 

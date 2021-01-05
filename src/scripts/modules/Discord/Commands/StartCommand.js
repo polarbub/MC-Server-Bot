@@ -28,6 +28,7 @@ class StartCommand extends Command {
     }
 
     execute(msg, args) {
+        let consoleChannel : Discord.TextChannel = this.root.main['ConsoleChannel'].channel;
         let mcModule = this.root.main.MinecraftServer;
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
@@ -46,7 +47,8 @@ class StartCommand extends Command {
                     if (chunk.includes("Done")) {
                         Embed.setDescription("Server Started");
                         Embed.setColor('#099a02');
-                        msg.channel.send(Embed).catch(console.error);
+                        if(consoleChannel.id !== msg.channel.id)
+                            msg.channel.send(Embed).catch(console.error);
                         mcModule.getServer().stdout.removeListener('data', doneHandler);
                         this.root.getBot().user.setActivity("Players on the Server", {type: "WATCHING"});
 

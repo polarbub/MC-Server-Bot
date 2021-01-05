@@ -49,7 +49,8 @@ class SayCommand extends Command {
                 mcModule.exec(command)
 
                 Embed.setDescription("sent");
-                msg.channel.send(Embed).catch(console.error);
+                if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel.id !== msg.channel.id)
+                    msg.channel.send(Embed).catch(console.error);
             } else {
                 Embed.setDescription("No command Specified");
                 Embed.setColor("#FF0000");

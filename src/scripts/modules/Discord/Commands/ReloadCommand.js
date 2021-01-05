@@ -1,0 +1,96 @@
+const Module = require('../../../interfaces/Module.js');
+const Main = require('../../../interfaces/Main.js');
+const DiscordBot = require('../../DiscordModule.js');
+const Command = require('../Command.js');
+const Permissions = require('../../../Permissions.js');
+const Discord = require('discord.js');
+
+const MinecraftServer = require('../../MinecraftModule.js');
+
+let periodicCheck;
+
+class ReloadCommand extends Command {
+
+    root;
+
+    constructor(module) {
+        super(module);
+        this.root = module;
+    }
+
+    register() {
+        this.root.commands['reload'] = this;
+        Permissions.addPermission('commands.reload');
+    }
+
+    unregister() {
+        delete this.root.commands['reload'];
+    }
+
+    execute(msg, args) {
+        let argList = args.split(" ");
+        switch (arg[0]){
+            case "commands":{
+                let Embed = new Discord.MessageEmbed();
+                Embed.setTitle("Bot Reloading")
+                Embed.setDescription("Started Reloading commands");
+                Embed.setColor("#ff0000");
+                msg.channel.send(Embed).catch(console.error);
+
+                this.root.reloadCommands();
+
+                Embed = new Discord.MessageEmbed();
+                Embed.setTitle("Bot Reloading")
+                Embed.setDescription("Finished Reloading commands");
+                Embed.setFooter("things might behave weird, in that case stop and restart the program");
+                Embed.setColor("#ff0000");
+                msg.channel.send(Embed).catch(console.error);
+                break;
+            }
+            case "module":{
+                let module_name = argList[1];
+
+                if(module_name === null || module_name === undefined){
+                    let Embed = new Discord.MessageEmbed();
+                    Embed.setTitle("Program HotLoading")
+                    Embed.setDescription("Missing module name");
+                    Embed.setColor("#ff0000");
+                    msg.channel.send(Embed).catch(console.error);
+                }
+                let Embed = new Discord.MessageEmbed();
+                Embed.setTitle("Program HotLoading")
+                Embed.setDescription("Started HotReload of module");
+                Embed.setColor("#ff0000");
+                msg.channel.send(Embed).catch(console.error);
+
+                this.root.main.reloadModule(module_name);
+
+                Embed = new Discord.MessageEmbed();
+                Embed.setTitle("Program HotLoading")
+                Embed.setDescription("finished HotReload of module");
+                Embed.setFooter("things might behave weird, in that case stop and restart the program");
+                Embed.setColor("#ff0000");
+                msg.channel.send(Embed).catch(console.error);
+
+                break;
+            }
+        }
+    }
+
+    getDescription() {
+        return "reload the Bot scripts";
+    }
+
+    getHelp() {
+        let Embed = new Discord.MessageEmbed();
+        Embed.setTitle("Help for `reload`");
+        Embed.setDescription(this.getDescription());
+        return Embed;
+    }
+
+    isAllowed(msg) {
+        return Permissions.isUserAllowed(msg, 'commands.reload');
+    }
+}
+
+module.exports = ReloadCommand;
