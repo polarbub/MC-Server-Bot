@@ -65,9 +65,10 @@ class ConsoleChannelModule extends Module {
             instance.stdout.on('data', this.listeners['data'] = (data) => {
                 if (chatRegex === null)
                     chatRegex = new RegExp(this.main.getConfigs()['MC_SERVER']['chat_regex'], 'gm');
-                let res = chatRegex.exec(data);
-                if (res != null)
-                    this.channel.send(res[0].replace(/([\\*`'_~])/gm, "\\$&"), {split: true}).catch(console.error);
+                let res = [ ...data.matchAll(chatRegex)];
+                res.forEach((match)=>{
+                    this.channel.send(match[1].replace(/([\\*`'_~])/gm, "\\$&"), {split: true}).catch(console.error);
+                })
             })
         })
     }

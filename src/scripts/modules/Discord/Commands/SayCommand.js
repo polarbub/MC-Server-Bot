@@ -32,32 +32,29 @@ class SayCommand extends Command {
             if (args.trim().length > 1) {
                 let member = msg.member;
                 let username = (member!==undefined)?msg.member.displayName:msg.author.username + "#" + msg.author.discriminator;
-                //let color = (member!==undefined)?msg.member.displayHexColor.substr(0,7):"acqua"; not yet working so only acqua colors for now
+                //let color = (member!==undefined)?msg.member.displayHexColor.substr(0,7):"acqua"; not yet working so only aqua colors for now
                 let color = "aqua";
 
-
-                let command = "tellraw @a [\"\",{\"text\":\"[Discord]\",\"color\":\"dark_blue\"},{\"text\":\" <\"},{\"text\":\""+
-                    username
-                    +"\",\"color\":\""+
-                    color
-                    +"\"},{\"text\":\"> \"},{\"text\":\""+
-                    args
-                    +"\"}]"
-
+                let command = this.root.main.getConfigs()["MC_SERVER"]['say_format'];
+                command = command.replace("%username%",username);
+                command = command.replace("%color%",color);
+                command = command.replace("%message%",args);
                 mcModule.exec(command)
 
                 Embed.setDescription("sent");
                 if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel.id !== msg.channel.id)
                     msg.channel.send(Embed).catch(console.error);
             } else {
-                Embed.setDescription("No command Specified");
+                Embed.setDescription("No text Specified");
                 Embed.setColor("#FF0000");
-                msg.channel.send(Embed).catch(console.error);
+                if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel.id !== msg.channel.id)
+                    msg.channel.send(Embed).catch(console.error);
             }
         } else {
             Embed.setDescription("Server is not Running");
             Embed.setColor("#FF0000");
-            msg.channel.send(Embed).catch(console.error);
+            if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel.id !== msg.channel.id)
+                msg.channel.send(Embed).catch(console.error);
         }
     }
 

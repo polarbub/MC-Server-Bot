@@ -77,7 +77,10 @@ class ReloadCommand extends Command {
     getHelp() {
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("Help for `reload`");
-        Embed.setDescription(this.getDescription());
+        Embed.setDescription("Sub-Commands:");
+        Embed.addField("reload commands","reloads all the bot commands");
+        Embed.addField("reload module [FileName]","reloads the specified FileName from memory\r\nUnloads it if it got deleted\r\nLoads it if got added");
+        Embed.setFooter("this is a really dangerous command use it only if you know what you're doing");
         return Embed;
     }
 
