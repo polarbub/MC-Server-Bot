@@ -1,0 +1,15 @@
+{
+  "DISCORD_BOT": {
+    "TOKEN": "",
+    "PREFIX": ">",
+    "CONSOLE_CHANNEL": "430125114823016468",
+    "CHAT_CHANNEL": "684334071836442647"
+  },
+  "MC_SERVER": {
+    "startCMD": "(cd /mnt/DATA/Programming/Minecraft-Test-Server/1.15.2/; java -jar paper-387.jar)",
+    "ip": "localhost",
+    "port": 25565,
+    "say_format": "tellraw @a [\"\",{\"text\":\"[Discord]\",\"color\":\"dark_blue\"},{\"text\":\" <\"},{\"text\":\"%username%\",\"color\":\"%color%\"},{\"text\":\"> \"},{\"text\":\"%message%\"}]",
+    "chat_regex": "^\\[\\d+:\\d+:\\d+ INFO]: (<([\\w\\d_-]+)> [^\\n\\r]+)"
+  }
+}
