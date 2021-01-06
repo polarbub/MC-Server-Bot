@@ -1,6 +1,5 @@
 const Main = require('./interfaces/Main.js');
 const Module = require('./interfaces/Module.js');
-const Permissions = require('./Permissions.js');
 const config = require('../../configs/config.json');
 
 
@@ -19,16 +18,11 @@ class Program extends Main {
 
     modules = {};
 
-    getPermissions() {
-        return Permissions.config;
-    }
-
     getConfigs() {
         return config;
     }
 
     onStart() {
-        this.instance = this;
         this.loadModules();
     }
 
@@ -38,24 +32,29 @@ class Program extends Main {
         })
     }
 
-
     reloadModule(module) {
-        let file = path.resolve("./bin/scripts/modules") + "/" +  module +".js";
+        let file = path.resolve("./bin/scripts/modules") + "/" + module +".js";
         let oldModule : Module= this.modules[file];
         if(oldModule !== undefined) {
             oldModule.onUnload();
             delete require.cache[file];
         }
-        let mod = require(file);
-        let instance = new mod(this);
-        instance.onLoad();
-        this.modules[file] = instance;
+        if(fs.existsSync(file)) {
+            let mod = require(file);
+            let instance = new mod(this);
+            instance.onLoad();
+            this.modules[file] = instance;
+            this.emit('reload', oldModule, instance);
+        }else{
+            this.emit('reload', oldModule, null);
+        }
     }
 
     reload() {
         Object.entries(this.modules).forEach((entry : [string,Module])=>{
             entry[1].onUnload();
             delete require.cache[entry[0]];
+            delete this.modules[entry[0]];
         })
         this.loadModules();
     }

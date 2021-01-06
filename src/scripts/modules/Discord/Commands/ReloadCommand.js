@@ -1,13 +1,6 @@
-const Module = require('../../../interfaces/Module.js');
-const Main = require('../../../interfaces/Main.js');
-const DiscordBot = require('../../DiscordModule.js');
 const Command = require('../Command.js');
 const Permissions = require('../../../Permissions.js');
 const Discord = require('discord.js');
-
-const MinecraftServer = require('../../MinecraftModule.js');
-
-let periodicCheck;
 
 class ReloadCommand extends Command {
 
@@ -28,8 +21,8 @@ class ReloadCommand extends Command {
     }
 
     execute(msg, args) {
-        let argList = args.split(" ");
-        switch (arg[0]){
+        let argList = args.split(/ +/gm);
+        switch (argList[0]){
             case "commands":{
                 let Embed = new Discord.MessageEmbed();
                 Embed.setTitle("Bot Reloading")
@@ -50,7 +43,7 @@ class ReloadCommand extends Command {
             case "module":{
                 let module_name = argList[1];
 
-                if(module_name === null || module_name === undefined){
+                if(module_name === null || module_name === undefined || module_name === ""){
                     let Embed = new Discord.MessageEmbed();
                     Embed.setTitle("Program HotLoading")
                     Embed.setDescription("Missing module name");

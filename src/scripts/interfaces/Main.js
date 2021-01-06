@@ -1,8 +1,6 @@
-const Module = require('./Module.js')
+const EventEmitter = require('events');
 
-class Main {
-
-    getPermissions(){};
+class Main extends EventEmitter{
 
     getConfigs(){};
 
@@ -10,7 +8,9 @@ class Main {
 
     onStop(){};
 
-    reloadModule(module){};
+    reloadModule(module : string){
+        this.emit('reload',null,null);
+    };
 
     reload(){};
 }

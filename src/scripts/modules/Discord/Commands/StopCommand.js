@@ -1,5 +1,3 @@
-const Module = require('../../../interfaces/Module.js');
-const Main = require('../../../interfaces/Main.js');
 const DiscordBot = require('../../DiscordModule.js');
 const Command = require('../Command.js');
 const Permissions = require('../../../Permissions.js');
@@ -10,7 +8,7 @@ const MinecraftServer = require('../../MinecraftModule.js');
 
 class StopCommand extends Command {
 
-    root;
+    root : DiscordBot;
 
     constructor(module) {
         super(module);
@@ -27,7 +25,7 @@ class StopCommand extends Command {
     }
 
     execute(msg, args) {
-        let mcModule = this.root.main.MinecraftServer;
+        let mcModule : MinecraftServer = this.root.main['MinecraftServer'];
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
         Embed.setDescription("Stopping the server");
@@ -37,7 +35,7 @@ class StopCommand extends Command {
         Embed.setTitle("MC Server");
         if (mcModule.getServer() !== null) {
 
-            this.root.getBot().user.setActivity("Server SHUTDOWN", {type: "WATCHING"});
+            this.root.getBot().user.setActivity("Server SHUTDOWN", {type: "WATCHING"}).catch(console.error);
             mcModule.getServer().on('exit', () => {
                 Embed.setDescription("Server Stopped");
                 Embed.setColor("#0032f3");

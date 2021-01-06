@@ -1,10 +1,6 @@
 const Module = require('../interfaces/Module.js');
 const Main = require('../interfaces/Main.js');
-const Command = require('./Discord/Command.js');
-const Permissions = require('../Permissions.js');
 const Discord = require('discord.js');
-const fs = require("fs");
-const path = require('path');
 
 let chatRegex = null;
 
@@ -23,36 +19,38 @@ class ConsoleChannelModule extends Module {
         this.main = main;
     }
 
-    buffer: string = "";
-
     listeners = {};
+
+    mcServer;
 
     onLoad() {
         this.main["ChatChannel"] = this;
         //wait next cycle to ensure all the modules are loaded
         setImmediate(() => {
-            this.listeners['ready'] = this.getBot().on('ready', () => {
-                this.getBot().channels.fetch(this.main.getConfigs().DISCORD_BOT.CHAT_CHANNEL).then(
+            this.getBot().on('ready', this.listeners['ready'] = () => {
+                this.getBot().channels.fetch(this.main.getConfigs()['DISCORD_BOT']['CHAT_CHANNEL']).then(
                     (channel) => {
                         this.channel = channel;
 
-                        this.listeners['start'] = this.main['MinecraftServer'].on('start', (instance) => {
-                            this.listeners['data'] = instance.stdout.on('data', (data) => {
-                                if(chatRegex===null)
-                                    chatRegex = new RegExp(this.main.getConfigs().MC_SERVER.chat_regex,'gm');
-                                let res = chatRegex.exec(data);
-                                if(res!=null)
-                                    this.channel.send(res[0].replace(/([\\*`'_~])/gm, "\\$&"), {split: true}).catch(console.error);
-                            })
-                        })
+                        this.mcServer = this.main['MinecraftServer'];
+                        this.setStartListener();
 
-                        this.listeners['message'] = this.getBot().on('message',(msg)=>{
+                        this.getBot().on('message',this.listeners['message'] = (msg)=>{
                             if(msg.author.bot)
                                 return;
                             if(msg.channel.id !== this.channel.id)
                                 return;
+                            if(msg.guild === undefined || msg.guild === null)
+                                return;
                             if(msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES', 'VIEW_CHANNEL')){
                                 this.main['DiscordModule'].commands['say'].execute(msg,msg.cleanContent);
+                            }
+                        })
+
+                        this.main.on('reload',(old_module,new_module)=>{
+                            if(old_module === this.mcServer){
+                                this.mcServer = new_module;
+                                this.setStartListener();
                             }
                         })
                     }
@@ -60,6 +58,18 @@ class ConsoleChannelModule extends Module {
 
             });
         });
+    }
+
+    setStartListener() {
+        this.mcServer.on('start', this.listeners['start'] = (instance) => {
+            instance.stdout.on('data', this.listeners['data'] = (data) => {
+                if (chatRegex === null)
+                    chatRegex = new RegExp(this.main.getConfigs()['MC_SERVER']['chat_regex'], 'gm');
+                let res = chatRegex.exec(data);
+                if (res != null)
+                    this.channel.send(res[0].replace(/([\\*`'_~])/gm, "\\$&"), {split: true}).catch(console.error);
+            })
+        })
     }
 
     onUnload() {

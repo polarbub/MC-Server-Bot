@@ -1,10 +1,6 @@
 const Module = require('../interfaces/Module.js');
 const Main = require('../interfaces/Main.js');
-const Command = require('./Discord/Command.js');
-const Permissions = require('../Permissions.js');
 const Discord = require('discord.js');
-const fs = require("fs");
-const path = require('path');
 
 const ipRegex = /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/gm;
 
@@ -33,8 +29,8 @@ class ConsoleChannelModule extends Module {
         //wait next cycle to ensure all the modules are loaded
         setImmediate(() => {
 
-            this.listeners['ready'] = this.getBot().on('ready', () => {
-                this.getBot().channels.fetch(this.main.getConfigs().DISCORD_BOT.CONSOLE_CHANNEL).then(
+            this.getBot().on('ready', this.listeners['ready'] = () => {
+                this.getBot().channels.fetch(this.main.getConfigs()['DISCORD_BOT']['CONSOLE_CHANNEL']).then(
                     (channel) => {
                         this.channel = channel;
 
@@ -45,8 +41,8 @@ class ConsoleChannelModule extends Module {
                             }
                         }, 500);
 
-                        this.listeners['start'] = this.main['MinecraftServer'].on('start', (instance) => {
-                            this.listeners['data'] = instance.stdout.on('data', (data) => {
+                        this.main['MinecraftServer'].on('start', this.listeners['start'] = (instance) => {
+                             instance.stdout.on('data', this.listeners['data'] = (data) => {
                                 this.buffer += data;
                             })
                         })

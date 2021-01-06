@@ -8,7 +8,7 @@ class Module extends EventEmitter
 
     onUnload(){};
 
-    constructor(main){
+    constructor(main : Main){
         super();
     };
 }

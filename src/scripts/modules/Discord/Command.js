@@ -7,15 +7,15 @@ class Command {
 
     unregister(){};
 
-    execute(msg, args){};
+    execute(msg : Discord.Message, args){};
 
-    getDescription() {} ;
+    getDescription() : string {} ;
 
-    getHelp() {} ;
+    getHelp() : Discord.MessageEmbed{} ;
 
-    constructor(module){};
+    constructor(module : DiscordBot){};
 
-    isAllowed(msg) {};
+    isAllowed(msg : Discord.Message) {};
 }
 
 module.exports = Command;

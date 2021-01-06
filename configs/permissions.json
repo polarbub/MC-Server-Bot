@@ -46,6 +46,14 @@
     "permissions": {
       "allowed_users": [],
       "allowed_roles": []
+    },
+    "reload": {
+      "allowed_users": [],
+      "allowed_roles": []
+    },
+    "say": {
+      "allowed_users": [],
+      "allowed_roles": []
     }
   }
 }

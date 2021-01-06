@@ -1,5 +1,3 @@
-const Module = require('../../../interfaces/Module.js');
-const Main = require('../../../interfaces/Main.js');
 const DiscordBot = require('../../DiscordModule.js');
 const Command = require('../Command.js');
 const Permissions = require('../../../Permissions.js');
@@ -10,7 +8,7 @@ const MinecraftServer = require('../../MinecraftModule.js');
 
 class ExecCommand extends Command {
 
-    root;
+    root : DiscordBot;
 
     constructor(module) {
         super(module);
@@ -28,7 +26,7 @@ class ExecCommand extends Command {
 
     execute(msg, args) {
         let consoleChannel : Discord.TextChannel = this.root.main['ConsoleChannel'].channel;
-        let mcModule = this.root.main.MinecraftServer;
+        let mcModule : MinecraftServer = this.root.main['MinecraftServer'];
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
         if(mcModule.getServer() !== null) {

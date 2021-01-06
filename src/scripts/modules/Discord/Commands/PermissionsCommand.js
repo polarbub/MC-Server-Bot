@@ -1,5 +1,3 @@
-const Module = require('../../../interfaces/Module.js');
-const Main = require('../../../interfaces/Main.js');
 const DiscordModule = require('../../DiscordModule.js');
 const Command = require('../Command.js');
 const Permissions = require('../../../Permissions.js');
@@ -7,7 +5,7 @@ const Discord = require('discord.js');
 
 class PermissionsCommand extends Command {
 
-    root = null;
+    root : DiscordModule = null;
 
     constructor(root) {
         super(root);
@@ -31,7 +29,7 @@ class PermissionsCommand extends Command {
         let argList = args.split(" ");
         switch (argList[0]){
             case "list":{
-                msg.channel.send(Permissions.list());
+                msg.channel.send(Permissions.list()).catch(console.error);
                 break;
             }
             case "add":{

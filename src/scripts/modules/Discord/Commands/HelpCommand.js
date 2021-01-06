@@ -1,5 +1,3 @@
-const Module = require('../../../interfaces/Module.js');
-const Main = require('../../../interfaces/Main.js');
 const DiscordModule = require('../../DiscordModule.js');
 const Command = require('../Command.js');
 const Permissions = require('../../../Permissions.js');
@@ -7,7 +5,7 @@ const Discord = require('discord.js');
 
 class HelpCommand extends Command {
 
-    root = null;
+    root : DiscordModule = null;
 
     constructor(root) {
         super(root);
@@ -54,7 +52,7 @@ class HelpCommand extends Command {
 
     getHelp() {
         let embed = new Discord.MessageEmbed();
-        embed.setDescription("You really requested the help page of the help command?")
+        embed.setDescription("you really requested the help for the help command?")
         return embed;
     }
 }
