@@ -34,7 +34,7 @@ class ExecCommand extends Command {
                 Embed.addField("Command:", args);
                 mcModule.exec(args, (res) => {
                     Embed.setDescription(res.substr(0,2000));
-                    if(msg.channel.id !== consoleChannel.id)
+                    if(msg.channel.id !== consoleChannel?.id)
                         msg.channel.send(Embed).catch(console.error);
                 })
             } else {

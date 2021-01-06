@@ -33,7 +33,7 @@ class DiscordBot extends Module {
                 return;
             if(!msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES'))
                 return;
-            if(this.main['ChatChannel'] !== undefined && this.main['ChatChannel'].channel.id === msg.channel.id)
+            if(this.main['ChatChannel'] !== undefined && this.main['ChatChannel'].channel?.id === msg.channel.id)
                 return;
             let cmd = msg.cleanContent.substr(1).split(' ')[0];
             let command = this.commands[cmd];

@@ -45,7 +45,7 @@ class StartCommand extends Command {
                     if (chunk.includes("Done")) {
                         Embed.setDescription("Server Started");
                         Embed.setColor('#099a02');
-                        if(consoleChannel.id !== msg.channel.id)
+                        if(consoleChannel?.id !== msg.channel.id)
                             msg.channel.send(Embed).catch(console.error);
                         mcModule.getServer().stdout.removeListener('data', doneHandler);
                         this.root.getBot().user.setActivity("Players on the Server", {type: "WATCHING"}).catch(console.error);

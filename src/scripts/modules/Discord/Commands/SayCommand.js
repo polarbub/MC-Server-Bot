@@ -42,18 +42,18 @@ class SayCommand extends Command {
                 mcModule.exec(command)
 
                 Embed.setDescription("sent");
-                if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel.id !== msg.channel.id)
+                if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel?.id !== msg.channel.id)
                     msg.channel.send(Embed).catch(console.error);
             } else {
                 Embed.setDescription("No text Specified");
                 Embed.setColor("#FF0000");
-                if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel.id !== msg.channel.id)
+                if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel?.id !== msg.channel.id)
                     msg.channel.send(Embed).catch(console.error);
             }
         } else {
             Embed.setDescription("Server is not Running");
             Embed.setColor("#FF0000");
-            if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel.id !== msg.channel.id)
+            if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel?.id !== msg.channel.id)
                 msg.channel.send(Embed).catch(console.error);
         }
     }
