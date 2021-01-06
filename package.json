@@ -9,10 +9,10 @@
   "main": "src/scripts/main.js",
   "scripts": {
     "start": "node ./bin/scripts/main.js",
-    "build": "run-s flow:check flow:clean flow:build",
+    "build": "run-s flow:clean flow:build",
     "flow": "flow",
-    "flow:check": "flow check ./src/",
-    "flow:clean": "rimraf bin/* ",
+    "flow:check": "flow check src/",
+    "flow:clean": "rimraf bin/*",
     "flow:build": "flow-remove-types src/ -d bin/ --all --pretty"
   },
   "keywords": [],

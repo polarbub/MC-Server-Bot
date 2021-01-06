@@ -6,14 +6,6 @@ const config = require('../../configs/config.json');
 const fs = require("fs");
 const path = require('path');
 
-
-//log errors to file
-try {
-    fs.mkdirSync('./logs/');
-}catch (e){}
-const errorWriter = fs.createWriteStream('./logs/error.log',{flags:'a'});
-process.stderr.pipe(errorWriter);
-
 class Program extends Main {
 
     modules = {};

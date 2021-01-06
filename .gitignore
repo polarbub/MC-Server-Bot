@@ -1,6 +1,5 @@
-/install.sh
-/install.bat
 /node_modules/
 /bin/
 /logs/
 config.json
+package-lock.json
