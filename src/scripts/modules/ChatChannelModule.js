@@ -38,7 +38,7 @@ class ConsoleChannelModule extends Module {
                         this.getBot().on('message',this.listeners['message'] = (msg)=>{
                             if(msg.author.bot)
                                 return;
-                            if(msg.channel.id !== this.channel.id)
+                            if(msg.channel.id !== this.channel?.id)
                                 return;
                             if(msg.guild === undefined || msg.guild === null)
                                 return;
