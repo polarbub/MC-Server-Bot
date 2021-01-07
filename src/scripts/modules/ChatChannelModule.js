@@ -47,10 +47,10 @@ class ConsoleChannelModule extends Module {
                             }
                         })
 
-                        this.main.on('reload',(old_module,new_module)=>{
+                        this.main.on('reload',this.listeners['reload'] = (old_module,new_module)=>{
                             if(old_module === this.mcServer){
                                 this.mcServer = new_module;
-                                this.setStartListener();
+                                new_module.on('start',this.listeners['start']);
                             }
                         })
                     }
@@ -86,6 +86,9 @@ class ConsoleChannelModule extends Module {
         listener = this.listeners['message'];
         if(listener!==undefined)
             this.getBot().removeListener('message',listener);
+        listener = this.listeners['reload'];
+        if(listener!==undefined)
+            this.main.removeListener('reload',listener);
     }
 }
 

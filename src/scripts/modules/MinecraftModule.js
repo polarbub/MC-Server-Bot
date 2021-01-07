@@ -34,8 +34,8 @@ class MinecraftServer extends Module {
             instance.stderr.pipe(process.stderr);
             this.main['server'] = instance;
             instance.on('exit',()=>{
-                this.emit('stop',instance);
                 this.main['server'] = null;
+                this.emit('stop',instance);
             })
             this.emit('start',instance);
         }
@@ -63,8 +63,8 @@ class MinecraftServer extends Module {
         }
     }
 
-    status(callback = ()=>{}, error = ()=>{}){
-        util.status(this.main.getConfigs()['MC_SERVER']['ip']).then(callback).catch(error)
+    status(){
+        return util.status(this.main.getConfigs()['MC_SERVER']['ip'])
     }
 }
 

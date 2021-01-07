@@ -2,6 +2,7 @@ const DiscordBot = require('../../DiscordModule.js');
 const Command = require('../Command.js');
 const Permissions = require('../../../Permissions.js');
 const Discord = require('discord.js');
+const Colors = require('discord.js').Constants.Colors;
 
 const MinecraftServer = require('../../MinecraftModule.js');
 
@@ -46,13 +47,13 @@ class SayCommand extends Command {
                     msg.channel.send(Embed).catch(console.error);
             } else {
                 Embed.setDescription("No text Specified");
-                Embed.setColor("#FF0000");
+                Embed.setColor(Colors.RED);
                 if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel?.id !== msg.channel.id)
                     msg.channel.send(Embed).catch(console.error);
             }
         } else {
             Embed.setDescription("Server is not Running");
-            Embed.setColor("#FF0000");
+            Embed.setColor(Colors.BLUE);
             if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel?.id !== msg.channel.id)
                 msg.channel.send(Embed).catch(console.error);
         }

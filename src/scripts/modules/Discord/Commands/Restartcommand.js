@@ -2,6 +2,7 @@ const DiscordBot = require('../../DiscordModule.js');
 const Command = require('../Command.js');
 const Permissions = require('../../../Permissions.js');
 const Discord = require('discord.js');
+const Colors = require('discord.js').Constants.Colors;
 
 const MinecraftServer = require('../../MinecraftModule.js');
 
@@ -31,7 +32,7 @@ class Restartcommand extends Command {
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
         Embed.setDescription("Restarting the server");
-        Embed.setColor('#51e879');
+        Embed.setColor(Colors.DARK_GREEN);
         msg.channel.send(Embed).catch(console.error);
         Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
@@ -40,13 +41,13 @@ class Restartcommand extends Command {
             this.root.getBot().user.setActivity("Server SHUTDOWN", {type: "WATCHING"}).catch(console.error);
             mcModule.getServer().on('exit', () => {
                 Embed.setDescription("Server Stopped");
-                Embed.setColor("#0032f3");
+                Embed.setColor(Colors.GREEN);
                 msg.channel.send(Embed).catch(console.error);
 
                 Embed = new Discord.MessageEmbed();
                 Embed.setTitle("MC Server");
                 Embed.setDescription("Starting the Server");
-                Embed.setColor('#51e879');
+                Embed.setColor(Colors.DARK_GREEN);
                 msg.channel.send(Embed).catch(console.error);
                 Embed = new Discord.MessageEmbed();
                 Embed.setTitle("MC Server");
@@ -58,7 +59,7 @@ class Restartcommand extends Command {
                     let doneHandler = (chunk) => {
                         if (chunk.includes("Done")) {
                             Embed.setDescription("Server Started");
-                            Embed.setColor('#099a02');
+                            Embed.setColor(Colors.GREEN);
                             msg.channel.send(Embed).catch(console.error);
                             mcModule.getServer().stdout.removeListener('data', doneHandler);
                             this.root.getBot().user.setActivity("Players on the Server", {type: "WATCHING"}).catch(console.error);
@@ -77,7 +78,7 @@ class Restartcommand extends Command {
                     })
                 } else {
                     Embed.setDescription("Something went wrong");
-                    Embed.setColor('#f10000');
+                    Embed.setColor(Colors.RED);
                     msg.channel.send(Embed).catch(console.error);
                 }
             })
@@ -86,7 +87,7 @@ class Restartcommand extends Command {
 
         } else {
             Embed.setDescription("Server is stopped");
-            Embed.setColor('#0018f1');
+            Embed.setColor(Colors.BLUE);
             msg.channel.send(Embed).catch(console.error);
         }
     }

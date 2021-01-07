@@ -2,6 +2,7 @@ const DiscordBot = require('../../DiscordModule.js');
 const Command = require('../Command.js');
 const Permissions = require('../../../Permissions.js');
 const Discord = require('discord.js');
+const Colors = require('discord.js').Constants.Colors;
 
 const MinecraftServer = require('../../MinecraftModule.js');
 
@@ -29,7 +30,7 @@ class StopCommand extends Command {
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
         Embed.setDescription("Stopping the server");
-        Embed.setColor('#51e879');
+        Embed.setColor(Colors.DARK_GREEN);
         msg.channel.send(Embed).catch(console.error);
         Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
@@ -38,7 +39,7 @@ class StopCommand extends Command {
             this.root.getBot().user.setActivity("Server SHUTDOWN", {type: "WATCHING"}).catch(console.error);
             mcModule.getServer().on('exit', () => {
                 Embed.setDescription("Server Stopped");
-                Embed.setColor("#0032f3");
+                Embed.setColor(Colors.GREEN);
                 msg.channel.send(Embed).catch(console.error);
             })
 
@@ -46,7 +47,7 @@ class StopCommand extends Command {
 
         } else {
             Embed.setDescription("Server already stopped");
-            Embed.setColor('#0018f1');
+            Embed.setColor(Colors.BLUE);
             msg.channel.send(Embed).catch(console.error);
         }
     }

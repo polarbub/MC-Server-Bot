@@ -26,7 +26,7 @@ class Program extends Main {
 
     reloadModule(module) {
         let file = path.resolve("./bin/scripts/modules") + "/" + module +".js";
-        let oldModule: Module= this.modules[file];
+        let oldModule = this.modules[file];
         if(oldModule !== undefined) {
             oldModule.onUnload();
             delete require.cache[file];

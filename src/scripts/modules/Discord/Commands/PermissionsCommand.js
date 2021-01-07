@@ -2,6 +2,7 @@ const DiscordModule = require('../../DiscordModule.js');
 const Command = require('../Command.js');
 const Permissions = require('../../../Permissions.js');
 const Discord = require('discord.js');
+const Colors = require('discord.js').Constants.Colors;
 
 class PermissionsCommand extends Command {
 
@@ -27,14 +28,19 @@ class PermissionsCommand extends Command {
 
     execute(msg, args) {
         let argList = args.split(" ");
+        let Embed = new Discord.MessageEmbed();
+        Embed.setTitle("Permissions");
         switch (argList[0]){
             case "list":{
                 msg.channel.send(Permissions.list()).catch(console.error);
                 break;
             }
             case "add":{
-                if(argList.length < 2)
-                    return msg.channel.send("Missing Arguments").catch(console.error);
+                if(argList.length < 2) {
+                    Embed.setDescription("Missing Arguments");
+                    Embed.setColor(Colors.RED);
+                    return msg.channel.send(Embed).catch(console.error);
+                }
 
                 let perm = argList[1];
                 let users = msg.mentions.members.mapValues(value => value.id).array();
@@ -50,12 +56,17 @@ class PermissionsCommand extends Command {
                     count++;
                 })
 
-                msg.channel.send("Added " + count + " Mentions").catch(console.error);
+                Embed.setDescription("Added " + count + " Mentions");
+                Embed.setColor(Colors.GREEN);
+                msg.channel.send(Embed).catch(console.error);
                 break;
             }
             case "remove":{
-                if(argList.length < 2)
-                    return msg.channel.send("Missing Arguments").catch(console.error);
+                if(argList.length < 2) {
+                    Embed.setDescription("Missing Arguments");
+                    Embed.setColor(Colors.RED);
+                    return msg.channel.send(Embed).catch(console.error);
+                }
 
                 let perm = argList[1];
                 let users = msg.mentions.members.mapValues(value => value.id).array();
@@ -71,17 +82,23 @@ class PermissionsCommand extends Command {
                     count++;
                 })
 
-                msg.channel.send("Removed " + count + " Mentions").catch(console.error);
+                Embed.setDescription("Removed " + count + " Mentions");
+                Embed.setColor(Colors.GREEN);
+                msg.channel.send(Embed).catch(console.error);
                 break;
             }
             case "save":{
                 Permissions.save();
-                msg.channel.send("Permissions saved to Disk").catch(console.error);
+                Embed.setDescription("Permissions saved to Disk");
+                Embed.setColor(Colors.DARK_AQUA);
+                msg.channel.send(Embed).catch(console.error);
                 break;
             }
             case 'reload': {
                 Permissions.reload();
-                msg.channel.send("Permissions reloaded from Disk").catch(console.error);
+                Embed.setDescription("Permissions reloaded from Disk");
+                Embed.setColor(Colors.DARK_AQUA);
+                msg.channel.send(Embed).catch(console.error);
                 break;
             }
         }

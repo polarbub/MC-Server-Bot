@@ -1,6 +1,7 @@
 const EventEmitter = require('events');
 
-class Main extends EventEmitter{
+class Main extends EventEmitter
+{
 
     getConfigs(){};
 
@@ -8,9 +9,7 @@ class Main extends EventEmitter{
 
     onStop(){};
 
-    reloadModule(module : string){
-        this.emit('reload',null,null);
-    };
+    reloadModule(module : string){};
 
     reload(){};
 }

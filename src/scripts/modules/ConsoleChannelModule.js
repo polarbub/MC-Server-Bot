@@ -47,6 +47,13 @@ class ConsoleChannelModule extends Module {
                             })
                         })
 
+                        this.main.on('reload',this.listeners['reload'] = (old_module,new_module)=>{
+                            if(old_module === this.mcServer){
+                                this.mcServer = new_module;
+                                new_module.on('start',this.listeners['start']);
+                            }
+                        })
+
                     }
                 ).catch(console.error);
 
@@ -64,6 +71,9 @@ class ConsoleChannelModule extends Module {
         listener = this.listeners['data'];
         if(listener!==undefined)
             this.main['server'].removeListener('data',listener);
+        listener = this.listeners['reload'];
+        if(listener!==undefined)
+            this.main.removeListener('reload',listener);
     }
 }
 

@@ -2,6 +2,7 @@ const DiscordBot = require('../../DiscordModule.js');
 const Command = require('../Command.js');
 const Permissions = require('../../../Permissions.js');
 const Discord = require('discord.js');
+const Colors = require('discord.js').Constants.Colors;
 
 const MinecraftServer = require('../../MinecraftModule.js');
 
@@ -31,7 +32,7 @@ class StartCommand extends Command {
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
         Embed.setDescription("Starting the Server");
-        Embed.setColor('#51e879');
+        Embed.setColor(Colors.DARK_GREEN);
         msg.channel.send(Embed).catch(console.error);
         Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
@@ -44,16 +45,16 @@ class StartCommand extends Command {
                 let doneHandler = (chunk) => {
                     if (chunk.includes("Done")) {
                         Embed.setDescription("Server Started");
-                        Embed.setColor('#099a02');
+                        Embed.setColor(Colors.GREEN);
                         if(consoleChannel?.id !== msg.channel.id)
                             msg.channel.send(Embed).catch(console.error);
                         mcModule.getServer().stdout.removeListener('data', doneHandler);
                         this.root.getBot().user.setActivity("Players on the Server", {type: "WATCHING"}).catch(console.error);
 
                         periodicCheck = setInterval(() => {
-                            mcModule.status((res) => {
+                            mcModule.status.then((res) => {
                                 this.root.getBot().user.setActivity(res.onlinePlayers + " Players on the Server", {type: "WATCHING"}).catch(console.error);
-                            })
+                            }).catch(console.error);
                         }, 30000)
                     }
                 }
@@ -64,12 +65,12 @@ class StartCommand extends Command {
                 })
             } else {
                 Embed.setDescription("Something went wrong");
-                Embed.setColor('#f10000');
+                Embed.setColor(Colors.RED);
                 msg.channel.send(Embed).catch(console.error);
             }
         } else {
             Embed.setDescription("Server already running");
-            Embed.setColor('#0018f1');
+            Embed.setColor(Colors.BLUE);
             msg.channel.send(Embed).catch(console.error);
         }
     }
