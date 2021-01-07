@@ -2,13 +2,18 @@
   "name": "protoskybot",
   "version": "1.0.0",
   "description": "the bot for protosky",
-  "repository": "https://github.com/Polarbub/MC-Server-Bot",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Polarbub/MC-Server-Bot"
+  },
   "main": "src/scripts/main.js",
   "scripts": {
-    "start": "node ./bin/scripts/main.js",
+    "start": "node bin/scripts/main.js",
+    "build": "run-s flow:check flow:clean flow:build",
     "flow": "flow",
-    "flow:check": "flow check ./src/",
-    "flow:build": "rimraf ./bin/* ;flow-remove-types ./src/ -d ./bin/ --all --pretty"
+    "flow:check": "flow check src/",
+    "flow:clean": "rimraf bin/* ",
+    "flow:build": "flow-remove-types src/ -d bin/ --all --pretty"
   },
   "keywords": [],
   "author": "mattymatty",
@@ -16,9 +21,9 @@
   "dependencies": {
     "discord.js": "^12.3.1",
     "minecraft-server-util": "^3.0.1",
-    "rimraf": "^3.0.2"
-  },
-  "devDependencies": {
+    "node": "^15.4.0",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^3.0.2",
     "flow-bin": "^0.141.0",
     "flow-remove-types": "^2.141.0"
   }
