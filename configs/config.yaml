@@ -1,6 +1,6 @@
 DISCORD_BOT:
   #the discord bot token needed to login
-  TOKEN: "[TOKEN HERE]"
+  TOKEN: "[BOT TOKEN]"
   #the prefix the bot will answer to
   PREFIX: ">"
   #the channel ID where to echo the server console

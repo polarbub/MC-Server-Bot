@@ -30,7 +30,7 @@ class SayCommand extends Command {
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
         if((mcModule : MinecraftServer).getServer() !== null) {
-            if (args.trim().length > 1) {
+            if (args.trim().length > 0) {
                 let member = (msg : Discord.Message).member;
                 let username = (member!==undefined)?(msg : Discord.Message).member.displayName:(msg : Discord.Message).author.username + "#" + (msg : Discord.Message).author.discriminator;
                 //let color = (member!==undefined)?(msg : Discord.Message).member.displayHexColor.substr(0,7):"aqua"; not yet working so only aqua colors for now

@@ -32,23 +32,10 @@ class BackupModule extends Module {
             if((this.main : Main).getConfigs()['BACKUP']['backup_time']>0 && (this.main : Main).getConfigs()['BACKUP']['backup_time']>(this.main : Main).getConfigs()['BACKUP']['backup_alert']*1.5) {
                 setImmediate(() => {
                     this.mcInstance = (this.main : Main)['MinecraftServer'];
-                    (this.main : Main)['MinecraftServer'].on('start', this.listeners['start'] = () => {
-                        let backingUp : boolean = false;
-                        this.listeners['interval'] = setInterval(() => {
-                            if(!backingUp && (backingUp=true)) {
-                                (this.main: Main)['MinecraftServer'].exec('say Backup in ' + (this.main: Main).getConfigs()['BACKUP']['backup_alert'] + ' seconds, if flying please land');
-                                setTimeout(async () => {
-                                    await (this.main: Main)['MinecraftServer'].exec('say Backing up');
-                                    await (this.main: Main)['MinecraftServer'].exec('save-off');
-                                    await (this.main: Main)['MinecraftServer'].exec('save-all');
-                                    let res = await this.makeBackup().catch(console.error);
-                                    await (this.main: Main)['MinecraftServer'].exec('save-on');
-                                    await (this.main: Main)['MinecraftServer'].exec('say Backup complete, id:' + res.commit);
-                                    backingUp=false;
-                                }, (this.main: Main).getConfigs()['BACKUP']['backup_alert'] * 1000);
-                            }
-                        }, (this.main : Main).getConfigs()['BACKUP']['backup_time'] * 1000);
-                    });
+                    if((this.main : Main)['server']!=null){
+                        this.onServerRunning();
+                    }
+                    (this.main : Main)['MinecraftServer'].on('start', this.listeners['start'] = this.onServerRunning);
 
                     (this.main : Main)['MinecraftServer'].on('stop', this.listeners['stop'] = () => {
                         clearInterval(this.listeners['interval']);
@@ -68,6 +55,24 @@ class BackupModule extends Module {
 
         (this.main : Main)['BackupModule'] = this;
     }
+
+    onServerRunning = () => {
+            let backingUp: boolean = false;
+            this.listeners['interval'] = setInterval(() => {
+                if (!backingUp && (backingUp = true)) {
+                    (this.main: Main)['MinecraftServer'].exec('say Backup in ' + (this.main: Main).getConfigs()['BACKUP']['backup_alert'] + ' seconds, if flying please land');
+                    setTimeout(async () => {
+                        await (this.main: Main)['MinecraftServer'].exec('say Backing up');
+                        await (this.main: Main)['MinecraftServer'].exec('save-off');
+                        await (this.main: Main)['MinecraftServer'].exec('save-all');
+                        let res = await this.makeBackup().catch(console.error);
+                        await (this.main: Main)['MinecraftServer'].exec('save-on');
+                        await (this.main: Main)['MinecraftServer'].exec('say Backup complete, id:' + res.commit);
+                        backingUp = false;
+                    }, (this.main: Main).getConfigs()['BACKUP']['backup_alert'] * 1000);
+                }
+            }, (this.main: Main).getConfigs()['BACKUP']['backup_time'] * 1000);
+        };
 
     async makeBackup(msg=new Date().toLocaleString()){
         let repo = this.getRepository();
@@ -121,7 +126,7 @@ class BackupModule extends Module {
         (this.main : Main)['MinecraftServer'].removeListener('start',this.listeners['start']);
         (this.main : Main)['MinecraftServer'].removeListener('stop',this.listeners['stop']);
         clearInterval(this.listeners['interval']);
-        (this.main : Main).removelistener('reload',this.listeners['reload']);
+        (this.main : Main).removeListener('reload',this.listeners['reload']);
     }
 
     getRepository(){
