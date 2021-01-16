@@ -11,12 +11,12 @@ class ConsoleChannelModule extends Module {
     channel: Discord.TextChannel = null;
 
     getBot(): Discord.Client {
-        return this.main['Bot'];
+        return (this.main : Main)['Bot'];
     }
 
     constructor(main) {
         super(main);
-        this.main = main;
+        (this.main : Main) = main;
     }
 
     listeners = {};
@@ -24,15 +24,15 @@ class ConsoleChannelModule extends Module {
     mcServer;
 
     onLoad() {
-        this.main["ChatChannel"] = this;
+        (this.main : Main)["ChatChannel"] = this;
         //wait next cycle to ensure all the modules are loaded
         setImmediate(() => {
             this.getBot().on('ready', this.listeners['ready'] = () => {
-                this.getBot().channels.fetch(this.main.getConfigs()['DISCORD_BOT']['CHAT_CHANNEL']).then(
+                this.getBot().channels.fetch((this.main : Main).getConfigs()['DISCORD_BOT']['CHAT_CHANNEL']).then(
                     (channel) => {
                         this.channel = channel;
 
-                        this.mcServer = this.main['MinecraftServer'];
+                        this.mcServer = (this.main : Main)['MinecraftServer'];
                         this.setStartListener();
 
                         this.getBot().on('message',this.listeners['message'] = (msg)=>{
@@ -43,11 +43,11 @@ class ConsoleChannelModule extends Module {
                             if(msg.guild === undefined || msg.guild === null)
                                 return;
                             if(msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES', 'VIEW_CHANNEL')){
-                                this.main['DiscordModule'].commands['say'].execute(msg,msg.cleanContent);
+                                (this.main : Main)['DiscordModule'].commands['say'].execute(msg,msg.cleanContent);
                             }
-                        })
+                        });
 
-                        this.main.on('reload',this.listeners['reload'] = (old_module,new_module)=>{
+                        (this.main : Main).on('reload',this.listeners['reload'] = (old_module,new_module)=>{
                             if(old_module === this.mcServer){
                                 this.mcServer = new_module;
                                 new_module.on('start',this.listeners['start']);
@@ -64,7 +64,7 @@ class ConsoleChannelModule extends Module {
         this.mcServer.on('start', this.listeners['start'] = (instance) => {
             instance.stdout.on('data', this.listeners['data'] = (data) => {
                 if (chatRegex === null)
-                    chatRegex = new RegExp(this.main.getConfigs()['MC_SERVER']['chat_regex'], 'gm');
+                    chatRegex = new RegExp((this.main : Main).getConfigs()['MC_SERVER']['chat_regex'], 'gm');
                 let res = [ ...data.matchAll(chatRegex)];
                 res.forEach((match)=>{
                     this.channel.send(match[1].replace(/([\\*`'_~])/gm, "\\$&"), {split: true}).catch(console.error);
@@ -79,16 +79,16 @@ class ConsoleChannelModule extends Module {
             this.getBot().removeListener('ready',listener);
         listener = this.listeners['start'];
         if(listener!==undefined)
-            this.main['MinecraftServer'].removeListener('start',listener);
+            (this.main : Main)['MinecraftServer'].removeListener('start',listener);
         listener = this.listeners['data'];
         if(listener!==undefined)
-            this.main['server'].removeListener('data',listener);
+            (this.main : Main)['server'].removeListener('data',listener);
         listener = this.listeners['message'];
         if(listener!==undefined)
             this.getBot().removeListener('message',listener);
         listener = this.listeners['reload'];
         if(listener!==undefined)
-            this.main.removeListener('reload',listener);
+            (this.main : Main).removeListener('reload',listener);
     }
 }
 

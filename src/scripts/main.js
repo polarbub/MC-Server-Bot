@@ -1,21 +1,29 @@
 const Main = require('./interfaces/Main.js');
 const Module = require('./interfaces/Module.js');
-const config = require('../../configs/config.json');
 
 
+const yaml = require("js-yaml");
 const fs = require("fs");
 const path = require('path');
 
 class Program extends Main {
 
+    config = {};
+
     modules = {};
 
     getConfigs() {
-        return config;
+        return this.config;
     }
 
     onStart() {
+        this.LoadConfig();
         this.loadModules();
+    }
+
+    LoadConfig() {
+        let cfg_content = fs.readFileSync("./configs/config.yaml", 'utf8');
+        this.config = yaml.load(cfg_content);
     }
 
     onStop() {
@@ -25,7 +33,7 @@ class Program extends Main {
     }
 
     reloadModule(module) {
-        let file = path.resolve("./bin/scripts/modules") + "/" + module +".js";
+        let file = path.resolve("./bin/scripts/modules", module +".js");
         let oldModule = this.modules[file];
         if(oldModule !== undefined) {
             oldModule.onUnload();
@@ -59,7 +67,7 @@ class Program extends Main {
 
             files.forEach((file) => {
                 if (path.extname(file) === ".js") {
-                    file = path.resolve("./bin/scripts/modules") + "/" + file;
+                    file = path.resolve("./bin/scripts/modules",file);
                     let mod = require(file);
                     let instance = new mod(this);
                     instance.onLoad();

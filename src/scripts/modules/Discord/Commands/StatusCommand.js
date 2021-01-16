@@ -10,20 +10,20 @@ class StartCommand extends Command {
 
     constructor(module) {
         super(module);
-        this.root = module;
+        (this.root : DiscordBot) = module;
     }
 
     register() {
-        this.root.commands['status'] = this;
+        (this.root : DiscordBot).commands['status'] = this;
         Permissions.addPermission('commands.status');
     }
 
     unregister() {
-        delete this.root.commands['status'];
+        delete (this.root : DiscordBot).commands['status'];
     }
 
     execute(msg, args) {
-        let mcModule = this.root.main['MinecraftServer'];
+        let mcModule = (this.root : DiscordBot).main['MinecraftServer'];
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
         if (mcModule.getServer() !== null) {
@@ -43,12 +43,12 @@ class StartCommand extends Command {
                 if(response.samplePlayers != null){
                     Embed.addField("List:",response.samplePlayers.map(p=>p.name).join(", "));
                 }
-                msg.channel.send(Embed).catch(console.error);
+                (msg : Discord.Message).channel.send(Embed).catch(console.error);
             }).catch(console.error);
         } else {
             Embed.setDescription("Server not running");
             Embed.setColor('#0018f1');
-            msg.channel.send(Embed).catch(console.error);
+            (msg : Discord.Message).channel.send(Embed).catch(console.error);
         }
     }
 
@@ -56,7 +56,7 @@ class StartCommand extends Command {
         return "get info about the Minecraft Server";
     }
 
-    getHelp() {
+    getHelp() : Discord.MessageEmbed {
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("Help for `status`");
         Embed.setDescription(this.getDescription());

@@ -1,0 +1,33 @@
+DISCORD_BOT:
+  #the discord bot token needed to login
+  TOKEN: "[TOKEN HERE]"
+  #the prefix the bot will answer to
+  PREFIX: ">"
+  #the channel ID where to echo the server console
+  CONSOLE_CHANNEL: '430125114823016468'
+  #the channel ID where to write and listen to chat messages
+  CHAT_CHANNEL: '684334071836442647'
+
+
+MC_SERVER:
+  #the one line command needed to start the Server
+  startCMD: "(cd ../../Minecraft-Test-Server/1.12.2/ & java -jar server.jar)"
+  #the ip of the server (will be shown in status)
+  ip: "localhost"
+  #the command to send the chat messages from discord to minecraft
+  #%username% will be replaced by sender username
+  #%color% will be replaced by sender user color
+  #%message% will be replaced by the message in json ready string format
+  #%messageJSON% will be replaced with a JSON string containing the message ( equivalent to { "text": "%message%" } )
+  say_format: "execute if entity @a run tellraw @a [\"\",{\"text\":\"[Discord]\",\"color\":\"dark_blue\"},{\"text\":\" <\"},{\"text\":\"%username%\",\"color\":\"%color%\"},{\"text\":\"> \"},{\"text\":\"%message%\"}}]"
+  #regular expression used to recognize chat messages from the server logs ( $1 capturing group should be the chat message + username, $2 should be username only )
+  chat_regex: "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (<([\\w\\d_-]+)> [^\\n\\r]+)"
+
+
+BACKUP:
+  #path to the server folder ( used to initiate git repository )
+  server_path: "../../Minecraft-Test-Server/1.12.2/"
+  #time in seconds between backups ( <0 means disabled , also needs to be at least 1.5 times the Backup_alert time )
+  backup_time: 3600
+  #time in seconds before a backup ( it is used to send a warning message to the players )
+  backup_alert: 30

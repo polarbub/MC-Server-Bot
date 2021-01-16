@@ -9,16 +9,16 @@ class HelpCommand extends Command {
 
     constructor(root) {
         super(root);
-        this.root = root;
+        (this.root : DiscordModule) = root;
     }
 
     register() {
-        this.root.commands['help'] = this;
+        (this.root : DiscordModule).commands['help'] = this;
         Permissions.addPermission("commands.help");
     }
 
     unregister() {
-        delete this.root.commands['help'];
+        delete (this.root : DiscordModule).commands['help'];
     }
 
     isAllowed(msg) {
@@ -31,17 +31,17 @@ class HelpCommand extends Command {
 
             Embed.setTitle("Available Commands:");
             Embed.setFooter("this are all the commands you're allowed to perform, please contact the administrator if any is missing");
-            Object.entries(this.root.commands).filter((entry) => entry[1].isAllowed(msg)
+            Object.entries((this.root : DiscordModule).commands).filter((entry) => entry[1].isAllowed(msg)
             ).forEach((entry) => {
                 Embed.addField(entry[0],entry[1].getDescription(),false)
-            })
-            msg.channel.send(Embed).catch(console.error);
+            });
+            (msg : Discord.Message).channel.send(Embed).catch(console.error);
         }else{
             let cmd = args.split(" ")[0];
-            let cmdObj = this.root.commands[cmd];
+            let cmdObj = (this.root : DiscordModule).commands[cmd];
             if(cmdObj !== undefined && cmdObj.isAllowed(msg)){
                 let Embed = cmdObj.getHelp();
-                msg.channel.send(Embed).catch(console.error);
+                (msg : Discord.Message).channel.send(Embed).catch(console.error);
             }
         }
     }
@@ -50,7 +50,7 @@ class HelpCommand extends Command {
         return "shows this help page";
     }
 
-    getHelp() {
+    getHelp(): Discord.MessageEmbed {
         let embed = new Discord.MessageEmbed();
         embed.setDescription("you really requested the help for the help command?")
         return embed;

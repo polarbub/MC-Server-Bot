@@ -13,49 +13,50 @@ class SayCommand extends Command {
 
     constructor(module) {
         super(module);
-        this.root = module;
+        (this.root : DiscordBot) = module;
     }
 
     register() {
-        this.root.commands['say'] = this;
+        (this.root : DiscordBot).commands['say'] = this;
         Permissions.addPermission('commands.say');
     }
 
     unregister() {
-        delete this.root.commands['say'];
+        delete (this.root : DiscordBot).commands['say'];
     }
 
     execute(msg, args) {
-        let mcModule : MinecraftServer= this.root.main['MinecraftServer'];
+        let mcModule : MinecraftServer= (this.root : DiscordBot).main['MinecraftServer'];
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
-        if(mcModule.getServer() !== null) {
+        if((mcModule : MinecraftServer).getServer() !== null) {
             if (args.trim().length > 1) {
-                let member = msg.member;
-                let username = (member!==undefined)?msg.member.displayName:msg.author.username + "#" + msg.author.discriminator;
-                //let color = (member!==undefined)?msg.member.displayHexColor.substr(0,7):"acqua"; not yet working so only aqua colors for now
+                let member = (msg : Discord.Message).member;
+                let username = (member!==undefined)?(msg : Discord.Message).member.displayName:(msg : Discord.Message).author.username + "#" + (msg : Discord.Message).author.discriminator;
+                //let color = (member!==undefined)?(msg : Discord.Message).member.displayHexColor.substr(0,7):"aqua"; not yet working so only aqua colors for now
                 let color = "aqua";
 
-                let command = this.root.main.getConfigs()["MC_SERVER"]['say_format'];
+                let command = (this.root : DiscordBot).main.getConfigs()["MC_SERVER"]['say_format'];
                 command = command.replace("%username%",username);
                 command = command.replace("%color%",color);
-                command = command.replace("%message%",args);
-                mcModule.exec(command)
+                command = command.replace("%message%",JSON.stringify(args).slice(1,-1));
+                command = command.replace("%messageJSON%",JSON.stringify({text:args}));
+                (mcModule : MinecraftServer).exec(command)
 
                 Embed.setDescription("sent");
-                if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel?.id !== msg.channel.id)
-                    msg.channel.send(Embed).catch(console.error);
+                if((this.root : DiscordBot).main['ChatChannel'] === undefined || (this.root : DiscordBot).main['ChatChannel'].channel?.id !== (msg : Discord.Message).channel.id)
+                    (msg : Discord.Message).channel.send(Embed).catch(console.error);
             } else {
                 Embed.setDescription("No text Specified");
                 Embed.setColor(Colors.RED);
-                if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel?.id !== msg.channel.id)
-                    msg.channel.send(Embed).catch(console.error);
+                if((this.root : DiscordBot).main['ChatChannel'] === undefined || (this.root : DiscordBot).main['ChatChannel'].channel?.id !== (msg : Discord.Message).channel.id)
+                    (msg : Discord.Message).channel.send(Embed).catch(console.error);
             }
         } else {
             Embed.setDescription("Server is not Running");
             Embed.setColor(Colors.BLUE);
-            if(this.root.main['ChatChannel'] === undefined || this.root.main['ChatChannel'].channel?.id !== msg.channel.id)
-                msg.channel.send(Embed).catch(console.error);
+            if((this.root : DiscordBot).main['ChatChannel'] === undefined || (this.root : DiscordBot).main['ChatChannel'].channel?.id !== (msg : Discord.Message).channel.id)
+                (msg : Discord.Message).channel.send(Embed).catch(console.error);
         }
     }
 
@@ -63,7 +64,7 @@ class SayCommand extends Command {
         return "sends a chat message to the server";
     }
 
-    getHelp() {
+    getHelp() : Discord.MessageEmbed {
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("Help for `say`");
         Embed.setDescription(this.getDescription());

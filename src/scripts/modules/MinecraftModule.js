@@ -8,15 +8,15 @@ class MinecraftServer extends Module {
 
     constructor(main) {
         super(main);
-        this.main = main;
+        (this.main : Main) = main;
     }
 
     onLoad() {
-        if(this.main['server'] === undefined){
-            this.main['server'] = null;
+        if((this.main : Main)['server'] === undefined){
+            (this.main : Main)['server'] = null;
         }
 
-        this.main['MinecraftServer'] = this;
+        (this.main : Main)['MinecraftServer'] = this;
     }
 
     onUnload() {
@@ -24,17 +24,17 @@ class MinecraftServer extends Module {
     }
 
     getServer(){
-        return this.main['server'];
+        return (this.main : Main)['server'];
     }
 
     start(){
-        if(this.main['server'] === null){
-            let instance = exec(this.main.getConfigs()['MC_SERVER']['startCMD']);
+        if((this.main : Main)['server'] === null){
+            let instance = exec((this.main : Main).getConfigs()['MC_SERVER']['startCMD']);
             instance.stdout.pipe(process.stdout);
             instance.stderr.pipe(process.stderr);
-            this.main['server'] = instance;
+            (this.main : Main)['server'] = instance;
             instance.on('exit',()=>{
-                this.main['server'] = null;
+                (this.main : Main)['server'] = null;
                 this.emit('stop',instance);
             })
             this.emit('start',instance);
@@ -42,29 +42,31 @@ class MinecraftServer extends Module {
     }
 
     stop(){
-        if(this.main['server'] != null){
+        if((this.main : Main)['server'] != null){
             this.exec('stop');
         }
     }
 
-    exec(cmd, callback = ()=>{}){
-        if(this.main['server'] != null){
-            let instance = this.main['server'];
+    async exec(cmd){
+        if((this.main : Main)['server'] != null){
+            let instance = (this.main : Main)['server'];
             instance.stdin.setEncoding('utf-8');
             let buffer = "";
             let reader = (chunk)=>buffer +=chunk;
             instance.stdout.on('data',reader);
-            instance.stdin.write(cmd.trim()+'\r\n');
-            setTimeout(()=>{
-                instance.stdout.removeListener('data',reader);
-                if(buffer!=="")
-                    callback(buffer);
-            },1000);
+            await instance.stdin.write(cmd.trim()+'\r\n');
+            return new Promise<string>(resolve => {
+                setTimeout(()=>{
+                    instance.stdout.removeListener('data',reader);
+                    resolve(buffer);
+                },1000);
+            });
         }
+        return "";
     }
 
     status(){
-        return util.status(this.main.getConfigs()['MC_SERVER']['ip'])
+        return util.status((this.main : Main).getConfigs()['MC_SERVER']['ip'])
     }
 }
 

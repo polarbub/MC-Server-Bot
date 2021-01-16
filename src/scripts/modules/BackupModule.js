@@ -4,14 +4,13 @@ const MinecraftServer = require('../modules/MinecraftModule.js');
 const simpleGit = require('simple-git');
 const path = require('path');
 
-
 class BackupModule extends Module {
 
-    main: Main = null;
+    main: Main;
 
     constructor(main : Main) {
         super(main);
-        this.main = main;
+        (this.main : Main) = main;
     }
 
     listeners = {};
@@ -19,10 +18,10 @@ class BackupModule extends Module {
     mcInstance = null;
 
     onLoad() {
-        if(this.main['repository'] === undefined){
-            let folder = path.resolve(this.main.getConfigs()['MC_SERVER']['server_path']);
+        if((this.main : Main)['repository'] === undefined){
+            let folder = path.resolve((this.main : Main).getConfigs()['BACKUP']['server_path']);
             let repo = simpleGit(folder);
-            this.main['repository'] = repo;
+            (this.main : Main)['repository'] = repo;
             repo.cwd(folder);
             repo.checkIsRepo('root').then((res)=>{
                 if(!res){
@@ -30,45 +29,50 @@ class BackupModule extends Module {
                 }
             }).catch(console.error);
 
-            setImmediate(()=>{
-                this.mcInstance = this.main['MinecraftServer'];
-                this.main['MinecraftServer'].on('start',this.listeners['start'] = ()=>{
-                    this.listeners['interval'] = setInterval( ()=>{
-                        this.main['MinecraftServer'].exec('say Backup in 30 seconds if flying please land');
-                        setTimeout(()=>{
-                            this.main['MinecraftServer'].exec('say Backing up');
-                            this.main['MinecraftServer'].exec('save-off');
-                            this.main['MinecraftServer'].exec('save-all');
-                            this.makeBackup().then((res)=>{
-                                this.main['MinecraftServer'].exec('save-on');
-                                this.main['MinecraftServer'].exec('say Backup complete, id:' + res.hash);
-                            }).catch(console.error)
-                        },30);
-                    },3600);
-                })
+            if((this.main : Main).getConfigs()['BACKUP']['backup_time']>0 && (this.main : Main).getConfigs()['BACKUP']['backup_time']>(this.main : Main).getConfigs()['BACKUP']['backup_alert']*1.5) {
+                setImmediate(() => {
+                    this.mcInstance = (this.main : Main)['MinecraftServer'];
+                    (this.main : Main)['MinecraftServer'].on('start', this.listeners['start'] = () => {
+                        let backingUp : boolean = false;
+                        this.listeners['interval'] = setInterval(() => {
+                            if(!backingUp && (backingUp=true)) {
+                                (this.main: Main)['MinecraftServer'].exec('say Backup in ' + (this.main: Main).getConfigs()['BACKUP']['backup_alert'] + ' seconds, if flying please land');
+                                setTimeout(async () => {
+                                    await (this.main: Main)['MinecraftServer'].exec('say Backing up');
+                                    await (this.main: Main)['MinecraftServer'].exec('save-off');
+                                    await (this.main: Main)['MinecraftServer'].exec('save-all');
+                                    let res = await this.makeBackup().catch(console.error);
+                                    await (this.main: Main)['MinecraftServer'].exec('save-on');
+                                    await (this.main: Main)['MinecraftServer'].exec('say Backup complete, id:' + res.commit);
+                                    backingUp=false;
+                                }, (this.main: Main).getConfigs()['BACKUP']['backup_alert'] * 1000);
+                            }
+                        }, (this.main : Main).getConfigs()['BACKUP']['backup_time'] * 1000);
+                    });
 
-                this.main['MinecraftServer'].on('stop',this.listeners['stop'] = ()=>{
-                    clearInterval(this.listeners['interval']);
-                    this.makeBackup().catch(console.error);
-                })
+                    (this.main : Main)['MinecraftServer'].on('stop', this.listeners['stop'] = () => {
+                        clearInterval(this.listeners['interval']);
+                        this.makeBackup().catch(console.error);
+                    });
 
-                this.main.on('reload',this.listeners['reload'] = (old_module,new_module) =>{
-                    if(old_module === this.mcInstance)
-                        this.mcInstance = new_module;
+                    (this.main : Main).on('reload', this.listeners['reload'] = (old_module, new_module) => {
+                        if (old_module === this.mcInstance)
+                            this.mcInstance = new_module;
 
-                    new_module.on('start',this.listeners['start']);
-                    new_module.on('stop',this.listeners['stop']);
-                })
-            });
+                        new_module.on('start', this.listeners['start']);
+                        new_module.on('stop', this.listeners['stop']);
+                    });
+                });
+            }
         }
 
-        this.main['BackupModule'] = this;
+        (this.main : Main)['BackupModule'] = this;
     }
 
     async makeBackup(msg=new Date().toLocaleString()){
         let repo = this.getRepository();
         await repo.add('.').catch(console.error);
-        return await repo.commit(msg, ['.'], ['--author="Backup <Backup@localhost>"', '--allow-empty']).catch(console.error);
+        return repo.commit(msg, ['.'], ['--author="Backup <Backup@localhost>"', '--allow-empty']).catch(console.error);
     }
 
     async getBackups(count=10){
@@ -114,14 +118,14 @@ class BackupModule extends Module {
     }
 
     onUnload() {
-        this.main['MinecraftServer'].removeListener('start',this.listeners['start']);
-        this.main['MinecraftServer'].removeListener('stop',this.listeners['stop']);
+        (this.main : Main)['MinecraftServer'].removeListener('start',this.listeners['start']);
+        (this.main : Main)['MinecraftServer'].removeListener('stop',this.listeners['stop']);
         clearInterval(this.listeners['interval']);
-        this.main.removelistener('reload',this.listeners['reload']);
+        (this.main : Main).removelistener('reload',this.listeners['reload']);
     }
 
     getRepository(){
-        return this.main['repository'];
+        return (this.main : Main)['repository'];
     }
 
 }

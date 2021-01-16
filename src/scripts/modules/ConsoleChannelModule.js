@@ -11,12 +11,12 @@ class ConsoleChannelModule extends Module {
     channel: Discord.TextChannel = null;
 
     getBot(): Discord.Client {
-        return this.main['Bot'];
+        return (this.main : Main)['Bot'];
     }
 
     constructor(main) {
         super(main);
-        this.main = main;
+        (this.main : Main) = main;
     }
 
     discordLogger = null;
@@ -25,12 +25,12 @@ class ConsoleChannelModule extends Module {
     listeners = {};
 
     onLoad() {
-        this.main["ConsoleChannel"] = this;
+        (this.main : Main)["ConsoleChannel"] = this;
         //wait next cycle to ensure all the modules are loaded
         setImmediate(() => {
 
             this.getBot().on('ready', this.listeners['ready'] = () => {
-                this.getBot().channels.fetch(this.main.getConfigs()['DISCORD_BOT']['CONSOLE_CHANNEL']).then(
+                this.getBot().channels.fetch((this.main : Main).getConfigs()['DISCORD_BOT']['CONSOLE_CHANNEL']).then(
                     (channel) => {
                         this.channel = channel;
 
@@ -41,18 +41,18 @@ class ConsoleChannelModule extends Module {
                             }
                         }, 500);
 
-                        this.main['MinecraftServer'].on('start', this.listeners['start'] = (instance) => {
+                        (this.main : Main)['MinecraftServer'].on('start', this.listeners['start'] = (instance) => {
                              instance.stdout.on('data', this.listeners['data'] = (data) => {
                                 this.buffer += data;
                             })
-                        })
+                        });
 
-                        this.main.on('reload',this.listeners['reload'] = (old_module,new_module)=>{
+                        (this.main : Main).on('reload',this.listeners['reload'] = (old_module,new_module)=>{
                             if(old_module === this.mcServer){
                                 this.mcServer = new_module;
                                 new_module.on('start',this.listeners['start']);
                             }
-                        })
+                        });
 
                     }
                 ).catch(console.error);
@@ -67,13 +67,13 @@ class ConsoleChannelModule extends Module {
             this.getBot().removeListener('ready',listener);
         listener = this.listeners['start'];
         if(listener!==undefined)
-            this.main['MinecraftServer'].removeListener('start',listener);
+            (this.main : Main)['MinecraftServer'].removeListener('start',listener);
         listener = this.listeners['data'];
         if(listener!==undefined)
-            this.main['server'].removeListener('data',listener);
+            (this.main : Main)['server'].removeListener('data',listener);
         listener = this.listeners['reload'];
         if(listener!==undefined)
-            this.main.removeListener('reload',listener);
+            (this.main : Main).removeListener('reload',listener);
     }
 }
 

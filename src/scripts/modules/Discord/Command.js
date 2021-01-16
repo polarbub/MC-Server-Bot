@@ -11,7 +11,7 @@ class Command {
 
     getDescription() : string {} ;
 
-    getHelp() : Discord.MessageEmbed{} ;
+    getHelp() : Discord.MessageEmbed {} ;
 
     constructor(module : DiscordBot){};
 

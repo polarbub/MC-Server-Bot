@@ -9,86 +9,86 @@ const MinecraftServer = require('../../MinecraftModule.js');
 let periodicCheck;
 
 
-class Restartcommand extends Command {
+class RestartCommand extends Command {
 
     root : DiscordBot;
 
     constructor(module) {
         super(module);
-        this.root = module;
+        (this.root : DiscordBot) = module;
     }
 
     register() {
-        this.root.commands['restart'] = this;
+        (this.root : DiscordBot).commands['restart'] = this;
         Permissions.addPermission('commands.restart');
     }
 
     unregister() {
-        delete this.root.commands['restart'];
+        delete (this.root : DiscordBot).commands['restart'];
     }
 
     execute(msg, args) {
-        let mcModule : MinecraftServer = this.root.main['MinecraftServer'];
+        let mcModule : MinecraftServer = (this.root : DiscordBot).main['MinecraftServer'];
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
         Embed.setDescription("Restarting the server");
         Embed.setColor(Colors.DARK_GREEN);
-        msg.channel.send(Embed).catch(console.error);
+        (msg : Discord.Message).channel.send(Embed).catch(console.error);
         Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
-        if (mcModule.getServer() !== null) {
+        if ((mcModule : MinecraftServer).getServer() !== null) {
 
-            this.root.getBot().user.setActivity("Server SHUTDOWN", {type: "WATCHING"}).catch(console.error);
-            mcModule.getServer().on('exit', () => {
+            (this.root : DiscordBot).getBot().user.setActivity("Server SHUTDOWN", {type: "WATCHING"}).catch(console.error);
+            (mcModule : MinecraftServer).getServer().on('exit', () => {
                 Embed.setDescription("Server Stopped");
                 Embed.setColor(Colors.GREEN);
-                msg.channel.send(Embed).catch(console.error);
+                (msg : Discord.Message).channel.send(Embed).catch(console.error);
 
                 Embed = new Discord.MessageEmbed();
                 Embed.setTitle("MC Server");
                 Embed.setDescription("Starting the Server");
                 Embed.setColor(Colors.DARK_GREEN);
-                msg.channel.send(Embed).catch(console.error);
+                (msg : Discord.Message).channel.send(Embed).catch(console.error);
                 Embed = new Discord.MessageEmbed();
                 Embed.setTitle("MC Server");
 
-                mcModule.start();
+                (mcModule : MinecraftServer).start();
 
-                if (mcModule.getServer().exitCode === null) {
-                    this.root.getBot().user.setActivity("Server Startup", {type: "WATCHING"}).catch(console.error);
+                if ((mcModule : MinecraftServer).getServer().exitCode === null) {
+                    (this.root : DiscordBot).getBot().user.setActivity("Server Startup", {type: "WATCHING"}).catch(console.error);
                     let doneHandler = (chunk) => {
                         if (chunk.includes("Done")) {
                             Embed.setDescription("Server Started");
                             Embed.setColor(Colors.GREEN);
-                            msg.channel.send(Embed).catch(console.error);
-                            mcModule.getServer().stdout.removeListener('data', doneHandler);
-                            this.root.getBot().user.setActivity("Players on the Server", {type: "WATCHING"}).catch(console.error);
+                            (msg : Discord.Message).channel.send(Embed).catch(console.error);
+                            (mcModule : MinecraftServer).getServer().stdout.removeListener('data', doneHandler);
+                            (this.root : DiscordBot).getBot().user.setActivity("Players on the Server", {type: "WATCHING"}).catch(console.error);
 
                             periodicCheck = setInterval(() => {
-                                mcModule.status((res) => {
-                                    this.root.getBot().user.setActivity(res.onlinePlayers + " Players on the Server", {type: "WATCHING"}).catch(console.error);
+                                (mcModule : MinecraftServer).status((res) => {
+                                    (this.root : DiscordBot).getBot().user.setActivity(res.onlinePlayers + " Players on the Server", {type: "WATCHING"}).catch(console.error);
                                 })
-                            }, 30000)
+                            }, 30000);
                         }
                     }
-                    mcModule.getServer().stdout.on('data', doneHandler);
-                    mcModule.getServer().on('exit', () => {
-                        this.root.getBot().user.setActivity("Commands", {type: "LISTENING"}).catch(console.error);
+                    (mcModule : MinecraftServer).getServer().stdout.on('data', doneHandler);
+                    (mcModule : MinecraftServer).getServer().on('exit', () => {
+                        (this.root : DiscordBot).getBot().user.setActivity("Commands", {type: "LISTENING"}).catch(console.error);
                         clearInterval(periodicCheck);
-                    })
+                    });
                 } else {
                     Embed.setDescription("Something went wrong");
                     Embed.setColor(Colors.RED);
-                    msg.channel.send(Embed).catch(console.error);
+                    (msg : Discord.Message).channel.send(Embed).catch(console.error);
                 }
-            })
+            });
 
-            mcModule.stop();
+            (mcModule : MinecraftServer).stop();
 
         } else {
             Embed.setDescription("Server is stopped");
             Embed.setColor(Colors.BLUE);
-            msg.channel.send(Embed).catch(console.error);
+            (msg : Discord.Message).channel.send(Embed).catch(console.error);
         }
     }
 
@@ -96,7 +96,7 @@ class Restartcommand extends Command {
         return "stops the Minecraft Server";
     }
 
-    getHelp() {
+    getHelp() : Discord.MessageEmbed {
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("Help for `restart`");
         Embed.setDescription(this.getDescription());
@@ -108,4 +108,4 @@ class Restartcommand extends Command {
     }
 }
 
-module.exports = Restartcommand;
+module.exports = RestartCommand;

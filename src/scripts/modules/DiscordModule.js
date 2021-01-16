@@ -15,25 +15,25 @@ class DiscordBot extends Module {
     listeners = {}
 
     onLoad() {
-        if( this.main['Bot'] === undefined ){
-            this.main['Bot'] = new Discord.Client();
-            this.main['Bot'].login(this.main.getConfigs()['DISCORD_BOT']['TOKEN']).catch(console.error);
+        if( (this.main : Main)['Bot'] === undefined ){
+            (this.main : Main)['Bot'] = new Discord.Client();
+            (this.main : Main)['Bot'].login((this.main : Main).getConfigs()['DISCORD_BOT']['TOKEN']).catch(console.error);
         }
 
-        this.main['DiscordModule'] = this;
+        (this.main : Main)['DiscordModule'] = this;
 
         this.loadCommands();
 
-        this.main['Bot'].on('message', this.listeners['message'] = msg => {
+        (this.main : Main)['Bot'].on('message', this.listeners['message'] = msg => {
             if(msg.author.bot)
                 return;
-            if(!msg.cleanContent.startsWith(this.main.getConfigs()['DISCORD_BOT']['PREFIX']))
+            if(!msg.cleanContent.startsWith((this.main : Main).getConfigs()['DISCORD_BOT']['PREFIX']))
                 return;
             if(msg.guild === undefined || msg.guild === null)
                 return;
             if(!msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES'))
                 return;
-            if(this.main['ChatChannel'] !== undefined && this.main['ChatChannel'].channel?.id === msg.channel.id)
+            if((this.main : Main)['ChatChannel'] !== undefined && (this.main : Main)['ChatChannel'].channel?.id === msg.channel.id)
                 return;
             let cmd = msg.cleanContent.substr(1).split(' ')[0];
             let command = this.commands[cmd];
@@ -41,9 +41,9 @@ class DiscordBot extends Module {
                 if(command.isAllowed(msg))
                     command.execute(msg,msg.cleanContent.substr(cmd.length+2))
             }
-        })
+        });
 
-        this.main['Bot'].on('ready', this.listeners['ready'] = ()=>{
+        (this.main : Main)['Bot'].on('ready', this.listeners['ready'] = ()=>{
             this.getBot().user.setActivity("Commands", {type: "LISTENING"}).catch(console.error);
         })
     }
@@ -56,10 +56,10 @@ class DiscordBot extends Module {
 
             files.forEach((file) => {
                 if (path.extname(file) === ".js") {
-                    file = path.resolve("./bin/scripts/modules/Discord/Commands") + "/" + file;
+                    file = path.resolve("./bin/scripts/modules/Discord/Commands",file);
                     let command = require(file);
                     let instance = new command(this);
-                    instance.register(this.main['Bot']);
+                    instance.register((this.main : Main)['Bot']);
                     this.commandFiles[file] = instance;
                 }
             });
@@ -79,7 +79,7 @@ class DiscordBot extends Module {
     unloadComands() {
         Object.keys(this.commandFiles).forEach((key) => {
             let command = this.commandFiles[key];
-            command.unregister(this.main['Bot']);
+            command.unregister((this.main : Main)['Bot']);
             delete require.cache[key];
             delete this.commandFiles[key];
         });
@@ -91,12 +91,12 @@ class DiscordBot extends Module {
     }
 
     getBot(){
-        return this.main['Bot'];
+        return (this.main : Main)['Bot'];
     }
 
     constructor(main){
         super(main);
-        this.main = main;
+        (this.main : Main) = main;
     }
 
 }

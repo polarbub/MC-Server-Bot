@@ -13,40 +13,42 @@ class ExecCommand extends Command {
 
     constructor(module) {
         super(module);
-        this.root = module;
+        (this.root : DiscordBot) = ( module : DiscordBot );
     }
 
     register() {
-        this.root.commands['exec'] = this;
+        ((this.root : DiscordBot) : DiscordBot).commands['exec'] = this;
         Permissions.addPermission('commands.exec');
     }
 
     unregister() {
-        delete this.root.commands['exec'];
+        delete (this.root : DiscordBot).commands['exec'];
     }
 
-    execute(msg, args) {
-        let consoleChannel : Discord.TextChannel = this.root.main['ConsoleChannel'].channel;
-        let mcModule : MinecraftServer = this.root.main['MinecraftServer'];
+    execute(msg : Discord.Message, args) {
+        let consoleChannel : Discord.TextChannel = (this.root : DiscordBot).main['ConsoleChannel'].channel;
+        let mcModule : MinecraftServer = (this.root : DiscordBot).main['MinecraftServer'] ;
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("MC Server");
-        if(mcModule.getServer() !== null) {
+        if((mcModule : MinecraftServer).getServer() !== null) {
             if (args.trim().length > 1) {
                 Embed.addField("Command:", args);
-                mcModule.exec(args, (res) => {
-                    Embed.setDescription(res.substr(0,2000));
-                    if(msg.channel.id !== consoleChannel?.id)
-                        msg.channel.send(Embed).catch(console.error);
-                })
+                (mcModule : MinecraftServer).exec(args).then((res : string) => {
+                    if(res.length > 0) {
+                        Embed.setDescription(res.substr(0, 2000));
+                        if ((msg : Discord.Message).channel.id !== (consoleChannel : Discord.TextChannel)?.id)
+                            (msg : Discord.Message).channel.send(Embed).catch(console.error);
+                    }
+                }).catch(console.error);
             } else {
                 Embed.setDescription("No command Specified");
                 Embed.setColor(Colors.RED);
-                msg.channel.send(Embed).catch(console.error);
+                (msg : Discord.Message).channel.send(Embed).catch(console.error);
             }
         } else {
             Embed.setDescription("Server is not Running");
             Embed.setColor(Colors.BLUE);
-            msg.channel.send(Embed).catch(console.error);
+            (msg : Discord.Message).channel.send(Embed).catch(console.error);
         }
     }
 
@@ -54,15 +56,15 @@ class ExecCommand extends Command {
         return "executes commands on the game console";
     }
 
-    getHelp() {
+    getHelp(): Discord.MessageEmbed {
         let Embed = new Discord.MessageEmbed();
         Embed.setTitle("Help for `exec`");
         Embed.setDescription(this.getDescription());
         return Embed;
     }
 
-    isAllowed(msg) {
-        return Permissions.isUserAllowed(msg, 'commands.exec');
+    isAllowed(msg : Discord.Message) {
+        return Permissions.isUserAllowed((msg : Discord.Message), 'commands.exec');
     }
 }
 

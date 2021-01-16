@@ -10,16 +10,16 @@ class PermissionsCommand extends Command {
 
     constructor(root) {
         super(root);
-        this.root = root;
+        (this.root : DiscordModule) = root;
     }
 
     register() {
-        this.root.commands['permissions'] = this;
+        (this.root : DiscordModule).commands['permissions'] = this;
         Permissions.addPermission("commands.permissions");
     }
 
     unregister() {
-        delete this.root.commands['permissions'];
+        delete (this.root : DiscordModule).commands['permissions'];
     }
 
     isAllowed(msg) {
@@ -32,19 +32,19 @@ class PermissionsCommand extends Command {
         Embed.setTitle("Permissions");
         switch (argList[0]){
             case "list":{
-                msg.channel.send(Permissions.list()).catch(console.error);
+                (msg : Discord.Message).channel.send(Permissions.list()).catch(console.error);
                 break;
             }
             case "add":{
                 if(argList.length < 2) {
                     Embed.setDescription("Missing Arguments");
                     Embed.setColor(Colors.RED);
-                    return msg.channel.send(Embed).catch(console.error);
+                    return (msg : Discord.Message).channel.send(Embed).catch(console.error);
                 }
 
                 let perm = argList[1];
-                let users = msg.mentions.members.mapValues(value => value.id).array();
-                let roles = msg.mentions.roles.mapValues(value => value.id).array();
+                let users = (msg : Discord.Message).mentions.members.mapValues(value => value.id).array();
+                let roles = (msg : Discord.Message).mentions.roles.mapValues(value => value.id).array();
 
                 let count = 0;
                 users.forEach(id=>{
@@ -58,19 +58,19 @@ class PermissionsCommand extends Command {
 
                 Embed.setDescription("Added " + count + " Mentions");
                 Embed.setColor(Colors.GREEN);
-                msg.channel.send(Embed).catch(console.error);
+                (msg : Discord.Message).channel.send(Embed).catch(console.error);
                 break;
             }
             case "remove":{
                 if(argList.length < 2) {
                     Embed.setDescription("Missing Arguments");
                     Embed.setColor(Colors.RED);
-                    return msg.channel.send(Embed).catch(console.error);
+                    return (msg : Discord.Message).channel.send(Embed).catch(console.error);
                 }
 
                 let perm = argList[1];
-                let users = msg.mentions.members.mapValues(value => value.id).array();
-                let roles = msg.mentions.roles.mapValues(value => value.id).array();
+                let users = (msg : Discord.Message).mentions.members.mapValues(value => value.id).array();
+                let roles = (msg : Discord.Message).mentions.roles.mapValues(value => value.id).array();
 
                 let count = 0;
                 users.forEach(id=>{
@@ -84,21 +84,21 @@ class PermissionsCommand extends Command {
 
                 Embed.setDescription("Removed " + count + " Mentions");
                 Embed.setColor(Colors.GREEN);
-                msg.channel.send(Embed).catch(console.error);
+                (msg : Discord.Message).channel.send(Embed).catch(console.error);
                 break;
             }
             case "save":{
                 Permissions.save();
                 Embed.setDescription("Permissions saved to Disk");
                 Embed.setColor(Colors.DARK_AQUA);
-                msg.channel.send(Embed).catch(console.error);
+                (msg : Discord.Message).channel.send(Embed).catch(console.error);
                 break;
             }
             case 'reload': {
                 Permissions.reload();
                 Embed.setDescription("Permissions reloaded from Disk");
                 Embed.setColor(Colors.DARK_AQUA);
-                msg.channel.send(Embed).catch(console.error);
+                (msg : Discord.Message).channel.send(Embed).catch(console.error);
                 break;
             }
         }
@@ -108,7 +108,7 @@ class PermissionsCommand extends Command {
         return "manage the runtime permissions";
     }
 
-    getHelp() {
+    getHelp(): Discord.MessageEmbed {
         let embed = new Discord.MessageEmbed();
         embed.setTitle("Help page for `permissions`");
         embed.setDescription("Sub-Commands:");
