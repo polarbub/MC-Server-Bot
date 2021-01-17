@@ -1,6 +1,6 @@
 DISCORD_BOT:
   #the discord bot token needed to login
-  TOKEN: "[BOT TOKEN]"
+  TOKEN: "NzE3ODAwNzY2ODY5NDcxMjgz.XtfmDg.1visr5_Ru6FjkxSrLhdztDP1ano"
   #the prefix the bot will answer to
   PREFIX: ">"
   #the channel ID where to echo the server console
@@ -11,22 +11,25 @@ DISCORD_BOT:
 
 MC_SERVER:
   #the one line command needed to start the Server
-  startCMD: "(cd ../../Minecraft-Test-Server/1.12.2/ & java -jar server.jar)"
+  startCMD: "(cd ../../Minecraft-Test-Server/1.16.4/ && java -jar server.jar)"
   #the ip of the server (will be shown in status)
   ip: "localhost"
   #the command to send the chat messages from discord to minecraft
   #%username% will be replaced by sender username
   #%color% will be replaced by sender user color
   #%message% will be replaced by the message in json ready string format
-  #%messageJSON% will be replaced with a JSON string containing the message ( equivalent to { "text": "%message%" } )
-  say_format: "execute if entity @a run tellraw @a [\"\",{\"text\":\"[Discord]\",\"color\":\"dark_blue\"},{\"text\":\" <\"},{\"text\":\"%username%\",\"color\":\"%color%\"},{\"text\":\"> \"},{\"text\":\"%message%\"}}]"
+  #%messageJSON% will be replaced with a JSON string containing the already formatted message
+  say_format: "execute if entity @a run tellraw @a %messageJSON%"
   #regular expression used to recognize chat messages from the server logs ( $1 capturing group should be the chat message + username, $2 should be username only )
-  chat_regex: "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (<([\\w\\d_-]+)> [^\\n\\r]+)"
+  chat_regex:
+    - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (<([\\w\\d_-]+)> [^\\n\\r]+)"
+    - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (([\\w\\d-]+) (?:(?:left)|(?:joined)) the game)"
+    - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: \\* (([\\w\\d-]+) [^\\r\\n]+)"
 
 
 BACKUP:
   #path to the server folder ( used to initiate git repository )
-  server_path: "../../Minecraft-Test-Server/1.12.2/"
+  server_path: "../../Minecraft-Test-Server/1.16.4/"
   #time in seconds between backups ( <0 means disabled , also needs to be at least 1.5 times the Backup_alert time )
   backup_time: 3600
   #time in seconds before a backup ( it is used to send a warning message to the players )

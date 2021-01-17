@@ -36,11 +36,90 @@ class SayCommand extends Command {
                 //let color = (member!==undefined)?(msg : Discord.Message).member.displayHexColor.substr(0,7):"aqua"; not yet working so only aqua colors for now
                 let color = "aqua";
 
+                let msgJSON = [""];
+                msgJSON.push({
+                    text:"[DISCORD]",
+                    color:"dark_blue",
+                    hoverEvent: {
+                        action:"show_text",
+                        contents:[
+                            {
+                                text:"Open on Discord",
+                                italic: true,
+                                underlined: true,
+                                color:"blue"
+                            }
+                        ]
+                    },
+                    clickEvent:{
+                        action:"open_url",
+                        value: (msg : Discord.Message).url
+                    }
+                });
+                msgJSON.push({
+                    text:" <"
+                });
+                msgJSON.push({
+                    text:username,
+                    color:color,
+                    hoverEvent: {
+                        action:"show_text",
+                        contents: [
+                            {
+                                text: msg.author.username + "#" + msg.author.discriminator,
+                                color: "blue",
+                                underlined: true
+                            }
+                        ]
+                    }
+                });
+                msgJSON.push({
+                    text:"> "
+                });
+
+                if(msg.attachments.size>0){
+                    msg.attachments.forEach((file)=>{
+                        msgJSON.push({
+                            text:"[",
+                            extra:
+                            [
+                                {
+                                    text:"File",
+                                    underlined:true
+                                },
+                                {
+                                    text:"] "
+                                }
+                            ],
+                            color: "blue",
+                            hoverEvent: {
+                                action:"show_text",
+                                contents: [
+                                    {
+                                        text: "Open File in Browser",
+                                        color: "blue",
+                                        underlined: true
+                                    }
+                                ]
+                            },
+                            clickEvent: {
+                                action:"open_url",
+                                value: file.url
+                            }
+                        })
+                    })
+                }
+
+                msgJSON.push({
+                    text:args
+                });
+
+
                 let command = (this.root : DiscordBot).main.getConfigs()["MC_SERVER"]['say_format'];
                 command = command.replace("%username%",username);
                 command = command.replace("%color%",color);
                 command = command.replace("%message%",JSON.stringify(args).slice(1,-1));
-                command = command.replace("%messageJSON%",JSON.stringify({text:args}));
+                command = command.replace("%messageJSON%",JSON.stringify(msgJSON));
                 (mcModule : MinecraftServer).exec(command)
 
                 Embed.setDescription("sent");

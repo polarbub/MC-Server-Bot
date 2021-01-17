@@ -2,7 +2,7 @@ const Module = require('../interfaces/Module.js');
 const Main = require('../interfaces/Main.js');
 const Discord = require('discord.js');
 
-let chatRegex = null;
+let chatRegex = [];
 
 class ConsoleChannelModule extends Module {
 
@@ -63,11 +63,16 @@ class ConsoleChannelModule extends Module {
     setStartListener() {
         this.mcServer.on('start', this.listeners['start'] = (instance) => {
             instance.stdout.on('data', this.listeners['data'] = (data) => {
-                if (chatRegex === null)
-                    chatRegex = new RegExp((this.main : Main).getConfigs()['MC_SERVER']['chat_regex'], 'gm');
-                let res = [ ...data.matchAll(chatRegex)];
+                if (chatRegex.length === 0)
+                    (this.main : Main).getConfigs()['MC_SERVER']['chat_regex'].forEach((regex)=>{
+                        chatRegex.push(new RegExp(regex, 'gm'));
+                    })
+                let res = [];
+                chatRegex.forEach((regex)=>{
+                    res.push(...data.matchAll(regex))
+                })
                 res.forEach((match)=>{
-                    this.channel.send(match[1].replace(/([\\*`'_~])/gm, "\\$&"), {split: true}).catch(console.error);
+                    this.channel.send(match[1].replace(/([\\*`'_~])/gm, "\\$&"), {split: {char:"\n\r "}}).catch(console.error);
                 })
             })
         })
