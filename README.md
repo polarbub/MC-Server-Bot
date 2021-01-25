@@ -10,7 +10,7 @@ Java and Npm
 
 1) Put all the files in the Minecraft Server's Folder.
 
-2) Edit config.json and put the bots token in and change the java arguments for your server.
+2) Edit config.yaml and put the bots token in and change the java arguments for your server.
 
 3) In the server's folder run `npm flow:compile`
 
