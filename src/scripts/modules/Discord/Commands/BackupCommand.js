@@ -134,6 +134,8 @@ class BackupCommand extends Command {
                                     commit.shorthash = await BackModule.getShortHash(commit.hash);
                                     return commit;
                                 })).then(list => {
+                                    if(list.length === 0)
+                                        return;
                                     let curr = 0;
 
                                     let makeEmbed = (curr) => {
