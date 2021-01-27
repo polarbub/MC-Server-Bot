@@ -36,7 +36,7 @@ class ConsoleChannelModule extends Module {
 
                         this.discordLogger = setInterval(() => {
                             if (this.channel != null && this.buffer !== "") {
-                                this.channel.send(this.buffer.replace(ipRegex, "||CENSORED IP||").replace(/([\\*`'_~])/gm, "\\$&"), {split: true}).catch(console.error);
+                                this.channel.send(this.buffer.replace(ipRegex, "||CENSORED IP||").replace(/([\\*`'_~])/gm, "\\$&"), {split: {char:"\n\r "}}).catch(console.error);
                                 this.buffer = "";
                             }
                         }, 500);

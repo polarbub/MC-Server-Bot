@@ -96,12 +96,12 @@ class BackupModule extends Module {
         return ret;
     }
 
-    async getBackups(count=10){
+    async getBackups(count){
         let repo = this.getRepository();
         let res = await repo.log().catch(console.error)
-        let list = res.all;
-        list.sort((a,b)=>{ return -a.date.localeCompare(b.date)});
-        list = list.slice(0,count);
+        let list = res?.all;
+        list?.sort((a,b)=>{ return -a.date.localeCompare(b.date)});
+        list = list?.slice(0,count || list.length);
         return list;
     }
 
@@ -115,6 +115,8 @@ class BackupModule extends Module {
             backObj = res.all.find((obj)=>{
                 if(obj.string === backup)
                     return true;
+                if(obj.hash === backup)
+                    return true;
                 if(obj.date === backup)
                     return true;
                 if(obj.message === backup)
@@ -124,8 +126,10 @@ class BackupModule extends Module {
         }
 
         if(backObj!==null){
-            let branch = await repo.branch(['-C',('rollback ' + new Date.toLocaleString()).replace(' ','-')]);
-            console.log(branch);
+            let [month, date, year]    = new Date().toLocaleDateString("en-US").split("/");
+            let [hour, minute, second] = new Date().toLocaleTimeString("en-US").split(/:| /);
+            let branch = `rollback--${month}-${date}-${year}--${hour}-${minute}`;
+            await repo.branch(['-C',branch]);
             let reset = await repo.reset('hard',[backObj.hash]);
             return [branch , reset];
         }
