@@ -17,6 +17,8 @@ class BackupModule extends Module {
 
     mcInstance = null;
 
+    runningGit=false;
+
     onLoad() {
         if((this.main : Main)['repository'] === undefined){
             let folder = path.resolve((this.main : Main).getConfigs()['BACKUP']['server_path']);
@@ -25,6 +27,7 @@ class BackupModule extends Module {
             repo.cwd(folder);
             repo.checkIsRepo('root').then((res)=>{
                 if(!res){
+                    this.runningGit = true;
                     repo.init().then(()=>this.makeBackup()).catch(console.error);
                 }
             }).catch(console.error);
@@ -56,28 +59,41 @@ class BackupModule extends Module {
         (this.main : Main)['BackupModule'] = this;
     }
 
+
+    backingUp: boolean = false;
+
     onServerRunning = () => {
-            let backingUp: boolean = false;
             this.listeners['interval'] = setInterval(() => {
-                if (!backingUp && (backingUp = true)) {
+                if (!(this.backingUp || this.runningGit) && (this.backingUp = true)) {
                     (this.main: Main)['MinecraftServer'].exec('say Backup in ' + (this.main: Main).getConfigs()['BACKUP']['backup_alert'] + ' seconds, if flying please land');
-                    setTimeout(async () => {
-                        await (this.main: Main)['MinecraftServer'].exec('say Backing up');
-                        await (this.main: Main)['MinecraftServer'].exec('save-off');
-                        await (this.main: Main)['MinecraftServer'].exec('save-all');
-                        let res = await this.makeBackup().catch(console.error);
-                        await (this.main: Main)['MinecraftServer'].exec('save-on');
-                        await (this.main: Main)['MinecraftServer'].exec('say Backup complete, id:' + res.commit);
-                        backingUp = false;
-                    }, (this.main: Main).getConfigs()['BACKUP']['backup_alert'] * 1000);
+                    setTimeout(this.makeServerBackup, (this.main: Main).getConfigs()['BACKUP']['backup_alert'] * 1000);
                 }
             }, (this.main: Main).getConfigs()['BACKUP']['backup_time'] * 1000);
         };
 
+    async makeServerBackup(msg) {
+            let res
+            try {
+                await (this.main: Main)['MinecraftServer'].exec('say Backing up');
+                await (this.main: Main)['MinecraftServer'].exec('save-off');
+                await (this.main: Main)['MinecraftServer'].exec('save-all');
+                res = await this.makeBackup(msg).catch(console.error);
+                await (this.main: Main)['MinecraftServer'].exec('save-on');
+                await (this.main: Main)['MinecraftServer'].exec('say Backup complete, id:' + res?.commit);
+            } catch (e) {
+                console.error(e);
+            }
+            this.backingUp = false;
+            return res;
+    }
+
     async makeBackup(msg=new Date().toLocaleString()){
         let repo = this.getRepository();
+        this.runningGit = true;
         await repo.add('.').catch(console.error);
-        return repo.commit(msg, ['.'], ['--author="Backup <Backup@localhost>"', '--allow-empty']).catch(console.error);
+        let ret = await repo.commit(msg, ['.'], ['--author="Backup <Backup@localhost>"', '--allow-empty']).catch(console.error);
+        this.runningGit = false;
+        return ret;
     }
 
     async getBackups(count=10){
@@ -108,9 +124,7 @@ class BackupModule extends Module {
         }
 
         if(backObj!==null){
-            await this.makeBackup("pre rollback");
-
-            let branch = await repo.branch(['-C','rollback ' + new Date.toLocaleString()]);
+            let branch = await repo.branch(['-C',('rollback ' + new Date.toLocaleString()).replace(' ','-')]);
             console.log(branch);
             let reset = await repo.reset('hard',[backObj.hash]);
             return [branch , reset];

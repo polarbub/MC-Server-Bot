@@ -65,10 +65,10 @@ class RestartCommand extends Command {
                             (this.root : DiscordBot).getBot().user.setActivity("Players on the Server", {type: "WATCHING"}).catch(console.error);
 
                             periodicCheck = setInterval(() => {
-                                (mcModule : MinecraftServer).status((res) => {
+                                (mcModule : MinecraftServer).status().then((res) => {
                                     (this.root : DiscordBot).getBot().user.setActivity(res.onlinePlayers + " Players on the Server", {type: "WATCHING"}).catch(console.error);
-                                })
-                            }, 30000);
+                                }).catch(console.error);
+                            }, 30000)
                         }
                     }
                     (mcModule : MinecraftServer).getServer().stdout.on('data', doneHandler);
