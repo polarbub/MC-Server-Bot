@@ -27,7 +27,7 @@ In the server's folder run start.bat / start.sh for your OS.
 
 2) In the server's folder run `npm install`
 
-3) In the server's folder run `npm run flow:compile`
+3) In the server's folder run `npm run build`
 
 ## KNOWN BUGS
 
