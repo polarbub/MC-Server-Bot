@@ -66,7 +66,7 @@ class BackupModule extends Module {
             this.listeners['interval'] = setInterval(() => {
                 if (!(this.backingUp || this.runningGit) && (this.backingUp = true)) {
                     (this.main: Main)['MinecraftServer'].exec('say Backup in ' + (this.main: Main).getConfigs()['BACKUP']['backup_alert'] + ' seconds, if flying please land');
-                    setTimeout(this.makeServerBackup, (this.main: Main).getConfigs()['BACKUP']['backup_alert'] * 1000);
+                    setTimeout(this.makeServerBackup.bind(this), (this.main: Main).getConfigs()['BACKUP']['backup_alert'] * 1000);
                 }
             }, (this.main: Main).getConfigs()['BACKUP']['backup_time'] * 1000);
         };
@@ -91,7 +91,7 @@ class BackupModule extends Module {
         let repo = this.getRepository();
         this.runningGit = true;
         await repo.add(['--ignore-errors','.']).catch(console.error);
-        let ret = await repo.commit(msg, ['.'], ['--author="Backup <Backup@localhost>"', '--allow-empty']).catch(console.error);
+        let ret = await repo.commit(msg, ['--author="Backup <Backup@localhost>"', '--allow-empty']).catch(console.error);
         this.runningGit = false;
         return ret;
     }
