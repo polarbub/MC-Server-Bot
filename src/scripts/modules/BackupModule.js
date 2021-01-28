@@ -48,11 +48,13 @@ class BackupModule extends Module {
                 });
 
                 (this.main: Main).on('reload', this.listeners['reload'] = (old_module, new_module) => {
-                    if (old_module === this.mcInstance)
+                    if (old_module === this.mcInstance) {
                         this.mcInstance = new_module;
-
-                    new_module.on('start', this.listeners['start']);
-                    new_module.on('stop', this.listeners['stop']);
+                        if(new_module !== null) {
+                            new_module.on('start', this.listeners['start']);
+                            new_module.on('stop', this.listeners['stop']);
+                        }
+                    }
                 });
             });
         }
