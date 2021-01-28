@@ -90,8 +90,8 @@ class BackupModule extends Module {
     async makeBackup(msg=new Date().toLocaleString()){
         let repo = this.getRepository();
         this.runningGit = true;
-        await repo.add('.').catch(console.error);
-        let ret = await repo.commit(msg, ['.'], ['--author="Backup <Backup@localhost>"', '--allow-empty']).catch(console.error);
+        await repo.add(['--ignore-errors','.']).catch(console.error);
+        let ret = await repo.commit(msg, ['.'], ['--ignore-errors','--author="Backup <Backup@localhost>"', '--allow-empty']).catch(console.error);
         this.runningGit = false;
         return ret;
     }
