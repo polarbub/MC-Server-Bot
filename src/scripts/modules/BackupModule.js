@@ -44,7 +44,7 @@ class BackupModule extends Module {
 
                 (this.main: Main)['MinecraftServer'].on('stop', this.listeners['stop'] = () => {
                     clearInterval(this.listeners['interval']);
-                    this.makeBackup().catch(console.error);
+                    this.makeBackup("Server Stopped").catch(console.error);
                 });
 
                 (this.main: Main).on('reload', this.listeners['reload'] = (old_module, new_module) => {
@@ -90,7 +90,7 @@ class BackupModule extends Module {
         return res;
     }
 
-    async makeBackup(msg = new Date().toLocaleString()) {
+    async makeBackup(msg = "AutoBackup") {
         let repo = this.getRepository();
         this.runningGit = true;
         await repo.add(['--ignore-errors', '.']).catch(console.error);
@@ -101,7 +101,7 @@ class BackupModule extends Module {
 
     async getBackups(count) {
         let repo = this.getRepository();
-        let res = await repo.log().catch(console.error)
+        let res = await repo.log(['HEAD']).catch(console.error)
         let list = res?.all;
         list?.sort((a, b) => {
             return -a.date.localeCompare(b.date)
