@@ -52,7 +52,7 @@ class BackupCommand extends Command {
                             })
                             Embed.setDescription((list.length > 0) ? "Listing last available backups\r\nPage: " + Math.ceil((cursor+1)/5) + "/" + Math.ceil((count+1)/5): "No backups found");
                             Embed.setColor(Colors.BLUE);
-                            Embed.setFooter((!end)?`Listening to ${msg.author} Reactions only`:"Not Listening to Reactions Anymore")
+                            Embed.setFooter((!end)?`Listening to ${msg.author.tag} Reactions only`:"Not Listening to Reactions Anymore")
                             return Embed;
                         }
 
@@ -151,7 +151,7 @@ class BackupCommand extends Command {
                         break;
                     }
                     case 'restore': {
-                        if (this.root.main['server'] !== undefined) {
+                        if (this.root.main['server'] === null) {
                             let commit = "HEAD"
                             let cursor = 0;
                             let count = 0;
@@ -172,7 +172,7 @@ class BackupCommand extends Command {
                                 Embed.addField("Date", new Date(curr.date).toLocaleString(), true);
                                 Embed.addField("Comment", curr.message, true);
                                 Embed.setColor(Colors.BLUE);
-                                Embed.setFooter((!end)?`Listening to ${msg.author} Reactions only`:"Not Listening to Reactions Anymore")
+                                Embed.setFooter((!end)?`Listening to ${msg.author.tag} Reactions only`:"Not Listening to Reactions Anymore")
 
                                 return Embed;
                             }
