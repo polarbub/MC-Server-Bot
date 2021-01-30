@@ -3,8 +3,7 @@ This it the main Repo of The_Matty's Minecraft Server Bot.
 
 
 ## Dependencies:
-Java and Npm
-
+Java
 
 ## Install:
 
