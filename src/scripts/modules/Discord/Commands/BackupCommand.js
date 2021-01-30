@@ -204,10 +204,12 @@ class BackupCommand extends Command {
                                 let emoji
                                 emoji = null;
                                 await (msg: Discord.Message).reactions.removeAll().catch(null);
+                                (msg: Discord.Message).react('⏪').catch(console.error);
                                 (msg: Discord.Message).react('⬅').catch(console.error);
                                 (msg: Discord.Message).react('✅').catch(console.error);
                                 (msg: Discord.Message).react('❌').catch(console.error);
                                 (msg: Discord.Message).react('➡').catch(console.error);
+                                (msg: Discord.Message).react('⏩').catch(console.error);
 
                                 (msg: Discord.Message).createReactionCollector((reaction, user) => !reaction.me, {
                                     idle: 60000,
@@ -226,13 +228,31 @@ class BackupCommand extends Command {
                                                     cursor = Math.max(curs,0);
                                                 }
                                                 break;
+                                            case '⏪':
+                                                [commit,curs] = await fetchCommit(cursor-10);
+                                                if(commit===undefined)
+                                                    cursor = Math.max(curs+10,0);
+                                                else {
+                                                    curr=commit;
+                                                    cursor = Math.max(curs,0);
+                                                }
+                                                break;
                                             case '➡':
                                                 [commit,curs] = await fetchCommit(cursor+1);
                                                 if(commit===undefined)
                                                     cursor = Math.min(curs-1,count);
                                                 else{
                                                     curr=commit;
-                                                    cursor =  Math.min(curs,count);;
+                                                    cursor =  Math.min(curs,count);
+                                                }
+                                                break;
+                                            case '⏩':
+                                                [commit,curs] = await fetchCommit(cursor+10);
+                                                if(commit===undefined)
+                                                    cursor = Math.min(curs-10,count);
+                                                else{
+                                                    curr=commit;
+                                                    cursor =  Math.min(curs,count);
                                                 }
                                                 break;
                                             case '❌':
