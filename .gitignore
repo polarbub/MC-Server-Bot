@@ -1,8 +1,0 @@
-/bin
-/src
-/.flowconfig
-/package.json
-/package-lock.json
-/configs
-/node_modules
-session.lock
