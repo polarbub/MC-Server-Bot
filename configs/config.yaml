@@ -11,7 +11,7 @@ DISCORD_BOT:
 
 MC_SERVER:
   #the one line command needed to start the Server
-  startCMD: "(cd ../../Minecraft-Test-Server/1.16.4/ && java -jar server.jar)"
+  startCMD: "(cd ../../Minecraft-Test-Server/1.16.4/ && java -jar server.jar --nogui)"
   #the ip of the server (will be shown in status)
   ip: "localhost"
   #the command to send the chat messages from discord to minecraft
@@ -24,13 +24,15 @@ MC_SERVER:
   chat_regex:
     - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (<([\\w\\d_-]+)> [^\\n\\r]+)"
     - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (([\\w\\d-]+) (?:(?:left)|(?:joined)) the game)"
-    - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: \\* (([\\w\\d-]+) [^\\r\\n]+)"
+    - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (\\* ([\\w\\d-]+) [^\\r\\n]+)"
+    - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (\\[([\\w\\d_-]+)] [^\\n\\r]+)"
+  save_regex: "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: Saved the game"
 
 
 BACKUP:
   #path to the server folder ( used to initiate git repository )
   server_path: "../../Minecraft-Test-Server/1.16.4/"
   #time in seconds between backups ( <0 means disabled , also needs to be at least 1.5 times the Backup_alert time )
-  backup_time: 3600
+  backup_time: 1800
   #time in seconds before a backup ( it is used to send a warning message to the players )
   backup_alert: 30
