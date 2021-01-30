@@ -3,6 +3,7 @@ const Command = require('../Command.js');
 const Permissions = require('../../../Permissions.js');
 const Discord = require('discord.js');
 const Colors = require('discord.js').Constants.Colors;
+//const NTC = require('../../../../libs/ntc.js').ntc;
 
 const MinecraftServer = require('../../MinecraftModule.js');
 
@@ -33,7 +34,7 @@ class SayCommand extends Command {
             if (args.trim().length > 0) {
                 let member = (msg : Discord.Message).member;
                 let username = (member!==undefined)?(msg : Discord.Message).member.displayName:(msg : Discord.Message).author.username + "#" + (msg : Discord.Message).author.discriminator;
-                //let color = (member!==undefined)?(msg : Discord.Message).member.displayHexColor.substr(0,7):"aqua"; not yet working so only aqua colors for now
+                //let color = (member!==undefined)?NTC.name((msg : Discord.Message).member.displayHexColor)[3].toLowerCase():"aqua"
                 let color = "aqua";
 
                 let msgJSON = [""];
