@@ -1,0 +1,44 @@
+plugins {
+    // Apply the application plugin to add support for building a CLI application in Java.
+    id 'application'
+    id 'java'
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'net.polarbub.botv2.Main'
+        )
+    }
+    archiveClassifier = "all"
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+repositories {
+    // Use JCenter for resolving dependencies.
+    jcenter()
+    maven { url 'https://jitpack.io/' }
+}
+
+dependencies {
+    // Use JUnit test framework.
+    testImplementation 'junit:junit:4.13'
+
+    // This dependency is used by the application.
+    implementation 'com.google.guava:guava:29.0-jre'
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'net.polarbub.botv2.Main'
+    }
+    archiveClassifier = "all"
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+}
