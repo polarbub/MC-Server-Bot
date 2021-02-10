@@ -3,6 +3,9 @@ plugins {
     id 'application'
     id 'java'
 }
+application {
+    mainClass = 'net.polarbub.botv2.Main'
+}
 
 jar {
     manifest {
@@ -45,11 +48,8 @@ repositories {
 dependencies {
     // Use JUnit test framework.
     testImplementation 'junit:junit:4.13'
-    //compile 'net.dv8tion:JDA:4.2.0_227'
     implementation name: 'JDA-4.2.0_DEV-withDependencies'
-    //compile ('club.minnced:opus-java:1.0.4@pom') {
-    //    transitive = true // gradle defaults to transitive false with @pom
-    //}
+    implementation name: 'slf4j-simple-1.7.9'
 
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:29.0-jre'
