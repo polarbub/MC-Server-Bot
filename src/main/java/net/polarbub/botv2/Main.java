@@ -16,7 +16,7 @@ public class Main extends ListenerAdapter {
 
     public static void main(String[] args) throws LoginException {
         JDABuilder.createLight("token", GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
-        Echobot.main();
+        in.main();
 
     }
 
@@ -25,9 +25,9 @@ public class Main extends ListenerAdapter {
         Message msg = event.getMessage();
         MessageChannel channel = event.getChannel();
 
-        if (msg.getContentRaw().equals(pre + "hi")) {
-            System.out.println("hi");
-            channel.sendMessageFormat("hi").queue();
+        if (msg.getContentRaw().equals(pre + "init")) {
+            System.out.println("done");
+            channel.sendMessageFormat("done").queue();
 
         } else if (msg.getContentRaw().equals(pre + "stopbot")) {
             System.exit(0);
@@ -35,9 +35,9 @@ public class Main extends ListenerAdapter {
         } else if(msg.getContentRaw().equals(pre + "start")) {
             channel.sendMessageFormat("at some point this will start the server").queue();
 
-        } else {
-            Echobot.out(msg, event);
+        } else if(!event.getAuthor().isBot()) {
+            out.out(msg, event);
         }
-        Echobot.sendhere = channel;
+        out.sendhere = channel;
     }
 }
