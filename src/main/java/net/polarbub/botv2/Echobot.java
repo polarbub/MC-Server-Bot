@@ -9,7 +9,7 @@ import java.util.Scanner;
 public class Echobot extends Thread{
     public static String tosay = "start";
     public static MessageChannel sendhere;
-    public static void input() {
+    public void run() {
         while(true) {
             Scanner myObj = new Scanner(System.in);  // Create a Scanner object
             tosay = myObj.nextLine();
@@ -26,7 +26,7 @@ public class Echobot extends Thread{
         }
     }
 
-    public static void main(String[] args) {
+    public static void main() {
         (new Echobot()).start();
     }
 
