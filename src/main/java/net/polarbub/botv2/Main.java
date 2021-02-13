@@ -6,41 +6,36 @@ import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import org.jetbrains.annotations.NotNull;
+
 import javax.security.auth.login.LoginException;
-import java.util.Scanner;
 
 public class Main extends ListenerAdapter {
     public static String pre = ".";
-    public static String tosay = "start";
-    public static MessageChannel sendhere;
+    public static ProcessBuilder pb = new ProcessBuilder("java", "-jar", "-Xmx5G", "-Xms5G", "-XX:+UseG1GC", "-XX:+ParallelRefProcEnabled", "-XX:MaxGCPauseMillis=200", "-XX:+UnlockExperimentalVMOptions", "-XX:+DisableExplicitGC", "-XX:+AlwaysPreTouch", "-XX:G1NewSizePercent=30", "-XX:G1MaxNewSizePercent=40", "-XX:G1HeapRegionSize=8M", "-XX:G1ReservePercent=20", "-XX:G1HeapWastePercent=5", "-XX:G1MixedGCCountTarget=4", "-XX:InitiatingHeapOccupancyPercent=15", "-XX:G1MixedGCLiveThresholdPercent=90", "-XX:G1RSetUpdatingPauseTimePercent=5", "-XX:SurvivorRatio=32", "-XX:+PerfDisableSharedMem", "-XX:MaxTenuringThreshold=1", "fabric-server-launch.jar", "-nogui");
 
     public static void main(String[] args) throws LoginException {
-        JDABuilder.createLight("Nzk2NDYyNTExMjkzMDcxMzYw.X_YRhA.t-qv7jVrQ2lauFkKok-tMylECJ8", GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
-        while(true) {
-            Scanner myObj = new Scanner(System.in);  // Create a Scanner object
-            tosay = myObj.nextLine();
-            sendhere.sendMessageFormat(tosay).queue();
-        }
+        JDABuilder.createLight("Nzk2NDYyNTExMjkzMDcxMzYw.X_YRhA.OxCMJtcCuduaOqnQoIMQ7RWGnVI", GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         Message msg = event.getMessage();
         MessageChannel channel = event.getChannel();
-        if (msg.getContentRaw().equals(pre + "hi"))
-        {
+
+        if (msg.getContentRaw().equals(pre + "hi")) {
             System.out.println("hi");
             channel.sendMessageFormat("hi").queue();
+
         } else if (msg.getContentRaw().equals(pre + "stopbot")) {
             System.exit(0);
+
+        } else if(msg.getContentRaw().equals(pre + "start")) {
+            channel.sendMessageFormat("at some point this will start the server").queue();
+
         } else {
-            if(tosay.equals(msg.getContentRaw())){
-                int a = 0;
-            } else {
-                System.out.println("Author: " + msg.getAuthor() + " Server: " + event.getGuild() + " Channel: " + msg.getChannel());
-                System.out.println("Content: " + msg.getContentRaw());
-            }
+            Echobot.out(msg, event);
         }
-        sendhere = channel;
+        Echobot.sendhere = channel;
     }
 }
