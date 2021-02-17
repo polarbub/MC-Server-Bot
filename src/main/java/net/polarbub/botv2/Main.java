@@ -20,17 +20,9 @@ public class Main extends ListenerAdapter {
     public static MessageChannel ReturnChannel;
     public static Process p;
 
-    static {
-        try {
-            p = pb.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public static void main(String[] args) throws LoginException, InterruptedException, IOException {
         //inti discord jda
-        JDA bot = JDABuilder.createLight("Nzk2NDYyNTExMjkzMDcxMzYw.X_YRhA.1Bu5ZJZXP8laO3eqUgWONMvChqw", GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
+        JDA bot = JDABuilder.createLight("Nzk2NDYyNTExMjkzMDcxMzYw.X_YRhA.mAISK0dNEE34pidscAR8Oeh0yk8", GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
         while(!String.valueOf(bot.getStatus()).equals("CONNECTED")) { //wait for connected
             Thread.sleep(10);
         }
@@ -39,7 +31,6 @@ public class Main extends ListenerAdapter {
         //define some vars
         ConsoleChannel = bot.getTextChannelById("796517469224960072");
         ReturnChannel = ConsoleChannel;
-
         //debug code
         /*System.out.println(ConsoleChannel);
         System.out.println(ReturnChannel);*/
@@ -48,9 +39,9 @@ public class Main extends ListenerAdapter {
         in.main();
 
         //server testing
-        /*pb.directory(new File("E:\\saves\\.minecraft\\server\\protosky-testing"));
+        pb.directory(new File("E:\\saves\\.minecraft\\server\\protosky-testing"));
         pb.redirectErrorStream(true);
-
+        p = pb.start();
         InputStream is = p.getInputStream();
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
         for (String line = br.readLine(); line != null; line = br.readLine()) {
@@ -58,7 +49,7 @@ public class Main extends ListenerAdapter {
             //ConsoleChannel.sendMessageFormat(line).queue();
         }
         p.waitFor();
-        System.out.println("server started");*/
+        System.out.println("server started");
 
     }
     //message processing

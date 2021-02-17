@@ -13,7 +13,6 @@ jar {
                 'Main-Class': 'net.polarbub.botv2.Main'
         )
     }
-    archiveClassifier = "all"
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
