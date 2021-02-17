@@ -1,11 +1,9 @@
 package net.polarbub.botv2;
 
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 public class out {
-    public static MessageChannel sendhere;
-    public static void out(Message msg, MessageReceivedEvent event) {
+    public static void output(Message msg, MessageReceivedEvent event) {
         if(in.tosay.equals(msg.getContentRaw())){
             int a = 0;
         } else {
