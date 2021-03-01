@@ -16,16 +16,17 @@ public class server extends Thread{
         try {
             for (String line = Main.br.readLine(); line != null; line = Main.br.readLine()) {
                 System.out.println(line);
-                //if(!line.contains("%")) {
-                //Main.ConsoleChannel.sendMessageFormat(line).queue();
-                //} else{
-                //String error = "This message had a %. It could not be sent";
-                //Main.ConsoleChannel.sendMessageFormat("This message had a . It could not be sent").queue();
-                //}
+                try {
+                    Main.ConsoleChannel.sendMessageFormat(line).queue();
+                } catch (UnknownFormatConversionException e) {
+                    Main.ConsoleChannel.sendMessageFormat("Discord JDA didn't like a char. F").queue();
+
+                }
+
             }
             Main.p.waitFor();
 
-        } catch (IOException | InterruptedException | UnknownFormatConversionException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
 
         }

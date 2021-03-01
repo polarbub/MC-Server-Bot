@@ -26,7 +26,7 @@ public class Main extends ListenerAdapter {
 
     public static void main(String[] args) throws LoginException, InterruptedException{
         //inti discord jda
-        JDA bot = JDABuilder.createLight("Nzk2NDYyNTExMjkzMDcxMzYw.X_YRhA.UqgNtt17IyJgOba2IisMjw4OQpQ", GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
+        JDA bot = JDABuilder.createLight("token", GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
         while(!String.valueOf(bot.getStatus()).equals("CONNECTED")) { //wait for connected
             Thread.sleep(10);
         }
