@@ -2,10 +2,7 @@ package net.polarbub.botv2;
 
 import net.dv8tion.jda.api.entities.MessageChannel;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -18,16 +15,17 @@ public class in extends Thread{
                 tosay = myObj.nextLine();
                 //essageChannel senderChannel = Main.ReturnChannel;
                 //senderChannel.sendMessageFormat(tosay).queue();
-            } catch (NoSuchElementException e) {
+            } catch (NoSuchElementException ignored) {
             }
-            OutputStream os = Main.p.getOutputStream();
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
-            try {
-                bw.write(tosay);
-                bw.newLine();
-                bw.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (Main.serverrunning) {
+                Main.bw = new BufferedWriter(new OutputStreamWriter(Main.p.getOutputStream()));
+                try {
+                    Main.bw.write(tosay);
+                    Main.bw.newLine();
+                    Main.bw.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
 

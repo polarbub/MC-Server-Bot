@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.jetbrains.annotations.NotNull;
 import javax.security.auth.login.LoginException;
 import java.io.*;
+import java.util.UnknownFormatConversionException;
 
 
 public class Main extends ListenerAdapter {
@@ -19,23 +20,24 @@ public class Main extends ListenerAdapter {
     public static TextChannel ConsoleChannel;
     public static MessageChannel ReturnChannel;
     public static Process p;
+    public static BufferedWriter bw;
+    public static BufferedReader br;
+    public static boolean serverrunning = false;
 
-    public static void main(String[] args) throws LoginException, InterruptedException {
+
+    public static void main(String[] args) throws LoginException, InterruptedException{
         //inti discord jda
-        JDA bot = JDABuilder.createLight("token", GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
+        JDA bot = JDABuilder.createLight("Nzk2NDYyNTExMjkzMDcxMzYw.X_YRhA.ozzyl5u5Q01xPSjxtyG78wZh-Xc", GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
         while(!String.valueOf(bot.getStatus()).equals("CONNECTED")) { //wait for connected
             Thread.sleep(10);
         }
-        Thread.sleep(1000); //init time
 
-        //define some vars
+        Thread.sleep(1000);
+
         ConsoleChannel = bot.getTextChannelById("796517469224960072");
         ReturnChannel = ConsoleChannel;
-        pb.directory(new File("E:\\saves\\.minecraft\\server\\testing"));
+        pb.directory(new File("E:\\saves\\.minecraft\\server\\protosky-testing"));
         pb.redirectErrorStream(true);
-        //debug code
-        /*System.out.println(ConsoleChannel);
-        System.out.println(ReturnChannel);*/
 
         //start the console in a thread
         in.main();
@@ -44,38 +46,66 @@ public class Main extends ListenerAdapter {
     //message processing
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        Message msg = event.getMessage();
-        ReturnChannel = event.getChannel();
-        if (msg.getContentRaw().equals(pre + "init")) {
-            System.out.println("done");
-            ReturnChannel.sendMessageFormat("done").queue();
+        if (!event.getAuthor().isBot()) {
+            Message msg = event.getMessage();
+            ReturnChannel = event.getChannel();
 
-        } else if (msg.getContentRaw().equals(pre + "stopbot")) {
-            System.exit(0);
+            if (msg.getContentRaw().equals(pre + "init")) {
+                System.out.println("done");
+                ReturnChannel.sendMessageFormat("done").queue();
 
-        } else if (msg.getContentRaw().equals(pre + "stop")) {
-            //ReturnChannel.sendMessageFormat("at some point this will start the server").queue();
-            p.destroy();
-            ReturnChannel.sendMessageFormat("stopped server").queue();
+            } else if (msg.getContentRaw().equals(pre + "stopbot")) {
+                System.exit(0);
 
-        } else if (msg.getContentRaw().equals(pre + "start")) {
+            } else if (msg.getContentRaw().equals(pre + "stop")) {
+                //ReturnChannel.sendMessageFormat("at some point this will start the server").queue();
+                p.destroy();
+                ReturnChannel.sendMessageFormat("stopped server").queue();
 
-            try {
-                p = pb.start();
-                InputStream is = p.getInputStream();
-                BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                for (String line = br.readLine(); line != null; line = br.readLine()) {
-                    System.out.println( line ); // Or just ignore it
-                    ConsoleChannel.sendMessageFormat(line).queue();
+            } else if (msg.getContentRaw().equals(pre + "start")) {
+                if(serverrunning) {
+                    ReturnChannel.sendMessageFormat("Server is Running rn").queue();
+                } else {
+                    serverrunning = true;
+                    try {
+                        p = pb.start();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    br = new BufferedReader(new InputStreamReader(Main.p.getInputStream()));
+                    bw = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
+                    try {
+                        for (String line = br.readLine(); line != null; line = br.readLine()) {
+                            System.out.println(line);
+                            //if(!line.contains("%")) {
+                            //Main.ConsoleChannel.sendMessageFormat(line).queue();
+                            //} else{
+                            //String error = "This message had a %. It could not be sent";
+                            //Main.ConsoleChannel.sendMessageFormat("This message had a . It could not be sent").queue();
+                            //}
+                        }
+                        p.waitFor();
+
+                    } catch (IOException | InterruptedException | UnknownFormatConversionException e) {
+                        e.printStackTrace();
+
+                    }
+                    System.out.println("after start");
                 }
-                p.waitFor();
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+
+            } else {
+                out.output(msg, event); //print the all messages non-command messages
+
+                if (String.valueOf(ReturnChannel).equals(String.valueOf(ConsoleChannel)) && serverrunning) {
+                    try {
+                        Main.bw.write(msg.getContentRaw());
+                        Main.bw.newLine();
+                        Main.bw.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-
-
-        } else if(!event.getAuthor().isBot()) {
-            out.output(msg, event); //print the all messages non-command messages
         }
     }
 }
