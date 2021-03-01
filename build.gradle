@@ -47,6 +47,7 @@ repositories {
 dependencies {
     // Use JUnit test framework.
     testImplementation 'junit:junit:4.13'
+
     implementation name: 'JDA-4.2.0_DEV-withDependencies'
     implementation name: 'slf4j-simple-1.7.9'
 

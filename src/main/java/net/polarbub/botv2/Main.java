@@ -11,7 +11,6 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.jetbrains.annotations.NotNull;
 import javax.security.auth.login.LoginException;
 import java.io.*;
-import java.util.UnknownFormatConversionException;
 
 
 public class Main extends ListenerAdapter {
@@ -27,7 +26,7 @@ public class Main extends ListenerAdapter {
 
     public static void main(String[] args) throws LoginException, InterruptedException{
         //inti discord jda
-        JDA bot = JDABuilder.createLight("Nzk2NDYyNTExMjkzMDcxMzYw.X_YRhA.ozzyl5u5Q01xPSjxtyG78wZh-Xc", GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
+        JDA bot = JDABuilder.createLight("Nzk2NDYyNTExMjkzMDcxMzYw.X_YRhA.UqgNtt17IyJgOba2IisMjw4OQpQ", GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
         while(!String.valueOf(bot.getStatus()).equals("CONNECTED")) { //wait for connected
             Thread.sleep(10);
         }
@@ -67,34 +66,16 @@ public class Main extends ListenerAdapter {
                     ReturnChannel.sendMessageFormat("Server is Running rn").queue();
                 } else {
                     serverrunning = true;
-                    try {
-                        p = pb.start();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    br = new BufferedReader(new InputStreamReader(Main.p.getInputStream()));
-                    bw = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
-                    try {
-                        for (String line = br.readLine(); line != null; line = br.readLine()) {
-                            System.out.println(line);
-                            //if(!line.contains("%")) {
-                            //Main.ConsoleChannel.sendMessageFormat(line).queue();
-                            //} else{
-                            //String error = "This message had a %. It could not be sent";
-                            //Main.ConsoleChannel.sendMessageFormat("This message had a . It could not be sent").queue();
-                            //}
-                        }
-                        p.waitFor();
-
-                    } catch (IOException | InterruptedException | UnknownFormatConversionException e) {
-                        e.printStackTrace();
-
-                    }
-                    System.out.println("after start");
+                    server.main();
                 }
 
             } else {
-                out.output(msg, event); //print the all messages non-command messages
+                if(in.tosay.equals(msg.getContentRaw())){
+                    int a = 0;
+                } else {
+                    System.out.println("Author: " + msg.getAuthor() + " Server: " + event.getGuild() + " Channel: " + msg.getChannel());
+                    System.out.println("Content: " + msg.getContentRaw());
+                }
 
                 if (String.valueOf(ReturnChannel).equals(String.valueOf(ConsoleChannel)) && serverrunning) {
                     try {

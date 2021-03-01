@@ -13,8 +13,10 @@ public class in extends Thread{
             try {
                 Scanner myObj = new Scanner(System.in);  // Create a Scanner object
                 tosay = myObj.nextLine();
-                //essageChannel senderChannel = Main.ReturnChannel;
-                //senderChannel.sendMessageFormat(tosay).queue();
+
+                //Send messages from console to discord
+                //MessageChannel senderChannel = Main.ReturnChannel;
+                //MsenderChannel.sendMessageFormat(tosay).queue();
             } catch (NoSuchElementException ignored) {
             }
             if (Main.serverrunning) {
