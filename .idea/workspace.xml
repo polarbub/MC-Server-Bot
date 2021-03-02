@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="5c51e5af-d859-44b4-9c22-8b0c13ca8a80" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/Readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/Readme.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/polarbub/botv2/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/net/polarbub/botv2/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/polarbub/botv2/server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/net/polarbub/botv2/server.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand />
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="WARN_ABOUT_CRLF" value="false" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="ProjectId" id="1oG5a8nnor8eOjU5cb7OHUMCS9o" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="project.structure.last.edited" value="Problems" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="settings.editor.selected.configurable" value="discord-application" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="5c51e5af-d859-44b4-9c22-8b0c13ca8a80" name="Default Changelist" comment="" />
+      <created>1612900148201</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1612900148201</updated>
+    </task>
+    <task id="LOCAL-00001" summary="more build.gradle">
+      <created>1612900801074</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1612900801074</updated>
+    </task>
+    <task id="LOCAL-00002" summary="more build.gradle">
+      <created>1612979708536</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1612979708536</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Added threading for the input class.">
+      <created>1613242418297</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1613242418297</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Added fixed threading for the Echobot class.">
+      <created>1613243012263</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1613243012263</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Don't echo the messages of the bot in console.">
+      <created>1613244737477</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1613244737477</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Clean Stuff up and Detect when the discord jda has initialized">
+      <created>1613520040675</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1613520040675</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Readme.md">
+      <created>1613520584595</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1613520584595</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Clean Stuff up and Detect when the discord jda has initialized">
+      <created>1613520593710</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1613520593710</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Clean Stuff more stuff up and bug fixes">
+      <created>1613593511789</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1613593511789</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Clean up code and get mc server starting">
+      <created>1613601072308</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1613601072308</updated>
+    </task>
+    <task id="LOCAL-00011" summary="More MC server testing">
+      <created>1613676005790</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1613676005790</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Mc server stuff and more readme">
+      <created>1614562847689</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1614562847689</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Server now works and more Readme.md">
+      <created>1614567310109</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1614567310109</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Server now works and more Readme.md">
+      <created>1614568307892</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1614568307892</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <MESSAGE value="more build.gradle" />
+    <MESSAGE value="Added threading for the input class." />
+    <MESSAGE value="Added fixed threading for the Echobot class." />
+    <MESSAGE value="Don't echo the messages of the bot in console." />
+    <MESSAGE value="Readme.md" />
+    <MESSAGE value="Clean Stuff up and Detect when the discord jda has initialized" />
+    <MESSAGE value="Clean Stuff more stuff up and bug fixes" />
+    <MESSAGE value="Clean up code and get mc server starting" />
+    <MESSAGE value="More MC server testing" />
+    <MESSAGE value="Mc server stuff and more readme" />
+    <MESSAGE value="Server now works and more Readme.md" />
+    <option name="LAST_COMMIT_MESSAGE" value="Server now works and more Readme.md" />
+  </component>
+</project>

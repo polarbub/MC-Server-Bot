@@ -1,0 +1,8 @@
+net/polarbub/botv2/permissions.java
+ net.polarbub.botv2.permissions
+net/polarbub/botv2/Main.java
+ net.polarbub.botv2.Main
+net/polarbub/botv2/server.java
+ net.polarbub.botv2.server
+net/polarbub/botv2/in.java
+ net.polarbub.botv2.in
