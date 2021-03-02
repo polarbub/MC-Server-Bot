@@ -17,7 +17,7 @@ public class server extends Thread{
             for (String line = Main.br.readLine(); line != null; line = Main.br.readLine()) {
                 System.out.println(line);
                 try {
-                    Main.ConsoleChannel.sendMessageFormat(line).queue();
+                    Main.ConsoleChannel.sendMessageFormat("%s", line).queue();
                 } catch (UnknownFormatConversionException e) {
                     Main.ConsoleChannel.sendMessageFormat("Discord JDA didn't like a char. F").queue();
 
