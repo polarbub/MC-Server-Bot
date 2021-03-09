@@ -38,25 +38,25 @@ BACKUP:
   #time in seconds before a backup ( it is used to send a warning message to the players )
   backup_alert: 30
 
-#Role permissions need to have 0 on the end. This is janky but I wanted it done. There is a better way to do this I don't know about.
+#USE IDS HERE
 PERMISSIONS:
   Global:
     Roles:
-      - "0"
+      - ""
     Users: 
-      - "667155361970782244"
+      - ""
   init:
     Roles:
-      - "0"
+      - ""
     Users: 
       - ""
   stopbot:
     Roles:
-      - "0"
+      - ""
     Users: 
       - ""
   start:
     Roles:
-      - "0"
+      - ""
     Users: 
       - ""
