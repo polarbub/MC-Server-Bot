@@ -27,7 +27,7 @@ public class permissions {
         long checkLong;
         Role role;
         check = Main.permissionsConfig.yamlMapping("Global").yamlSequence("Roles").string(useNumber);
-        if(check.length() == 2) {} else {
+        if(check.length() == 2 || check.equals("null")) {} else {
             checkLong = Long.parseLong(check);
             role = guild.getRoleById(checkLong);
             while(check.length() != 2) {
@@ -53,7 +53,7 @@ public class permissions {
 
         useNumber = 0;
         check = Main.permissionsConfig.yamlMapping(permission).yamlSequence("Roles").string(useNumber);
-        if(check.length() == 2) {} else {
+        if(check.length() == 2 || check.equals("null")) {} else {
             checkLong = Long.parseLong(check);
             role = guild.getRoleById(checkLong);
             while(check.length() != 2) {
