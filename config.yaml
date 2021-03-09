@@ -1,0 +1,62 @@
+DISCORD_BOT:
+  #the discord bot token needed to login
+  TOKEN: "Nzk2NDYyNTExMjkzMDcxMzYw.X_YRhA.vQYSvAdz11jI8UxzOm3hg1gTY34"
+  #the prefix the bot will answer to
+  PREFIX: "."
+  #the channel ID where to echo the server console
+  CONSOLE_CHANNEL: '796517469224960072'
+  #the channel ID where to write and listen to chat messages
+  CHAT_CHANNEL: '796519072799653899'
+
+
+MC_SERVER:
+  #the one line command needed to start the Server
+  startCMD: '"java" "-jar" "-Xmx5G" "-Xms5G" "-XX:+UseG1GC" "-XX:+ParallelRefProcEnabled" "-XX:MaxGCPauseMillis=200" "-XX:+UnlockExperimentalVMOptions" "-XX:+DisableExplicitGC" "-XX:+AlwaysPreTouch" "-XX:G1NewSizePercent=30" "-XX:G1MaxNewSizePercent=40" "-XX:G1HeapRegionSize=8M" "-XX:G1ReservePercent=20" "-XX:G1HeapWastePercent=5" "-XX:G1MixedGCCountTarget=4" "-XX:InitiatingHeapOccupancyPercent=15" "-XX:G1MixedGCLiveThresholdPercent=90" "-XX:G1RSetUpdatingPauseTimePercent=5" "-XX:SurvivorRatio=32" "-XX:+PerfDisableSharedMem" "-XX:MaxTenuringThreshold=1" "fabric-server-launch.jar" "-nogui"'
+  #the ip of the server (will be shown in status)
+
+  ip: "localhost"
+  #the command to send the chat messages from discord to minecraft
+  #%username% will be replaced by sender username
+  #%color% will be replaced by sender user color
+  #%message% will be replaced by the message in json ready string format
+  #%messageJSON% will be replaced with a JSON string containing the already formatted message
+  say_format: "execute if entity @a run tellraw @a %messageJSON%"
+  #regular expression used to recognize chat messages from the server logs ( $1 capturing group should be the chat message + username, $2 should be username only )
+  chat_regex:
+    - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (<([\\w\\d_-]+)> [^\\n\\r]+)"
+    - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (([\\w\\d-]+) (?:(?:left)|(?:joined)) the game)"
+    - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (\\* ([\\w\\d-]+) [^\\r\\n]+)"
+    - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (\\[([\\w\\d_-]+)] [^\\n\\r]+)"
+  save_regex: "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: Saved the game"
+
+
+BACKUP:
+  #path to the server folder ( used to initiate git repository )
+  server_path: "../../Minecraft-Test-Server/1.16.4/"
+  #time in seconds between backups ( <0 means disabled , also needs to be at least 1.5 times the Backup_alert time )
+  backup_time: 1800
+  #time in seconds before a backup ( it is used to send a warning message to the players )
+  backup_alert: 30
+
+#If a permission has no roles then IT HAS TO BE 0. It will break otherwise
+PERMISSIONS:
+  Global:
+    Roles:
+      - "0"
+    Users: 
+      - "667155361970782244"
+  init:
+    Roles:
+      - "0"
+    Users: 
+      - "667155361970782244"
+  stopbot:
+    Roles:
+      - "0"
+    Users: 
+      - "667155361970782244"
+  start:
+    Roles:
+      - "0"
+    Users: 
+      - "667155361970782244"
