@@ -24,20 +24,21 @@ public class permissions {
         }
 
         useNumber = 0;
+        long checkLong;
+        Role role;
         check = Main.permissionsConfig.yamlMapping("Global").yamlSequence("Roles").string(useNumber);
-        if(check.equals("0")) {
-            return false;
-        }
-        long checkLong = Long.parseLong(check);
-        Role role = guild.getRoleById(checkLong);
-        while(!check.equals("0")) {
-            role = guild.getRoleById(checkLong);
-            if(userRoles.contains(role)) {
-                return true;
-            }
-            useNumber++;
-            check = Main.permissionsConfig.yamlMapping("Global").yamlSequence("Roles").string(useNumber);
+        if(check.length() == 2) {} else {
             checkLong = Long.parseLong(check);
+            role = guild.getRoleById(checkLong);
+            while(check.length() != 2) {
+                role = guild.getRoleById(checkLong);
+                if(userRoles.contains(role)) {
+                    return true;
+                }
+                useNumber++;
+                check = Main.permissionsConfig.yamlMapping("Global").yamlSequence("Roles").string(useNumber);
+                checkLong = Long.parseLong(check);
+            }
         }
 
         useNumber = 0;
@@ -52,19 +53,18 @@ public class permissions {
 
         useNumber = 0;
         check = Main.permissionsConfig.yamlMapping(permission).yamlSequence("Roles").string(useNumber);
-        if(check.equals("0")) {
-            return false;
-        }
-        checkLong = Long.parseLong(check);
-        role = guild.getRoleById(checkLong);
-        while(!check.equals("0")) {
-            role = guild.getRoleById(checkLong);
-            if(userRoles.contains(role)) {
-                return true;
-            }
-            useNumber++;
-            check = Main.permissionsConfig.yamlMapping(permission).yamlSequence("Roles").string(useNumber);
+        if(check.length() == 2) {} else {
             checkLong = Long.parseLong(check);
+            role = guild.getRoleById(checkLong);
+            while(check.length() != 2) {
+                role = guild.getRoleById(checkLong);
+                if(userRoles.contains(role)) {
+                    return true;
+                }
+                useNumber++;
+                check = Main.permissionsConfig.yamlMapping(permission).yamlSequence("Roles").string(useNumber);
+                checkLong = Long.parseLong(check);
+            }
         }
         return false;
     }
