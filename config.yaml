@@ -38,7 +38,7 @@ BACKUP:
   #time in seconds before a backup ( it is used to send a warning message to the players )
   backup_alert: 30
 
-#If a permission has no roles then IT HAS TO BE 0. It will break otherwise
+#Role permissions need to have 0 on the end. This is janky but I wanted it done. There is a better way to do this I don't know about.
 PERMISSIONS:
   Global:
     Roles:
@@ -49,14 +49,14 @@ PERMISSIONS:
     Roles:
       - "0"
     Users: 
-      - "667155361970782244"
+      - ""
   stopbot:
     Roles:
       - "0"
     Users: 
-      - "667155361970782244"
+      - ""
   start:
     Roles:
       - "0"
     Users: 
-      - "667155361970782244"
+      - ""
