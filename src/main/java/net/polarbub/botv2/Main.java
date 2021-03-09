@@ -11,30 +11,38 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.jetbrains.annotations.NotNull;
 import javax.security.auth.login.LoginException;
 import java.io.*;
+import com.amihaiemil.eoyaml.*;
 
 
 public class Main extends ListenerAdapter {
-    public static String pre = ".";
-    public static ProcessBuilder pb = new ProcessBuilder("java", "-jar", "-Xmx5G", "-Xms5G", "-XX:+UseG1GC", "-XX:+ParallelRefProcEnabled", "-XX:MaxGCPauseMillis=200", "-XX:+UnlockExperimentalVMOptions", "-XX:+DisableExplicitGC", "-XX:+AlwaysPreTouch", "-XX:G1NewSizePercent=30", "-XX:G1MaxNewSizePercent=40", "-XX:G1HeapRegionSize=8M", "-XX:G1ReservePercent=20", "-XX:G1HeapWastePercent=5", "-XX:G1MixedGCCountTarget=4", "-XX:InitiatingHeapOccupancyPercent=15", "-XX:G1MixedGCLiveThresholdPercent=90", "-XX:G1RSetUpdatingPauseTimePercent=5", "-XX:SurvivorRatio=32", "-XX:+PerfDisableSharedMem", "-XX:MaxTenuringThreshold=1", "fabric-server-launch.jar", "-nogui");
-    public static TextChannel ConsoleChannel;
-    public static MessageChannel ReturnChannel;
+    public static String pre;
+    public static ProcessBuilder pb;
+    public static TextChannel consoleChannel;
+    public static MessageChannel returnChannel;
     public static Process p;
     public static BufferedWriter bw;
     public static BufferedReader br;
-    public static boolean serverrunning = false;
+    public static boolean serverRunning = false;
+    public static YamlMapping config;
+    public static String serverArgs;
+    public static YamlMapping discordConfig;
+    public static String token;
+    public static YamlMapping minecraftConfig;
+    public static YamlMapping permissionsConfig;
+    public static JDA bot;
 
 
-    public static void main(String[] args) throws LoginException, InterruptedException{
-        //inti discord jda
-        JDA bot = JDABuilder.createLight("token", GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
+    public static void main(String[] args) throws LoginException, InterruptedException, IOException {
+        Main.configInit();
+        //init discord jda
+        bot = JDABuilder.createLight(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
         while(!String.valueOf(bot.getStatus()).equals("CONNECTED")) { //wait for connected
             Thread.sleep(10);
         }
-
         Thread.sleep(1000);
 
-        ConsoleChannel = bot.getTextChannelById("796517469224960072");
-        ReturnChannel = ConsoleChannel;
+        consoleChannel = bot.getTextChannelById(discordConfig.string("CONSOLE_CHANNEL"));
+        pb = new ProcessBuilder(serverArgs);
         pb.directory(new File("E:\\saves\\.minecraft\\server\\protosky-testing"));
         pb.redirectErrorStream(true);
 
@@ -42,42 +50,58 @@ public class Main extends ListenerAdapter {
         in.main();
 
     }
+
+    public static void configInit() throws IOException {
+        config = Yaml.createYamlInput(new File("configs\\config.yaml")).readYamlMapping();
+        discordConfig = config.yamlMapping("DISCORD_BOT");
+        token = discordConfig.string("TOKEN");
+        pre = discordConfig.string("PREFIX");
+        minecraftConfig = config.yamlMapping("MC_SERVER");
+        serverArgs = minecraftConfig.string("startCMD");
+        permissionsConfig = config.yamlMapping("PERMISSIONS");
+
+    }
+
     //message processing
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (!event.getAuthor().isBot()) {
             Message msg = event.getMessage();
-            ReturnChannel = event.getChannel();
+            returnChannel = event.getChannel();
 
-            if (msg.getContentRaw().equals(pre + "init")) {
+            if (msg.getContentRaw().equals(pre + "init") && permissions.getPermissions("init", event)) {
                 System.out.println("done");
-                ReturnChannel.sendMessageFormat("done").queue();
+                returnChannel.sendMessageFormat("done").queue();
 
-            } else if (msg.getContentRaw().equals(pre + "stopbot")) {
+
+            } else if (msg.getContentRaw().equals(pre + "stopbot") && permissions.getPermissions("stopbot", event)) {
                 System.exit(0);
 
-            } else if (msg.getContentRaw().equals(pre + "stop")) {
-                //ReturnChannel.sendMessageFormat("at some point this will start the server").queue();
-                p.destroy();
-                ReturnChannel.sendMessageFormat("stopped server").queue();
-
-            } else if (msg.getContentRaw().equals(pre + "start")) {
-                if(serverrunning) {
-                    ReturnChannel.sendMessageFormat("Server is Running rn").queue();
+            } else if (msg.getContentRaw().equals(pre + "start") && permissions.getPermissions("start", event)) {
+                if(serverRunning) {
+                    returnChannel.sendMessageFormat("Server is Running rn").queue();
                 } else {
-                    serverrunning = true;
+                    serverRunning = true;
                     server.main();
                 }
 
+            } else if(msg.getContentRaw().equals(pre + "reloadconfig") && permissions.getPermissions("reloadconfig", event)) {
+                try {
+                    configInit();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                returnChannel.sendMessageFormat("Done").queue();
+
             } else {
-                if(in.tosay.equals(msg.getContentRaw())){
+                if (in.tosay.equals(msg.getContentRaw())) {
                     int a = 0;
                 } else {
                     System.out.println("Author: " + msg.getAuthor() + " Server: " + event.getGuild() + " Channel: " + msg.getChannel());
                     System.out.println("Content: " + msg.getContentRaw());
                 }
 
-                if (String.valueOf(ReturnChannel).equals(String.valueOf(ConsoleChannel)) && serverrunning) {
+                if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && serverRunning) {
                     try {
                         Main.bw.write(msg.getContentRaw());
                         Main.bw.newLine();

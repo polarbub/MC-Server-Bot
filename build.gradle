@@ -48,8 +48,13 @@ dependencies {
     // Use JUnit test framework.
     testImplementation 'junit:junit:4.13'
 
+    //jar libs
     implementation name: 'JDA-4.2.0_DEV-withDependencies'
     implementation name: 'slf4j-simple-1.7.9'
+    implementation name: 'eo-yaml-5.1.9-jar-with-dependencies'
+
+    // Non-jar libs
+    implementation 'com.google.code.gson:gson:2.8.6'
 
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:29.0-jre'

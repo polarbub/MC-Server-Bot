@@ -5,7 +5,7 @@ import java.util.UnknownFormatConversionException;
 
 public class server extends Thread{
     public void run() {
-        Main.serverrunning = true;
+        Main.serverRunning = true;
         try {
             Main.p = Main.pb.start();
         } catch (IOException e) {
@@ -16,13 +16,7 @@ public class server extends Thread{
         try {
             for (String line = Main.br.readLine(); line != null; line = Main.br.readLine()) {
                 System.out.println(line);
-                try {
-                    Main.ConsoleChannel.sendMessageFormat("%s", line).queue();
-                } catch (UnknownFormatConversionException e) {
-                    Main.ConsoleChannel.sendMessageFormat("Discord JDA didn't like a char. F").queue();
-
-                }
-
+                Main.consoleChannel.sendMessage(line).queue();
             }
             Main.p.waitFor();
 
@@ -30,7 +24,7 @@ public class server extends Thread{
             e.printStackTrace();
 
         }
-        Main.serverrunning = false;
+        Main.serverRunning = false;
     }
 
     public static void main() {
