@@ -48,11 +48,12 @@ public class Main extends ListenerAdapter {
 
         //start the console in a thread
         in.main();
+        consoleChannel.sendMessageFormat("line one\nline 2").queue();
 
     }
 
     public static void configInit() throws IOException {
-        config = Yaml.createYamlInput(new File("configs\\config.yaml")).readYamlMapping();
+        config = Yaml.createYamlInput(new File("config.yaml")).readYamlMapping();
         discordConfig = config.yamlMapping("DISCORD_BOT");
         token = discordConfig.string("TOKEN");
         pre = discordConfig.string("PREFIX");
@@ -77,7 +78,7 @@ public class Main extends ListenerAdapter {
             } else if (msg.getContentRaw().equals(pre + "stopbot") && permissions.getPermissions("stopbot", event)) {
                 System.exit(0);
 
-            } else if (msg.getContentRaw().equals(pre + "start") && permissions.getPermissions("start", event)) {
+            } else if (msg.getContentRaw().equals(pre + "start") && String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && !serverRunning && permissions.getPermissions("server", event)) {
                 if(serverRunning) {
                     returnChannel.sendMessageFormat("Server is Running rn").queue();
                 } else {
@@ -101,7 +102,7 @@ public class Main extends ListenerAdapter {
                     System.out.println("Content: " + msg.getContentRaw());
                 }
 
-                if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && serverRunning) {
+                if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && serverRunning && permissions.getPermissions("server", event)) {
                     try {
                         Main.bw.write(msg.getContentRaw());
                         Main.bw.newLine();

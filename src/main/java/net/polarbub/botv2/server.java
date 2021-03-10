@@ -16,7 +16,8 @@ public class server extends Thread{
         try {
             for (String line = Main.br.readLine(); line != null; line = Main.br.readLine()) {
                 System.out.println(line);
-                Main.consoleChannel.sendMessage(line).queue();
+                //Main.consoleChannel.sendMessage(line).queue();
+                out.add(line);
             }
             Main.p.waitFor();
 
