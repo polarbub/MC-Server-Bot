@@ -1,9 +1,9 @@
 ### Todo:
 
-1) Message bunching
+1) Message bunching, Might work
 2) Backups
-4) Chat bridge
-5) Embeds?
+3) Chat bridge
+4) Embeds?
 
 
 
