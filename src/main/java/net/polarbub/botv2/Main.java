@@ -48,7 +48,7 @@ public class Main extends ListenerAdapter {
 
         //start the console in a thread
         in.main();
-        consoleChannel.sendMessageFormat("line one\nline 2").queue();
+        out.main();
 
     }
 
@@ -78,7 +78,7 @@ public class Main extends ListenerAdapter {
             } else if (msg.getContentRaw().equals(pre + "stopbot") && permissions.getPermissions("stopbot", event)) {
                 System.exit(0);
 
-            } else if (msg.getContentRaw().equals(pre + "start") && String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && !serverRunning && permissions.getPermissions("server", event)) {
+            } else if (msg.getContentRaw().equals("start") && String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && !serverRunning && permissions.getPermissions("server", event)) {
                 if(serverRunning) {
                     returnChannel.sendMessageFormat("Server is Running rn").queue();
                 } else {
