@@ -1,8 +1,8 @@
 ### Todo:
 
-2) Backups
-3) Chat bridge
-4) Embeds?
+1) Backups
+2) Chat bridge
+3) Embeds?
 
 
 
