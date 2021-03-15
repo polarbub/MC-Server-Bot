@@ -26,6 +26,7 @@ public class server extends Thread{
 
         }
         Main.serverRunning = false;
+
     }
 
     public static void main() {

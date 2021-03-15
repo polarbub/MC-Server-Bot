@@ -30,6 +30,9 @@ public class Main extends ListenerAdapter {
     public static YamlMapping minecraftConfig;
     public static YamlMapping permissionsConfig;
     public static JDA bot;
+    public static long backupTime;
+    public static long backupWarn;
+    public static YamlMapping backupConfig;
 
 
     public static void main(String[] args) throws LoginException, InterruptedException, IOException {
@@ -60,7 +63,21 @@ public class Main extends ListenerAdapter {
         minecraftConfig = config.yamlMapping("MC_SERVER");
         serverArgs = minecraftConfig.string("startCMD");
         permissionsConfig = config.yamlMapping("PERMISSIONS");
+        backupConfig = config.yamlMapping("BACKUP");
+        backupTime = backupConfig.longNumber("backup_time");
+        backupWarn = backupConfig.longNumber("backup_alert");
+    }
 
+    public static void commandUse(String command) {
+        if (serverRunning) {
+            try {
+                bw.write(command);
+                bw.newLine();
+                bw.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     //message processing
@@ -103,13 +120,7 @@ public class Main extends ListenerAdapter {
                 }
 
                 if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && serverRunning && permissions.getPermissions("server", event)) {
-                    try {
-                        Main.bw.write(msg.getContentRaw());
-                        Main.bw.newLine();
-                        Main.bw.flush();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    commandUse(msg.getContentRaw());
                 }
             }
         }
