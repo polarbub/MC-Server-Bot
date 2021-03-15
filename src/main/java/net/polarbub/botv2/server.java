@@ -1,7 +1,6 @@
 package net.polarbub.botv2;
 
 import java.io.*;
-import java.util.UnknownFormatConversionException;
 
 public class server extends Thread{
     public void run() {
@@ -16,7 +15,6 @@ public class server extends Thread{
         try {
             for (String line = Main.br.readLine(); line != null; line = Main.br.readLine()) {
                 System.out.println(line);
-                //Main.consoleChannel.sendMessage(line).queue();
                 out.add(line);
             }
             Main.p.waitFor();
@@ -26,10 +24,8 @@ public class server extends Thread{
 
         }
         Main.serverRunning = false;
-
+        git.backup("Server_shutdown");
     }
 
-    public static void main() {
-        (new server()).start();
-    }
+    public static void main() { (new server()).start(); }
 }

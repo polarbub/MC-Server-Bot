@@ -3,10 +3,8 @@ package net.polarbub.botv2;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
-public class git extends Thread{
+public class git extends Thread {
     public static boolean gitInUse = false;
 
     public void run() {
@@ -19,11 +17,11 @@ public class git extends Thread{
         out.add("Backup started");
         runProg("git add *.*");
         if(comment == null) {
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-            LocalDateTime now = LocalDateTime.now();
-            runProg("git commit -a -c " + dtf.format(now));
+            runProg("git commit -a");
+        } else if(comment.contains(" ")) {
+            throw new IllegalArgumentException("No spaces allowed in commit comment");
         } else {
-            runProg("git commit " + comment);
+            runProg("git commit -a -m " + comment);
         }
         gitInUse = false;
         System.out.println("Backup complete");
