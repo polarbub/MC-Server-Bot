@@ -17,8 +17,4 @@ public class in extends Thread{
 
     }
 
-    public static void main() {
-        (new in()).start();
-    }
-
 }

@@ -33,6 +33,10 @@ public class Main extends ListenerAdapter {
     public static long backupTime;
     public static long backupWarn;
     public static YamlMapping backupConfig;
+    public static in inThread = new in();
+    public static out outThread = new out();
+    public static server serverThread = new server();
+    public static git gitThread = new git();
 
 
     public static void main(String[] args) throws LoginException, InterruptedException, IOException {
@@ -50,8 +54,8 @@ public class Main extends ListenerAdapter {
         pb.redirectErrorStream(true);
 
         //start the console in a thread
-        in.main();
-        out.main();
+        inThread.start();
+        outThread.start();
 
     }
 
@@ -99,8 +103,9 @@ public class Main extends ListenerAdapter {
                 if(serverRunning) {
                     returnChannel.sendMessageFormat("Server is Running rn").queue();
                 } else {
+                    serverThread.start();
                     serverRunning = true;
-                    server.main();
+                    gitThread.start();
                 }
 
             } else if(msg.getContentRaw().equals(pre + "reloadconfig") && permissions.getPermissions("reloadconfig", event)) {

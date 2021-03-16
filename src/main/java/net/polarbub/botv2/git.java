@@ -6,9 +6,22 @@ import java.io.InputStreamReader;
 
 public class git extends Thread {
     public static boolean gitInUse = false;
+    public static boolean autoBackup = false;
 
     public void run() {
-
+        while(true) {
+            try {
+                Thread.sleep(Main.backupTime * 1000);
+            } catch (InterruptedException ignored) {}
+            autoBackup = true;
+            while(gitInUse) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {}
+            }
+            backup("autosave");
+            autoBackup = false;
+        }
     }
 
     public static void backup(String comment) {
@@ -48,9 +61,5 @@ public class git extends Thread {
             e.printStackTrace();
 
         }
-    }
-
-    public static void main() {
-        (new git()).start();
     }
 }

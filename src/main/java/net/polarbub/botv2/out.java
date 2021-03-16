@@ -21,10 +21,6 @@ public class out extends Thread{
 
     }
 
-    public static void main() {
-        (new out()).start();
-    }
-
     public static void add(String message) {
         inUse = true;
         if(message.length() >= 2000) {

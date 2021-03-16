@@ -25,7 +25,13 @@ public class server extends Thread{
         }
         Main.serverRunning = false;
         git.backup("Server_shutdown");
+        while(git.autoBackup) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        Main.gitThread.interrupt();
     }
-
-    public static void main() { (new server()).start(); }
 }
