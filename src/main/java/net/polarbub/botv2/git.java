@@ -13,6 +13,9 @@ public class git extends Thread {
             try {
                 Thread.sleep(Main.backupTime * 1000);
             } catch (InterruptedException ignored) {}
+            Main.commandUse("say Backup in " + Main.backupWarn);
+            Main.commandUse("save-off");
+            Main.commandUse("save-all flush");
             autoBackup = true;
             while(gitInUse) {
                 try {
@@ -20,6 +23,7 @@ public class git extends Thread {
                 } catch (InterruptedException e) {}
             }
             backup("autosave");
+            Main.commandUse("save-on");
             autoBackup = false;
         }
     }

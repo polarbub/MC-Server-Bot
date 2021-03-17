@@ -1,7 +1,5 @@
 package net.polarbub.botv2;
 
-import net.dv8tion.jda.api.entities.Message;
-
 public class out extends Thread{
     public static String Final = "";
     public static String temp;
