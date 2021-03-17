@@ -50,7 +50,7 @@ public class Main extends ListenerAdapter {
 
         consoleChannel = bot.getTextChannelById(discordConfig.string("CONSOLE_CHANNEL"));
         pb = new ProcessBuilder(serverArgs);
-        pb.directory(new File("E:\\saves\\.minecraft\\server\\protosky-testing"));
+        pb.directory(new File("server\\"));
         pb.redirectErrorStream(true);
 
         //start the console in a thread
@@ -117,12 +117,8 @@ public class Main extends ListenerAdapter {
                 returnChannel.sendMessageFormat("Done").queue();
 
             } else {
-                if (in.tosay.equals(msg.getContentRaw())) {
-                    int a = 0;
-                } else {
-                    System.out.println("Author: " + msg.getAuthor() + " Server: " + event.getGuild() + " Channel: " + msg.getChannel());
-                    System.out.println("Content: " + msg.getContentRaw());
-                }
+                System.out.println("Author: " + msg.getAuthor() + " Server: " + event.getGuild() + " Channel: " + msg.getChannel());
+                System.out.println("Content: " + msg.getContentRaw());
 
                 if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && serverRunning && permissions.getPermissions("server", event)) {
                     commandUse(msg.getContentRaw());

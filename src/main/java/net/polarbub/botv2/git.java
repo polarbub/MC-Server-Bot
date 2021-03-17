@@ -1,6 +1,7 @@
 package net.polarbub.botv2;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -20,7 +21,7 @@ public class git extends Thread {
             while(gitInUse) {
                 try {
                     Thread.sleep(10);
-                } catch (InterruptedException e) {}
+                } catch (InterruptedException ignored) {}
             }
             backup("autosave");
             Main.commandUse("save-on");
@@ -47,12 +48,14 @@ public class git extends Thread {
 
     public static void runProg(String prog) {
         ProcessBuilder pb = new ProcessBuilder(prog);
+        pb.directory(new File("server\\"));
         Process p = null;
         try {
             p = pb.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        assert p != null;
         BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
         try {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
