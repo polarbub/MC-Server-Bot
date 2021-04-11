@@ -7,7 +7,8 @@ DISCORD_BOT:
   CONSOLE_CHANNEL: '430125114823016468'
   #the channel ID where to write and listen to chat messages
   CHAT_CHANNEL: '684334071836442647'
-
+  #the channel ID where the applications will be shown
+  APPLICATION_CHANNEL: '790616229496619058'
 
 MC_SERVER:
   #the one line command needed to start the Server

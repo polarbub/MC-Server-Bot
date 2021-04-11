@@ -30,6 +30,12 @@ class BackupCommand extends Command {
         let Embed = new Discord.MessageEmbed();
         let requester = (msg: Discord.Message).author;
         Embed.setTitle("Backup");
+        if(BackModule.runningGit){
+            Embed.setDescription("Git Already Running please wait");
+            Embed.setColor("RED");
+            (msg: Discord.Message).channel.send(Embed).catch(console.error);
+            return;
+        }
         if (this.root.main['repository'] !== null) {
             args = args.split(' ');
             if (args.length > 0) {
