@@ -24,8 +24,12 @@
     "flow-remove-types": "^2.141.0",
     "js-yaml": "^4.0.0",
     "minecraft-server-util": "^3.0.1",
+    "mineflayer": "^3.6.0",
+    "mineflayer-pathfinder": "^1.6.1",
+    "mineflayer-statemachine": "^1.6.3",
     "node": "^14.15.0",
     "npm-run-all": "^4.1.5",
+    "prismarine-viewer": "^1.19.2",
     "rimraf": "^3.0.2",
     "simple-git": "^2.31.0"
   }
