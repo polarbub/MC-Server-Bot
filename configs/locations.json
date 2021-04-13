@@ -1,0 +1,23 @@
+[
+  {
+    "name" : "example",
+    "coords": [0,0,0],
+    "look": [0,0],
+    "dimension" : "overworld"
+  },
+
+  {
+    "name" : "ow spawn",
+    "coords": [0,20,0],
+    "look": [0,0],
+    "dimension" : "overworld"
+  },
+
+  {
+    "name" : "nether spawn",
+    "coords": [0,20,0],
+    "look": [0,0],
+    "dimension" : "nether"
+  }
+
+]

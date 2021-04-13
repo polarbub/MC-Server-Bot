@@ -1,4 +1,4 @@
-const CameraModule = require('../bin/scripts/modules/CameraModule');
+const CameraModule = require('../../../bin/scripts/modules/CameraModule');
 
 const Mineflayer = require('mineflayer');
 const StateMachine = require('mineflayer-statemachine');
@@ -20,19 +20,17 @@ class Tour extends CameraModule.API{
 
             let next = function (){
                 bot.creative.startFlying()
-                //TODO: add actions for the bot
 
-                let targets={};
-                let getClosestEntity = new StateMachine.BehaviorGetClosestEntity(bot, targets,StateMachine.EntityFilters().AllEntities);
-                let lookAtEntity = new StateMachine.BehaviorLookAtEntity(bot, targets);
-                let idle = new StateMachine.BehaviorIdle();
+                /*let targets={};
+                let mainState = new StateMachine.BehaviorIdle();
+                mainState.stateName = 'Main';
 
-                let timeout = false;
-                let result = false;
+                let findLocation = new require('sub-module/findLocation')(bot,targets);
+
                 let transitions = [
 
                     new StateMachine.StateTransition({
-                        parent: getClosestEntity,
+                        parent: mainState,
                         child: lookAtEntity,
                         name: 'Entity Found',
                         shouldTransition: () => true
@@ -67,7 +65,7 @@ class Tour extends CameraModule.API{
                 let machine = new StateMachine.BotStateMachine(bot, rootLayer);
 
                 this.server = new StateMachine.StateMachineWebserver(bot, machine, 8081);
-                this.server.startServer();
+                this.server.startServer();*/
             }.bind(this);
 
             //undefined is spectator ( until mojang adds a new gamemode )

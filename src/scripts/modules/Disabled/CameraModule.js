@@ -1,5 +1,5 @@
-const Module = require('../interfaces/Module.js');
-const Main = require('../interfaces/Main.js');
+const Module = require('../../interfaces/Module.js');
+const Main = require('../../interfaces/Main.js');
 const Mineflayer = require('mineflayer');
 const Viewer = require('prismarine-viewer')['mineflayer'];
 
@@ -48,12 +48,11 @@ class CameraModule extends Module {
             });
             (this.main: Main)["CameraClient"] = this.client;
 
-            this.client.physics.gravity = 0.0
-
             this.executeScript(script);
 
             this.client.on('spawn', this.listeners['spawn'] = () => {
                 this.client?.removeListener('spawn', this.listeners['spawn']);
+                this.client.physics.gravity = 0.0
                 Viewer(this.client, {
                     viewDistance: 6,
                     firstPerson: true,
