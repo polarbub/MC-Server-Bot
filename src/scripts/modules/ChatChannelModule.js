@@ -72,7 +72,9 @@ class ConsoleChannelModule extends Module {
                     res.push(...data.matchAll(regex))
                 })
                 res.forEach((match)=>{
-                    this.channel.send(match[1].replace(/([\\*`'_~])/gm, "\\$&"), {split: {char:"\n\r "}}).catch(console.error);
+                    let messages = this.main["DiscordModule"].splitMessage(match[1].replace(/([\\*`'_~])/gm, "\\$&"));
+                    for(let msg of messages)
+                        this.channel.send(msg).catch(console.error);
                 })
             })
         })

@@ -99,6 +99,28 @@ class DiscordBot extends Module {
         (this.main : Main) = main;
     }
 
+    splitMessage(msg: String, maxLength = 2000,splitters=["\n"," ",".",",",":"]) : string[]
+    {
+        let result: string[] = [];
+
+        let sub: string = msg.substring(0,2000);
+        if(sub.length === 2000){
+            let index = -1;
+            for(let separator of splitters){
+                index = sub.lastIndexOf(separator);
+                if(index!==-1)
+                    break;
+            }
+            sub = msg.substring(0,index);
+            let next = msg.substr(index+1);
+            result.push(sub);
+            result = result.concat(this.splitMessage(next,maxLength,splitters))
+        }else{
+            result.push(msg);
+        }
+        return result;
+    }
+
 }
 
 module.exports = DiscordBot;
