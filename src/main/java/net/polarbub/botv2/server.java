@@ -3,6 +3,7 @@ package net.polarbub.botv2;
 import java.io.*;
 
 public class server extends Thread{
+    //like git.runprog just to discord with cacheing
     public void run() {
         Main.serverRunning = true;
         try {

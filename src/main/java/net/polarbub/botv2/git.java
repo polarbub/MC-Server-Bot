@@ -9,6 +9,7 @@ public class git extends Thread {
     public static boolean gitInUse = false;
     public static boolean autoBackup = false;
 
+    //Backup waiting
     public void run() {
         while(true) {
             try {
@@ -29,6 +30,7 @@ public class git extends Thread {
         }
     }
 
+    //Backup thingy
     public static void backup(String comment) {
         gitInUse = true;
         System.out.println("Backup started");
@@ -46,6 +48,7 @@ public class git extends Thread {
         out.add("Backup complete");
     }
 
+    //Run a program using process builder and print its output
     public static void runProg(String prog) {
         ProcessBuilder pb = new ProcessBuilder(prog);
         pb.directory(new File("server\\"));

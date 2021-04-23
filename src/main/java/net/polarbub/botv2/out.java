@@ -1,6 +1,7 @@
 package net.polarbub.botv2;
 
 public class out extends Thread{
+    //Message Cacheing
     public static String Final = "";
     public static String temp;
     public static boolean inUse = false;

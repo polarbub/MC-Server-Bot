@@ -13,7 +13,6 @@ import javax.security.auth.login.LoginException;
 import java.io.*;
 import com.amihaiemil.eoyaml.*;
 
-
 public class Main extends ListenerAdapter {
     public static String pre;
     public static ProcessBuilder pb;
@@ -38,9 +37,9 @@ public class Main extends ListenerAdapter {
     public static server serverThread = new server();
     public static git gitThread = new git();
 
-
     public static void main(String[] args) throws LoginException, InterruptedException, IOException {
         Main.configInit();
+
         //init discord jda
         bot = JDABuilder.createLight(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
         while(!String.valueOf(bot.getStatus()).equals("CONNECTED")) { //wait for connected
@@ -48,6 +47,7 @@ public class Main extends ListenerAdapter {
         }
         Thread.sleep(1000);
 
+        //Get the channel IDs
         consoleChannel = bot.getTextChannelById(discordConfig.string("CONSOLE_CHANNEL"));
         pb = new ProcessBuilder(serverArgs);
         pb.directory(new File("server\\"));
@@ -55,10 +55,13 @@ public class Main extends ListenerAdapter {
 
         //start the console in a thread
         inThread.start();
+
+        //Start the console out
         outThread.start();
 
     }
 
+    //Read the config file
     public static void configInit() throws IOException {
         config = Yaml.createYamlInput(new File("config.yaml")).readYamlMapping();
         discordConfig = config.yamlMapping("DISCORD_BOT");
@@ -72,6 +75,7 @@ public class Main extends ListenerAdapter {
         backupWarn = backupConfig.longNumber("backup_alert");
     }
 
+    //Send a command to the server
     public static void commandUse(String command) {
         if (serverRunning) {
             try {
