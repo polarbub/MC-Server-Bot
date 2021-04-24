@@ -77,27 +77,29 @@ class BackupModule extends Module {
     async makeServerBackup(msg) {
         let res
         try {
-            await (this.main: Main)['MinecraftServer'].exec('say Backing up ( this might freeze the Server )');
-            await (this.main: Main)['MinecraftServer'].exec('save-off');
-            await new Promise(((resolve, reject) => {
-                let endRegex = new RegExp((this.main: Main).getConfigs()['MC_SERVER']['save_regex'],'gm');
-                let waiter ;
-                let timeout = setTimeout(()=>{
-                    (this.main : Main)['server'].stdout.removeListener('data',waiter);
-                    reject();
-                },60000);
-                (this.main : Main)['server'].stdout.on('data',waiter = (data:string)=>{
-                    if(endRegex.test(data)) {
-                        (this.main : Main)['server'].stdout.removeListener('data',waiter);
-                        clearTimeout(timeout);
-                        resolve();
-                    }
-                });
-                (this.main: Main)['MinecraftServer'].exec('save-all flush');
-            }))
-            res = await this.makeBackup(msg).catch(console.error);
-            await (this.main: Main)['MinecraftServer'].exec('save-on');
-            await (this.main: Main)['MinecraftServer'].exec('say Backup complete, id:' + res?.commit);
+            if((this.main : Main)['server']) {
+                await (this.main: Main)['MinecraftServer'].exec('say Backing up ( this might freeze the Server )');
+                await (this.main: Main)['MinecraftServer'].exec('save-off');
+                await new Promise(((resolve, reject) => {
+                    let endRegex = new RegExp((this.main: Main).getConfigs()['MC_SERVER']['save_regex'], 'gm');
+                    let waiter;
+                    let timeout = setTimeout(() => {
+                        (this.main: Main)['server']?.stdout.removeListener('data', waiter);
+                        reject();
+                    }, 60000);
+                    (this.main: Main)['server'].stdout.on('data', waiter = (data: string) => {
+                        if (endRegex.test(data)) {
+                            (this.main: Main)['server'].stdout.removeListener('data', waiter);
+                            clearTimeout(timeout);
+                            resolve();
+                        }
+                    });
+                    (this.main: Main)['MinecraftServer'].exec('save-all flush');
+                }))
+                res = await this.makeBackup(msg).catch(console.error);
+                await (this.main: Main)['MinecraftServer'].exec('save-on');
+                await (this.main: Main)['MinecraftServer'].exec('say Backup complete, id:' + res?.commit);
+            }
         } catch (e) {
             console.error(e);
         }

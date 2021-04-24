@@ -37,3 +37,15 @@ BACKUP:
   backup_time: 1800
   #time in seconds before a backup ( it is used to send a warning message to the players )
   backup_alert: 30
+
+
+CAMERA_ACCOUNT:
+  #secrets for the spectator account
+  #email of the account
+  EMAIL: 'test'
+  #password of the account
+  PASSWORD: ''
+  #port for the webserver ( view only )
+  PORT: 8080
+  #script the bot should follow ( should extend CameraModule.API )
+  SCRIPT: './configs/cameraBehaviours/Tour/tour.js'

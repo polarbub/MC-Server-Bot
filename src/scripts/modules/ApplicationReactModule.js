@@ -29,8 +29,10 @@ class ApplicationReactModule extends Module {
                     (channel) => {
                         this.channel = channel;
 
-                        this.getBot().on('message',this.listeners['message'] = (msg)=>{
+                        this.getBot().on('message',this.listeners['message'] = (msg : Discord.Message)=>{
                             if(!msg.author.bot)
+                                return;
+                            if(msg.embeds.length < 1)
                                 return;
                             if(msg.channel.id !== this.channel?.id)
                                 return;
