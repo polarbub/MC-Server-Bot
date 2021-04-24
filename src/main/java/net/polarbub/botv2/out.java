@@ -22,6 +22,7 @@ public class out extends Thread{
 
     public static void add(String message) {
         inUse = true;
+        System.out.println(message);
         if(message.length() >= 2000) {
             Main.consoleChannel.sendMessageFormat("This message is too long to send :(").queue();
         }

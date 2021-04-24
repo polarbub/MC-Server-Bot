@@ -88,6 +88,18 @@ public class Main extends ListenerAdapter {
         }
     }
 
+    private static void processServerCommand(String message) {
+        if(message.toLowerCase().equals("start")) {
+            if(serverRunning) {
+                out.add("Server is Running rn");
+            } else {
+                serverThread.start();
+                serverRunning = true;
+                gitThread.start();
+            }
+        }
+    }
+
     //message processing
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
@@ -105,7 +117,7 @@ public class Main extends ListenerAdapter {
 
             } else if (msg.getContentRaw().equals("start") && String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && !serverRunning && permissions.getPermissions("server", event)) {
                 if(serverRunning) {
-                    returnChannel.sendMessageFormat("Server is Running rn").queue();
+                    out.add("Server is Running rn");
                 } else {
                     serverThread.start();
                     serverRunning = true;
@@ -120,6 +132,12 @@ public class Main extends ListenerAdapter {
                 }
                 returnChannel.sendMessageFormat("Done").queue();
 
+            } else if(msg.getContentRaw().equals(pre + "get git")) {
+                System.out.println(git.gitInUse);
+                System.out.println(git.autoBackup);
+                System.out.println(git.stopGit);
+                System.out.println(git.gitStopped);
+                System.out.println(git.inSleep);
             } else {
                 System.out.println("Author: " + msg.getAuthor() + " Server: " + event.getGuild() + " Channel: " + msg.getChannel());
                 System.out.println("Content: " + msg.getContentRaw());

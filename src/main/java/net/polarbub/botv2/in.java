@@ -12,7 +12,17 @@ public class in extends Thread{
                 tosay = myObj.nextLine();
             } catch (NoSuchElementException ignored) {
             }
-            Main.commandUse(tosay);
+            if(tosay.toLowerCase().equals("start")) {
+                if(Main.serverRunning) {
+                    out.add("Server is Running rn");
+                } else {
+                    Main.serverThread.start();
+                    Main.serverRunning = true;
+                    Main.gitThread.start();
+                }
+            } else {
+                Main.commandUse(tosay);
+            }
         }
 
     }
