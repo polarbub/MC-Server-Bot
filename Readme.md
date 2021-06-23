@@ -5,5 +5,5 @@ All the issues
 Build w/ `gradle build`
 Jar is in build/libs
 Use config file from releases
-
-No jvm args are needed.
+Edit config file for needs.
+No jvm args are needed so start w/ java -jar bot-v2.jar
