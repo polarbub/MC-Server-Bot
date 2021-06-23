@@ -3,10 +3,24 @@ package net.polarbub.botv2;
 import java.io.*;
 
 public class server extends Thread{
+    //Send a command to the server
+    public static void commandUse(String command) {
+        if (Main.serverRunning) {
+            System.out.println(command);
+            try {
+                Main.bw.write(command);
+                Main.bw.newLine();
+                Main.bw.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
     //like git.runprog just to discord with cacheing
     public void run() {
         //start server
-        Main.serverRunning = true;
         try {
             Main.p = Main.pb.start();
         } catch (IOException e) {
@@ -21,6 +35,13 @@ public class server extends Thread{
         try {
             for (String line = Main.br.readLine(); line != null; line = Main.br.readLine()) {
                 out.add(line);
+                if(line.contains("] [Server thread/INFO]: Saved the game") && !line.contains("<") && !line.contains(">")) {
+                    git.autoSaveReturn = true;
+                }
+                if(line.contains("] [Server thread/INFO]: Done (") && line.contains(")! For help, type ") && !Main.serverRunning && Main.backupTime > 0) {
+                    Main.serverRunning = true;
+                    Main.gitThread.start();
+                }
             }
             Main.p.waitFor();
 
@@ -30,8 +51,20 @@ public class server extends Thread{
         }
 
         //Stop git
-        if(git.inSleep) Main.gitThread.stop(); else git.stopGit = true;
-        while(!git.gitStopped) {
+        if(git.inSleep) {Main.gitThread.stop(); } else {
+            git.stopGit = true;
+            while (!git.gitStopped) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
+        git.backup("Server Shutdown");
+        while(git.gitInUse) {
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {
@@ -39,17 +72,9 @@ public class server extends Thread{
             }
         }
 
-        git.backup("Server Shutdown");
-        while(git.autoBackup) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        out.add("Server stopped\n");
 
         //Stop server
         Main.serverRunning = false;
-        //git.runProg("git");
     }
 }

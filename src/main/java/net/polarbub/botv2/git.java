@@ -7,10 +7,10 @@ import java.io.InputStreamReader;
 
 public class git extends Thread {
     public static boolean gitInUse = false;
-    public static boolean autoBackup = false;
     public static boolean stopGit = false;
     public static boolean gitStopped = false;
     public static boolean inSleep = false;
+    public static boolean autoSaveReturn = false;
 
     //Backup waiting
     public void run() {
@@ -19,19 +19,34 @@ public class git extends Thread {
             try {
                 Thread.sleep(Main.backupTime * 1000);
             } catch (InterruptedException ignored) {}
-            inSleep = false;
-            Main.commandUse("say Backup in " + Main.backupWarn);
-            Main.commandUse("save-off");
-            Main.commandUse("save-all flush");
-            autoBackup = true;
+            if(Main.serverRunning) server.commandUse("say Backup in " + Main.backupWarn + "seconds."); {
+                try {
+                    Thread.sleep(Main.backupWarn * 1000);
+                } catch (InterruptedException ignored) {}
+                inSleep = false;
+            }
             while(gitInUse) {
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException ignored) {}
             }
-            backup("autosave");
-            Main.commandUse("save-on");
-            autoBackup = false;
+            if(Main.serverRunning) server.commandUse("say Backup Happening!");
+            if(Main.serverRunning) server.commandUse("save-off");
+            if(Main.serverRunning) server.commandUse("save-all flush");
+            autoSaveReturn = false;
+            while(!autoSaveReturn) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ignored) {}
+
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            backup("Timed Backup");
+            if(Main.serverRunning) server.commandUse("save-on");
             if(stopGit) break;
         }
         gitStopped = true;
@@ -39,21 +54,32 @@ public class git extends Thread {
 
     //Backup thingy
     public static void backup(String comment) {
+        while(gitInUse) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         gitInUse = true;
-        out.add("Backup started");
-        runProg("\"git\" \"add\" \"-A\"");
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        runProg(new ProcessBuilder("git", "add", "-A"));
+        out.add("\nBackup started");
         if(comment == null) {
-            runProg("\"git\" \"commit\" \"-m\" \"No Comment\"");
+            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"No Comment\""));
         } else {
-            runProg("\"git\" \"commit\" \"-m\" \"" + comment + "\"");
+            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"" + comment + "\""));
         }
         gitInUse = false;
-        out.add("Backup complete");
+        out.add("Backup complete\n");
     }
 
     //Run a program using process builder and print its output
-    public static void runProg(String prog) {
-        ProcessBuilder pb = new ProcessBuilder(prog);
+    public static void runProg(ProcessBuilder pb) {
         pb.directory(new File("server\\"));
         Process p = null;
         try {
@@ -67,7 +93,7 @@ public class git extends Thread {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 out.add(line);
             }
-            Main.p.waitFor();
+            p.waitFor();
 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
