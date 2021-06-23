@@ -173,8 +173,8 @@ public class Main extends ListenerAdapter {
                         }
                     }
                     git.gitInUse = true;
-                    git.runProg(new ProcessBuilder("git", "reset", "--hard", msg.getContentRaw().substring(16)));
                     git.runProg(new ProcessBuilder("git", "branch", msg.getContentRaw().substring(16) + "_rollback_" + DateTimeFormatter.ofPattern("yyyy/MM/dd_HH:mm:ss").format(LocalDateTime.now())));
+                    git.runProg(new ProcessBuilder("git", "reset", "--hard", msg.getContentRaw().substring(16)));
                     git.gitInUse = false;
                 } else {
                     out.add("Please stop the server first");
