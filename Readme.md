@@ -1,3 +1,9 @@
 ### Todo:
+All the issues
 
-1) backup restore 
+### Help:
+Build w/ `gradle build`
+Jar is in build/libs
+Use config file from releases
+
+No jvm args are needed.
