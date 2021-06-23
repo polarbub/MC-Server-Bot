@@ -162,9 +162,6 @@ public class Main extends ListenerAdapter {
                 }
                 returnChannel.sendMessageFormat(out).queue();
 
-            } else if(msg.getContentRaw().startsWith(pre + "backup") && permissions.getPermissions("backup", event)) {
-                git.backup(msg.getContentRaw().substring(8));
-
             } else if(msg.getContentRaw().startsWith(pre + "backup restore") && permissions.getPermissions("backup", event)) {
                 if(!Main.serverRunning) {
                     git.backup("before rollback");
@@ -182,6 +179,9 @@ public class Main extends ListenerAdapter {
                 } else {
                     out.add("Please stop the server first");
                 }
+
+            } else if(msg.getContentRaw().startsWith(pre + "backup") && permissions.getPermissions("backup", event)) {
+                git.backup(msg.getContentRaw().substring(8));
 
             } else {
                 System.out.println("Author: " + msg.getAuthor() + " Server: " + event.getGuild() + " Channel: " + msg.getChannel());
