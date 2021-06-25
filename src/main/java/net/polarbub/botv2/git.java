@@ -67,19 +67,19 @@ public class git extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        runProg(new ProcessBuilder("git", "add", "-A"));
+        runProg(new ProcessBuilder("git", "add", "-A"), Main.gitDir);
         out.add("\nBackup started");
         if(comment == null) {
-            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"No Comment\""));
+            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"No Comment\""), Main.gitDir);
         } else {
-            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"" + comment + "\""));
+            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"" + comment + "\""), Main.gitDir);
         }
         gitInUse = false;
         out.add("Backup complete\n");
     }
 
     //Run a program using process builder and print its output
-    public static void runProg(ProcessBuilder pb) {
+    public static void runProg(ProcessBuilder pb, String dir) {
         pb.directory(new File("server\\"));
         Process p = null;
         try {

@@ -35,7 +35,14 @@ public class out extends Thread{
         System.out.println(message);
         if(message.length() >= 2000) {
             Main.consoleChannel.sendMessageFormat("This message is too long to send :(").queue();
+            return;
         }
+
+        Matcher matcher = Main.ipPattern.matcher(message);
+        if(matcher.matches()) {
+            message = message.replaceAll("(\\d+\\.\\d+\\.\\d+\\.\\d+)", "||ip.no.look.ing||");
+        }
+
         temp = String.join("",Final, "\n", message);
         if(temp.length() <= 2002) {
             Final = temp;
