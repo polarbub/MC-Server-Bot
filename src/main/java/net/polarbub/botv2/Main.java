@@ -48,7 +48,7 @@ public class Main extends ListenerAdapter {
     public static YamlMapping permissionsConfig;
     public static String tellCommand;
     public static Pattern ipPattern = Pattern.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+)");
-    public static String gitDir;
+    public static String serverDir;
 
 
 
@@ -67,6 +67,7 @@ public class Main extends ListenerAdapter {
 
         //Get the channel IDs
         pb = new ProcessBuilder(serverArgs);
+        pb.directory(new File(serverDir));
         pb.redirectErrorStream(true);
 
         //start the console in a thread
@@ -92,6 +93,7 @@ public class Main extends ListenerAdapter {
         showIP = minecraftConfig.string("status_ip");
         trueIP = minecraftConfig.string("ip");
         tellCommand = minecraftConfig.string("say_command");
+        serverDir = minecraftConfig.string("git_dir");
 
         YamlSequence chatBridgeRegexSeq = minecraftConfig.yamlSequence("chat_regex");
         pattern = new Pattern[chatBridgeRegexSeq.size()];
@@ -104,7 +106,6 @@ public class Main extends ListenerAdapter {
 
         backupTime = backupConfig.longNumber("backup_time");
         backupWarn = backupConfig.longNumber("backup_alert");
-        gitDir = backupConfig.string("git_dir");
     }
 
     //message processing
@@ -175,8 +176,8 @@ public class Main extends ListenerAdapter {
                         }
                     }
                     git.gitInUse = true;
-                    git.runProg(new ProcessBuilder("git", "branch", msg.getContentRaw().substring(16) + "_rollback_" + DateTimeFormatter.ofPattern("yyyy/MM/dd_HH:mm:ss").format(LocalDateTime.now())), gitDir);
-                    git.runProg(new ProcessBuilder("git", "reset", "--hard", msg.getContentRaw().substring(16)), gitDir);
+                    git.runProg(new ProcessBuilder("git", "branch", msg.getContentRaw().substring(16) + "_rollback_" + DateTimeFormatter.ofPattern("yyyy/MM/dd_HH:mm:ss").format(LocalDateTime.now())), serverDir);
+                    git.runProg(new ProcessBuilder("git", "reset", "--hard", msg.getContentRaw().substring(16)), serverDir);
                     git.gitInUse = false;
                 } else {
                     out.add("Please stop the server first");

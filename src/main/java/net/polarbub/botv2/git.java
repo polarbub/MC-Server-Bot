@@ -67,12 +67,12 @@ public class git extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        runProg(new ProcessBuilder("git", "add", "-A"), Main.gitDir);
+        runProg(new ProcessBuilder("git", "add", "-A"), Main.serverDir);
         out.add("\nBackup started");
         if(comment == null) {
-            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"No Comment\""), Main.gitDir);
+            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"No Comment\""), Main.serverDir);
         } else {
-            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"" + comment + "\""), Main.gitDir);
+            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"" + comment + "\""), Main.serverDir);
         }
         gitInUse = false;
         out.add("Backup complete\n");
