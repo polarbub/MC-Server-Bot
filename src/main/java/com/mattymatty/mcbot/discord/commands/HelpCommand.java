@@ -43,10 +43,6 @@ public class HelpCommand implements Command{
 
     @Override
     public void run(SlashCommandEvent event) {
-        if (!bot.canExecuteCommand(event.getTextChannel())) {
-            event.reply("You're not allowed to do this").setEphemeral(true).queue();
-            return;
-        }
         event.deferReply(false).queue();
         OptionMapping opt = event.getOption("command");
         if(opt == null) {

@@ -46,10 +46,6 @@ public class StartCommand implements Command{
 
     @Override
     public void run(SlashCommandEvent event) {
-        if (!bot.canExecuteCommand(event.getTextChannel())) {
-            event.reply("You're not allowed to do this").setEphemeral(true).queue();
-            return;
-        }
         event.deferReply().queue();
         if(bot.server.isRunning()) {
             EmbedBuilder embed = new EmbedBuilder();

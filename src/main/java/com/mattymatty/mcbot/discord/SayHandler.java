@@ -44,7 +44,7 @@ public class SayHandler {
                 .put("text"," <")
         );
 
-        Color color = Optional.ofNullable(member.getColor()).orElse(new Color(23, 35, 130));
+        Color color = Optional.ofNullable(member.getColor()).orElse(Color.WHITE);
 
         String red = Integer.toHexString(color.getRed());
         String green = Integer.toHexString(color.getGreen());

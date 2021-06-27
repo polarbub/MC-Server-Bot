@@ -14,6 +14,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ChannelManager {
     private final JDA api;
@@ -23,6 +25,8 @@ public class ChannelManager {
     private final Set<TextChannel> chat_channels = new HashSet<>();
     private final Set<TextChannel> console_channels = new HashSet<>();
     private final Set<TextChannel> command_channels = new HashSet<>();
+    private final Pattern ipRegex = Pattern.compile("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b",Pattern.MULTILINE);
+    private final Pattern escapeRegex = Pattern.compile("([\\\\*`'_~])",Pattern.MULTILINE);
 
     public ChannelManager(JDA api, Server server, Config config,Bot bot) {
         this.api = api;
@@ -117,7 +121,7 @@ public class ChannelManager {
                     List<String> messages = splitMessage(to_print);
                     for (TextChannel channel: chat_channels) {
                         for (String msg : messages) {
-                            channel.sendMessage(msg).queue();
+                            channel.sendMessage(this.escapeMsg(msg)).queue();
                         }
                     }
                 }
@@ -135,7 +139,7 @@ public class ChannelManager {
                     List<String> messages = splitMessage(to_print);
                     for (TextChannel channel: console_channels) {
                         for (String msg : messages) {
-                            channel.sendMessage(msg).queue();
+                            channel.sendMessage(this.escapeMsg(msg)).queue();
                         }
                     }
                 }
@@ -187,6 +191,13 @@ public class ChannelManager {
             return s;
         }
 
+    }
+
+    private String escapeMsg(String msg){
+        Matcher matcher = ipRegex.matcher(msg);
+        String censored = matcher.replaceAll("||CENSORED IP||");
+        matcher = escapeRegex.matcher(censored);
+        return matcher.replaceAll("\\\\$0");
     }
 
 }

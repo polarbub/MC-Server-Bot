@@ -23,6 +23,10 @@ public class Listener extends ListenerAdapter {
         if (event.getGuild() == null)
             return;
 
+        if (!bot.canExecuteCommand(event.getTextChannel())) {
+            event.reply("You're not allowed to do this").setEphemeral(true).queue();
+            return;
+        }
         Command cmd = bot.commandMap.get(event.getName());
         if(cmd!=null)
             cmd.run(event);
