@@ -1,9 +1,10 @@
 DISCORD_BOT:
   #the discord bot token needed to login
-  token: "NzE3ODAwNzY2ODY5NDcxMjgz.XtfmDg.RTETdfq-0BfnVVjG-blgQUDuup4"
+  token: ""
   #the guild IDs to listen for commands
   guilds:
     - 428163245753499653
+    - 785950137289539610
   #put this text in the description of a channel to mark it as
   chat_channel_marker: "|MC-chat"
   console_channel_marker: "|MC-console"
@@ -30,7 +31,8 @@ MC_SERVER:
     - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (\\* ([\\w\\d-]+) [^\\r\\n]+)"
     - "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: (\\[([\\w\\d_-]+)] [^\\n\\r]+)"
   save_regex: "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: Saved the game"
-  done_regex: "^^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: Done \\([\\d.]+s\\)! For help, type \"help\""
+  done_regex: "^\\[\\d+:\\d+:\\d+] \\[Server thread\\/INFO]: Done \\([\\d.]+s\\)! For help, type \"help\""
+  error_regex: "^\\[\\d+:\\d+:\\d+] \\[[^/]+\\/\\w+]:.*"
 
 
 BACKUP:

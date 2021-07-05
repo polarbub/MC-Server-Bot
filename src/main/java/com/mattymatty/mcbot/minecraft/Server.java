@@ -69,6 +69,14 @@ public class Server {
                         server.waitFor();
                         stopListeners.forEach(l->l.listen("Stopped"));
                         Main.LOG.print("[Server] server stopped");
+                        if(error.length() > old_length)
+                            errorListeners.forEach(l -> {
+                                try {
+                                    l.listen(error.toString());
+                                } catch (Exception ignored) {
+                                }
+                            });
+                        error.setLength(0);
                     } catch (InterruptedException ignored) {}
                 },"Stop Listener").start();
                 return true;
