@@ -1,6 +1,7 @@
 package com.mattymatty.mcbot.discord;
 
 import com.mattymatty.mcbot.Config;
+import com.mattymatty.mcbot.Main;
 import com.mattymatty.mcbot.minecraft.Server;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;

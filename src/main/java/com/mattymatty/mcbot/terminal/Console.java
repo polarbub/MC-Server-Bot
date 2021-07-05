@@ -15,6 +15,7 @@ import com.googlecode.lanterna.gui2.menu.MenuItem;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.mattymatty.mcbot.Config;
+import com.mattymatty.mcbot.Main;
 import com.mattymatty.mcbot.discord.Bot;
 import com.mattymatty.mcbot.minecraft.Server;
 import com.googlecode.lanterna.TextColor;
@@ -59,23 +60,22 @@ public class Console {
         try {
             ClassLoader classLoader = AbstractTextGUI.class.getClassLoader();
             InputStream resourceAsStream = classLoader.getResourceAsStream("local_theme.properties");
-            if(resourceAsStream == null) {
+            if (resourceAsStream == null) {
                 resourceAsStream = new FileInputStream("src/main/resources/local_theme.properties");
             }
             properties.load(resourceAsStream);
             resourceAsStream.close();
-        }
-        catch(IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
         btn_theme = new PropertyTheme(properties);
     }
 
     public void start() throws IOException {
-        Terminal terminal = new DefaultTerminalFactory().createTerminal();
+        Terminal terminal = new DefaultTerminalFactory().createHeadlessTerminal();
         Screen screen = new TerminalScreen(terminal);
         screen.startScreen();
-        MultiWindowTextGUI gui = new MultiWindowTextGUI(screen,new DefaultWindowManager(),new EmptySpace(TextColor.ANSI.BLACK_BRIGHT));
+        MultiWindowTextGUI gui = new MultiWindowTextGUI(screen, new DefaultWindowManager(), new EmptySpace(TextColor.ANSI.BLACK_BRIGHT));
 
         Window window = createWindow();
         Panel mainPanel = makeMainPannel(window);
@@ -84,12 +84,12 @@ public class Console {
         gui.addWindowAndWait(window);
     }
 
-    private void setup(){
+    private void setup() {
         this.console_component.setVisible(false);
         this.chat_component.setVisible(false);
         this.log_btn.setEnabled(false);
 
-        this.log_btn.addListener(l->{
+        this.log_btn.addListener(l -> {
             this.active_log = this.bot_log;
             this.log_component.setVisible(true);
             this.console_component.setVisible(false);
@@ -99,7 +99,7 @@ public class Console {
             this.console_btn.setEnabled(true);
         });
 
-        this.chat_btn.addListener(l->{
+        this.chat_btn.addListener(l -> {
             this.active_log = this.chat_log;
             this.log_component.setVisible(false);
             this.chat_component.setVisible(true);
@@ -109,7 +109,7 @@ public class Console {
             this.console_btn.setEnabled(true);
         });
 
-        this.console_btn.addListener(l->{
+        this.console_btn.addListener(l -> {
             this.active_log = this.console_log;
             this.log_component.setVisible(false);
             this.chat_component.setVisible(false);
@@ -119,35 +119,51 @@ public class Console {
             this.console_btn.setEnabled(false);
         });
 
-        server.addChatListener(s->{
-           if(this.chat_log.getLineCount()>this.active_log.getSize().getRows()-1){
-               this.chat_log.removeLine(0);
-           }
-           this.chat_log.addLine(s);
+        server.addChatListener(s -> {
+            while (this.chat_log.getLineCount() > this.active_log.getSize().getRows() - 1) {
+                this.chat_log.removeLine(0);
+            }
+            this.chat_log.addLine(s);
         });
 
-        server.addConsoleListener(s->{
-           if(this.console_log.getLineCount()>this.active_log.getSize().getRows()-1){
-               this.console_log.removeLine(0);
-           }
-           this.console_log.addLine(s);
+        server.addConsoleListener(s -> {
+            while (this.console_log.getLineCount() > this.active_log.getSize().getRows() - 1) {
+                this.console_log.removeLine(0);
+            }
+            this.console_log.addLine(s);
         });
 
+        server.addErrorListener(s -> {
+            String[] lines = s.split("\n");
+            Arrays.stream(lines).skip(1).forEach(l->{
+                while (this.console_log.getLineCount() > this.active_log.getSize().getRows() - 1) {
+                    this.console_log.removeLine(0);
+                }
+                this.console_log.addLine(l);
+            });
+        });
+
+        Main.LOG.addLogListener(s -> {
+            while (this.bot_log.getLineCount() > this.active_log.getSize().getRows() - 1) {
+                this.bot_log.removeLine(0);
+            }
+            this.bot_log.addLine(s);
+        });
 
     }
 
-    private Window createWindow(){
+    private Window createWindow() {
         BasicWindow window = new BasicWindow();
         window.setHints(Arrays.asList(Window.Hint.FULL_SCREEN, Window.Hint.NO_DECORATIONS));
         return window;
     }
 
-    private Panel makeMainPannel(Window window){
+    private Panel makeMainPannel(Window window) {
         Panel mainPanel = new Panel();
         mainPanel.setLayoutManager(new BorderLayout());
 
         Panel tabPanel = makeTabPanel();
-        tabPanel.setPreferredSize(new TerminalSize(5000,1));
+        tabPanel.setPreferredSize(new TerminalSize(5000, 1));
         tabPanel.setLayoutData(BorderLayout.Location.TOP);
         mainPanel.addComponent(tabPanel);
 
@@ -170,7 +186,7 @@ public class Console {
         return mainPanel;
     }
 
-    private Panel makeTabPanel(){
+    private Panel makeTabPanel() {
         Panel tabPanel = new Panel();
         tabPanel.setLayoutManager(new LinearLayout(Direction.HORIZONTAL));
 
@@ -183,7 +199,7 @@ public class Console {
         console_btn.setTheme(btn_theme);
 
         tabPanel.addComponent(this.log_btn);
-        tabPanel.addComponent(this.chat_btn );
+        tabPanel.addComponent(this.chat_btn);
         tabPanel.addComponent(this.console_btn);
 
         MenuBar menu = makeMenu();
@@ -197,7 +213,7 @@ public class Console {
         return tabPanel;
     }
 
-    private MenuBar makeMenu(){
+    private MenuBar makeMenu() {
         MenuBar menuBar = new MenuBar();
 
         Menu commands = new Menu("Commands");
@@ -209,14 +225,14 @@ public class Console {
         return menuBar;
     }
 
-    private Panel makeChatPanel(){
+    private Panel makeChatPanel() {
         Panel chatPanel = new Panel();
         chatPanel.setLayoutManager(new BorderLayout());
 
-        this.chat_log = new TextBox("Chat", TextBox.Style.MULTI_LINE){
+        this.chat_log = new TextBox("Chat", TextBox.Style.MULTI_LINE) {
             @Override
             protected TextBoxRenderer createDefaultRenderer() {
-                DefaultTextBoxRenderer def =new DefaultTextBoxRenderer();
+                DefaultTextBoxRenderer def = new DefaultTextBoxRenderer();
                 def.setHideScrollBars(true);
                 return def;
             }
@@ -226,34 +242,35 @@ public class Console {
         chat_log.setLayoutData(BorderLayout.Location.CENTER);
         chatPanel.addComponent(chat_log);
 
-        TextBox chat_input = new TextBox("input"){
+        TextBox chat_input = new TextBox("input") {
             @Override
             public synchronized Result handleKeyStroke(KeyStroke keyStroke) {
-                if(keyStroke.getKeyType() != KeyType.Enter)
+                if (keyStroke.getKeyType() != KeyType.Enter)
                     return super.handleKeyStroke(keyStroke);
-                else{
+                else {
                     String input = getText();
                     setText("");
                     server.command("say " + input);
                     return Result.HANDLED;
                 }
             }
-        };;
+        };
+        ;
         chat_input.setLayoutData(BorderLayout.Location.BOTTOM);
-        chat_input.setPreferredSize(new TerminalSize(5000,1));
+        chat_input.setPreferredSize(new TerminalSize(5000, 1));
         chatPanel.addComponent(chat_input.withBorder(Borders.singleLine("Input")));
 
         return chatPanel;
     }
 
-    private Panel makeLogPanel(){
+    private Panel makeLogPanel() {
         Panel logPanel = new Panel();
         logPanel.setLayoutManager(new BorderLayout());
 
-        this.bot_log = new TextBox("Log", TextBox.Style.MULTI_LINE){
+        this.bot_log = new TextBox("Log", TextBox.Style.MULTI_LINE) {
             @Override
             protected TextBoxRenderer createDefaultRenderer() {
-                DefaultTextBoxRenderer def =new DefaultTextBoxRenderer();
+                DefaultTextBoxRenderer def = new DefaultTextBoxRenderer();
                 def.setHideScrollBars(true);
                 return def;
             }
@@ -266,14 +283,14 @@ public class Console {
         return logPanel;
     }
 
-    private Panel makeConsolePanel(){
+    private Panel makeConsolePanel() {
         Panel consolePanel = new Panel();
         consolePanel.setLayoutManager(new BorderLayout());
 
-        this.console_log  = new TextBox("Console", TextBox.Style.MULTI_LINE){
+        this.console_log = new TextBox("Console", TextBox.Style.MULTI_LINE) {
             @Override
             protected TextBoxRenderer createDefaultRenderer() {
-                DefaultTextBoxRenderer def =new DefaultTextBoxRenderer();
+                DefaultTextBoxRenderer def = new DefaultTextBoxRenderer();
                 def.setHideScrollBars(true);
                 return def;
             }
@@ -283,12 +300,12 @@ public class Console {
         console_log.setLayoutData(BorderLayout.Location.CENTER);
         consolePanel.addComponent(console_log);
 
-        TextBox chat_input = new TextBox("input"){
+        TextBox chat_input = new TextBox("input") {
             @Override
             public synchronized Result handleKeyStroke(KeyStroke keyStroke) {
-                if(keyStroke.getKeyType() != KeyType.Enter)
+                if (keyStroke.getKeyType() != KeyType.Enter)
                     return super.handleKeyStroke(keyStroke);
-                else{
+                else {
                     String input = getText();
                     setText("");
                     server.command(input);

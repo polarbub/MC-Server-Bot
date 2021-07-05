@@ -3,6 +3,7 @@ package com.mattymatty.mcbot.backup;
 import com.mattymatty.mcbot.Config;
 import org.apache.commons.collections4.list.UnmodifiableList;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
@@ -51,9 +52,18 @@ public class GitWrapper {
     }
 
     public synchronized List<RevCommit> getBackups(){
+        return getBackups(0,-1);
+    }
+
+    public synchronized List<RevCommit> getBackups(int skip, int maxCount){
         try {
             List<RevCommit> commits = new LinkedList<>();
-            this.git.log().addPath("HEAD").call().forEach(commits::add);
+            LogCommand log = this.git.log();
+            if(skip>0)
+                log.setSkip(skip);
+            if(maxCount>0)
+                log.setMaxCount(maxCount);
+            log.call().forEach(commits::add);
             return new UnmodifiableList<>(commits);
         }catch (GitAPIException ex)
         {

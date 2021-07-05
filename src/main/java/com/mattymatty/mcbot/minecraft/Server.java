@@ -1,31 +1,36 @@
 package com.mattymatty.mcbot.minecraft;
 
 import com.mattymatty.mcbot.Config;
+import com.mattymatty.mcbot.DataListener;
+import com.mattymatty.mcbot.Main;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Server {
+    private static final boolean isWindows = System.getProperty("os.name")
+            .toLowerCase().startsWith("windows");
+    public static final int MAX_QUEUE_SIZE = 1000;
     private Process server;
     private final Config config;
     private OutputStreamWriter os;
-    private List<DataListener> chatListeners = new LinkedList<>();
-    private List<DataListener> consoleListeners = new LinkedList<>();
-    private List<DataListener> errorListeners = new LinkedList<>();
-    private List<DataListener> startListeners = new LinkedList<>();
-    private List<DataListener> stopListeners = new LinkedList<>();
-    private List<DataListener> saveListeners = new LinkedList<>();
-    private static final boolean isWindows = System.getProperty("os.name")
-            .toLowerCase().startsWith("windows");
+    private Set<DataListener> chatListeners = new LinkedHashSet<>();
+    private Set<DataListener> consoleListeners = new LinkedHashSet<>();
+    private Set<DataListener> errorListeners = new LinkedHashSet<>();
+    private Set<DataListener> startListeners = new LinkedHashSet<>();
+    private Set<DataListener> stopListeners = new LinkedHashSet<>();
+    private Set<DataListener> saveListeners = new LinkedHashSet<>();
+
+    private final Queue<String> messageQueue = new ConcurrentLinkedQueue<>();
+    private final Semaphore messageSem = new Semaphore(0);
 
     public Server(Config config) {
         this.config = config;
@@ -42,6 +47,7 @@ public class Server {
             }
         },"Shutdown Thread");
         Runtime.getRuntime().addShutdownHook(shutdown);
+        new Thread(this::parseMessages,"Message Consumer").start();
     }
 
     public boolean start(){
@@ -56,12 +62,13 @@ public class Server {
                 pb.redirectErrorStream(false);
                 server = pb.start();
                 os = new OutputStreamWriter(server.getOutputStream());
-                new Thread(this::parseOut,"Output Listener").start();
-                new Thread(this::parseErr,"Error Listener").start();
+                new Thread(this::readOut,"Output Listener").start();
+                new Thread(this::readErr,"Error Listener").start();
                 new Thread(()->{
                     try {
                         server.waitFor();
                         stopListeners.forEach(l->l.listen("Stopped"));
+                        Main.LOG.print("[Server] server stopped");
                     } catch (InterruptedException ignored) {}
                 },"Stop Listener").start();
                 return true;
@@ -161,46 +168,67 @@ public class Server {
         return this;
     }
 
-    private void parseOut(){
+    private StringBuffer error = new StringBuffer();
+    private int old_length = 0;
+    private void parseMessages(){
         try{
-            BufferedReader stdout = new BufferedReader(new InputStreamReader(server.getInputStream()));
-
             List<Pattern> chat_patterns = Arrays.stream(config.MC_SERVER.chat_regex).map(Pattern::compile).collect(Collectors.toList());
             Pattern save_pattern = Pattern.compile(config.MC_SERVER.save_regex);
             Pattern start_pattern = Pattern.compile(config.MC_SERVER.done_regex);
+            Pattern error_pattern = Pattern.compile(config.MC_SERVER.error_regex);
 
-            while(!Thread.interrupted() && server.isAlive()){
-                String line = stdout.readLine();
+            while(!Thread.interrupted()){
+                messageSem.acquire();
+                String line = messageQueue.poll();
                 if (line == null) continue;
-                consoleListeners.forEach(l->{
-                    try {
-                        l.listen(line);
-                    }catch (Exception ignored){}
-                });
+                if(error_pattern.matcher(line).matches()) {
 
-                Optional<Matcher> match = chat_patterns.stream().map(p->p.matcher(line)).filter(Matcher::matches).findAny();
-                match.ifPresent(matcher -> chatListeners.forEach(l->{
-                    try {
-                        l.listen(match.get().group(1));
-                    }catch (Exception ignored){}
-                }));
+                    if(error.length() > old_length)
+                        errorListeners.forEach(l -> {
+                            try {
+                                l.listen(error.toString());
+                            } catch (Exception ignored) {
+                            }
+                        });
+                    error.setLength(0);
+                    error.append(line).append("\n");
+                    old_length = error.length();
 
-                Matcher matcher = save_pattern.matcher(line);
-                if(matcher.matches()){
-                    saveListeners.forEach(l->{
+                    consoleListeners.forEach(l -> {
                         try {
                             l.listen(line);
-                        }catch (Exception ignored){}
+                        } catch (Exception ignored) {
+                        }
                     });
-                }
 
-                matcher = start_pattern.matcher(line);
-                if(matcher.matches()){
-                    startListeners.forEach(l->{
+                    Optional<Matcher> match = chat_patterns.stream().map(p->p.matcher(line)).filter(Matcher::matches).findAny();
+                    match.ifPresent(matcher -> chatListeners.forEach(l->{
                         try {
-                            l.listen(line);
+                            l.listen(match.get().group(1));
                         }catch (Exception ignored){}
-                    });
+                    }));
+
+                    Matcher matcher = save_pattern.matcher(line);
+                    if(matcher.matches()){
+                        saveListeners.forEach(l->{
+                            try {
+                                l.listen(line);
+                            }catch (Exception ignored){}
+                        });
+                    }
+
+                    matcher = start_pattern.matcher(line);
+                    if(matcher.matches()){
+                        Main.LOG.print("[Server] server started");
+                        startListeners.forEach(l->{
+                            try {
+                                l.listen(line);
+                            }catch (Exception ignored){}
+                        });
+                    }
+
+                } else {
+                    error.append(line).append("\r\n");
                 }
 
             }
@@ -209,25 +237,35 @@ public class Server {
         }
     }
 
-    private void parseErr(){
+    private void readOut(){
+        try{
+            BufferedReader stdout = new BufferedReader(new InputStreamReader(server.getInputStream()));
+
+            while(!Thread.interrupted() && server.isAlive()){
+                String l = stdout.readLine();
+                if(messageQueue.size()< MAX_QUEUE_SIZE && l != null) {
+                    messageQueue.add(l);
+                    messageSem.release();
+                }
+            }
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private void readErr(){
         try{
             BufferedReader stderr = new BufferedReader(new InputStreamReader(server.getErrorStream()));
 
             while(!Thread.interrupted() && server.isAlive()){
-                String line = stderr.readLine();
-                if (line == null) continue;
-
-                errorListeners.forEach(l -> l.listen(line));
-
+                String l = stderr.readLine();
+                if( l != null) {
+                    error.append(l).append('\n');
+                }
             }
         }catch (Exception ex){
             throw new RuntimeException(ex);
         }
     }
 
-
-
-    public interface DataListener{
-        void listen(String data);
-    }
 }

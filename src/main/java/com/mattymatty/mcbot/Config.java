@@ -22,6 +22,7 @@ public class Config {
         public String[] chat_regex;
         public String save_regex;
         public String done_regex;
+        public String error_regex;
     }
 
     public static class Backup{

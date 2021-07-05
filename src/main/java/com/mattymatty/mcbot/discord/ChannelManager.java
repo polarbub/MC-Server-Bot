@@ -3,21 +3,24 @@ package com.mattymatty.mcbot.discord;
 import com.mattymatty.mcbot.Config;
 import com.mattymatty.mcbot.minecraft.Server;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.channel.text.TextChannelCreateEvent;
 import net.dv8tion.jda.api.events.channel.text.TextChannelDeleteEvent;
 import net.dv8tion.jda.api.events.channel.text.update.TextChannelUpdateTopicEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ChannelManager {
+    public static final int MAX_MSG_LENGTH = 2000;
     private final JDA api;
     private final Server server;
     private final Config config;
@@ -36,6 +39,7 @@ public class ChannelManager {
         new Thread(this::chat_channel_thread,"Chat channels").start();
         new Thread(this::console_channel_thread,"Console channels").start();
         server.addConsoleListener(console_buffer::append);
+        server.addErrorListener(error_buffer::add);
         server.addChatListener(chat_buffer::append);
     }
 
@@ -131,6 +135,7 @@ public class ChannelManager {
     }
 
     final StringBufferPlus console_buffer = new StringBufferPlus();
+    final Queue<String> error_buffer = new LinkedBlockingQueue<>();
     private void console_channel_thread(){
         try {
             while(!Thread.interrupted()){
@@ -141,9 +146,17 @@ public class ChannelManager {
                         for (String msg : messages) {
                             channel.sendMessage(this.escapeMsg(msg)).queue();
                         }
+
                     }
                 }
-                TimeUnit.SECONDS.sleep(1);
+                if(!error_buffer.isEmpty()){
+                    List<String> errors = new LinkedList<>(error_buffer);
+                    error_buffer.clear();
+                    for (TextChannel channel: console_channels) {
+                        errors.forEach(e -> channel.sendFile(new ByteArrayInputStream(e.getBytes(StandardCharsets.UTF_8)),"exception.log").queue());
+                    }
+                }
+                TimeUnit.MILLISECONDS.sleep(500);
             }
         }catch (InterruptedException ignored) {}
     }
@@ -154,13 +167,16 @@ public class ChannelManager {
         String[] splitters ={"\n"," ",".",",",":"} ;
         LinkedList<String> result = new LinkedList<>();
 
-        String sub = msg.substring(0,Math.min(2000,msg.length()));
-        if(sub.length() == 2000){
+        String sub = msg.substring(0,Math.min(MAX_MSG_LENGTH,msg.length()));
+        if(sub.length() == MAX_MSG_LENGTH){
             int index = -1;
             for(String separator : splitters){
                 index = sub.lastIndexOf(separator);
                 if(index!=-1)
                     break;
+            }
+            if(index==-1){
+                index=MAX_MSG_LENGTH;
             }
             sub = msg.substring(0,index);
             String next = msg.substring(index+1);

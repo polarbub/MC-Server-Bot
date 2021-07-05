@@ -1,8 +1,9 @@
 package com.mattymatty.mcbot.discord.commands;
 
+import com.mattymatty.mcbot.DataListener;
 import com.mattymatty.mcbot.discord.Bot;
-import com.mattymatty.mcbot.minecraft.Server;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -39,7 +40,7 @@ public class StopCommand implements Command{
         return new CommandData(getName(),getDescription());
     }
 
-    Server.DataListener stop,start;
+    DataListener stop,start;
 
     @Override
     public void run(SlashCommandEvent event) {
@@ -64,15 +65,19 @@ public class StopCommand implements Command{
                 embed2.setColor(Color.BLUE);
                 event.getHook().editOriginalEmbeds(embed2.build()).queue();
                 bot.server.removeStopListener(this.stop);
+                bot.instance.getPresence().setActivity(Activity.listening("Commands"));
             };
             bot.server.addStopListener(stop);
+            Activity activity = bot.instance.getPresence().getActivity();
             if(!bot.server.stop()) {
                 EmbedBuilder embed2 = new EmbedBuilder();
                 embed2.setTitle("MC Server:");
                 embed2.setDescription("Server Failed to Stop");
                 embed2.setColor(Color.RED);
                 event.getHook().editOriginalEmbeds(embed2.build()).queue();
+                bot.instance.getPresence().setActivity(activity);
             }
+            bot.instance.getPresence().setActivity(Activity.watching("Server shutdown"));
         }
     }
 }
