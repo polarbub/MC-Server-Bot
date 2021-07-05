@@ -1,41 +1,59 @@
-buildscript {
-    repositories {
-        jcenter()
+plugins {
+    // Apply the application plugin to add support for building a CLI application in Java.
+    id 'application'
+    id 'java'
+    id "com.github.johnrengelman.shadow" version "7.0.0"
+}
+application {
+    mainClass = 'com.mattymatty.mcbot.Main'
+}
+
+jar {
+    archiveClassifier = 'no-libs'
+    manifest {
+        attributes(
+                'Main-Class': 'com.mattymatty.mcbot.Main'
+        )
     }
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
+    shadowJar {
+        archiveClassifier.set('')
     }
 }
 
-apply plugin: 'java'
-apply plugin: 'com.github.johnrengelman.shadow'
+task sourcesJar(type: Jar, dependsOn: classes) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+}
 
-group 'com.mattymatty'
-version '0.1'
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    archiveClassifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
 
 repositories {
-    mavenCentral()
+    // Use JCenter for resolving dependencies.
+    jcenter()
+    maven { url 'https://jitpack.io/' }
+    flatDir {
+        dirs 'libs'
+    }
+    mavenCentral() // for transitive dependencies
     maven {
         name 'm2-dv8tion'
         url 'https://m2.dv8tion.net/releases'
     }
 }
 
-
 dependencies {
     implementation group: 'com.googlecode.lanterna', name: 'lanterna', version: '3.1.1'
     implementation("net.dv8tion:JDA:4.3.0_277")
+    implementation name: 'slf4j-simple-1.7.9'
     implementation group: 'org.yaml', name: 'snakeyaml', version: '1.29'
     implementation group: 'org.json', name: 'json', version: '20210307'
     implementation group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: '5.12.0.202106070339-r'
-}
-
-jar {
-    manifest {
-        attributes "Main-Class": "com.mattymatty.mcbot.Main"
-    }
-
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
 }
