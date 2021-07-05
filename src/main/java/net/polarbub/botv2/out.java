@@ -40,7 +40,7 @@ public class out extends Thread{
 
         Matcher matcher = Main.ipPattern.matcher(message);
         if(matcher.matches()) {
-            message = message.replaceAll("(\\d+\\.\\d+\\.\\d+\\.\\d+)", "||ip.no.look.ing||");
+            message = matcher.replaceAll("||ip.no.look.ing||");
         }
 
         temp = String.join("",Final, "\n", message);

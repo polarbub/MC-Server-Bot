@@ -48,6 +48,7 @@ public class Main extends ListenerAdapter {
     public static YamlMapping permissionsConfig;
     public static String tellCommand;
     public static Pattern ipPattern = Pattern.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+)");
+    public static Pattern urlPattern = Pattern.compile("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}");
     public static String serverDir;
 
 
@@ -114,6 +115,7 @@ public class Main extends ListenerAdapter {
         if (!event.getAuthor().isBot()) {
             Message msg = event.getMessage();
             returnChannel = event.getChannel();
+            System.out.println();
             if (msg.getContentRaw().equals(pre + "stopbot") && permissions.getPermissions("stopbot", event)) {
                 if(Main.serverRunning) {
                     out.add("Server is Running rn");
@@ -194,6 +196,13 @@ public class Main extends ListenerAdapter {
                     server.commandUse(msg.getContentRaw());
                 } else if (String.valueOf(returnChannel).equals(String.valueOf(chatBridgeChannel)) && serverRunning && permissions.getPermissions("chatbridge", event)) {
                     String rgb = "";
+                    /*String[] url;
+
+                    Matcher matcher = urlPattern.matcher(msg.getContentRaw());
+                    if(matcher.matches()) {
+
+                    }*/
+
                     try {
                         Color c = event.getMember().getColor();
                         int R = 0;
@@ -206,6 +215,7 @@ public class Main extends ListenerAdapter {
                     } catch (NullPointerException ignored) {
                         rgb = "#FFFFFF";
                     }
+
                     server.commandUse(
 
                             "/tellraw @a [{\"text\":\"[DISCORD]\",\"color\":\"#7289DA\"},{\"text\":\" <\",\"color\":\"white\"},{\"text\":\"" +
@@ -214,8 +224,9 @@ public class Main extends ListenerAdapter {
                             rgb +
                             "\"},{\"text\":\"> \",\"color\":\"white\"},{\"text\":\"" +
                                     msg.getContentRaw() +
-                            "\",\"color\":\"white\"}]"
-                                    );
+                            "\",\"color\":\"white\", \"clickEvent\":{\"action\":\"open_url\",\"value\":\"" +
+                            //url +
+                            "\"}]");
                 }
             }
         }
