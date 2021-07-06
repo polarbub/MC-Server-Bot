@@ -11,6 +11,7 @@ public class Config {
         public String chat_channel_marker;
         public String console_channel_marker;
         public String command_channel_marker;
+        public String console_command_channel_marker;
         public String command_marker_mode;
         public Long[] guilds;
     }

@@ -1,6 +1,6 @@
 DISCORD_BOT:
   #the discord bot token needed to login
-  token: ""
+  token: "TOKEN"
   #the guild IDs to listen for commands
   guilds:
     - 428163245753499653
@@ -9,6 +9,7 @@ DISCORD_BOT:
   chat_channel_marker: "|MC-chat"
   console_channel_marker: "|MC-console"
   command_channel_marker: "|MC-commands"
+  console_command_channel_marker: "|MC-console-command"
   #command marker mode ALLOW/DISALLOW
   command_marker_mode: "ALLOW"
 

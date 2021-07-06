@@ -28,6 +28,7 @@ public class ChannelManager {
     private final Set<TextChannel> chat_channels = new HashSet<>();
     private final Set<TextChannel> console_channels = new HashSet<>();
     private final Set<TextChannel> command_channels = new HashSet<>();
+    private final Set<TextChannel> console_command_channels = new HashSet<>();
     private final Pattern ipRegex = Pattern.compile("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b",Pattern.MULTILINE);
     private final Pattern escapeRegex = Pattern.compile("([\\\\*`'_~])",Pattern.MULTILINE);
 
@@ -51,20 +52,7 @@ public class ChannelManager {
     }
 
     public void loadChannels(){
-        bot.guilds.forEach(g->{
-            g.getTextChannels().forEach(c->{
-                if(c.getTopic()==null)
-                    return;
-                if(c.getTopic().contains(config.DISCORD_BOT.chat_channel_marker))
-                    chat_channels.add(c);
-                else {
-                    if (c.getTopic().contains(config.DISCORD_BOT.console_channel_marker))
-                        console_channels.add(c);
-                    if (c.getTopic().contains(config.DISCORD_BOT.command_channel_marker))
-                        command_channels.add(c);
-                }
-            });
-        });
+        bot.guilds.forEach(g-> g.getTextChannels().forEach(this::channel));
     }
 
     public void channel_edited(TextChannelUpdateTopicEvent event){
@@ -80,8 +68,13 @@ public class ChannelManager {
             channel(event.getChannel());
     }
     public void message_received(GuildMessageReceivedEvent event){
-        if(isChatChannel(event.getChannel()) && !event.getAuthor().isBot()){
+        if(event.getAuthor().isBot())
+            return;
+        if(isChatChannel(event.getChannel())){
             bot.say(event.getMessage());
+        }
+        if(isConsoleCommandChannel(event.getChannel())){
+            server.command(event.getMessage().getContentRaw());
         }
     }
 
@@ -95,6 +88,9 @@ public class ChannelManager {
     public boolean isCommandChannel(TextChannel channel){
         return command_channels.contains(channel);
     }
+    public boolean isConsoleCommandChannel(TextChannel channel){
+        return console_command_channels.contains(channel);
+    }
 
     private void channel(TextChannel channel){
         if(channel.getTopic()==null)
@@ -102,6 +98,7 @@ public class ChannelManager {
         boolean chat_channel = channel.getTopic().contains(config.DISCORD_BOT.chat_channel_marker);
         boolean console_channel = !chat_channel && channel.getTopic().contains(config.DISCORD_BOT.console_channel_marker) ;
         boolean command_channel = !chat_channel && channel.getTopic().contains(config.DISCORD_BOT.command_channel_marker) ;
+        boolean console_command_channel = !chat_channel && channel.getTopic().contains(config.DISCORD_BOT.console_command_channel_marker) ;
         if(chat_channel)
             chat_channels.add(channel);
         else
@@ -114,6 +111,10 @@ public class ChannelManager {
             command_channels.add(channel);
         else
             command_channels.remove(channel);
+        if(console_command_channel)
+            console_command_channels.add(channel);
+        else
+            console_command_channels.remove(channel);
     }
 
     final StringBufferPlus chat_buffer = new StringBufferPlus();
