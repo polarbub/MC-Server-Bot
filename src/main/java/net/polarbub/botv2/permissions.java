@@ -6,6 +6,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import java.util.List;
 import java.util.Objects;
 
+import static net.polarbub.botv2.config.*;
+
 public class permissions {
 
     //Permissions grabber
@@ -16,19 +18,19 @@ public class permissions {
         Guild guild = event.getGuild();
 
         int useNumber = 0;
-        String check = Main.permissionsConfig.yamlMapping("Global").yamlSequence("Users").string(useNumber);
+        String check = permissionsConfig.yamlMapping("Global").yamlSequence("Users").string(useNumber);
         while(check != null) {
             if(check.equals(id)) {
                 return true;
             }
             useNumber++;
-            check = Main.permissionsConfig.yamlMapping("Global").yamlSequence("Users").string(useNumber);
+            check = permissionsConfig.yamlMapping("Global").yamlSequence("Users").string(useNumber);
         }
 
         useNumber = 0;
         long checkLong;
         Role role;
-        check = Main.permissionsConfig.yamlMapping("Global").yamlSequence("Roles").string(useNumber);
+        check = permissionsConfig.yamlMapping("Global").yamlSequence("Roles").string(useNumber);
         if(check.length() == 2 || check.equals("null")) {} else {
             checkLong = Long.parseLong(check);
             role = guild.getRoleById(checkLong);
@@ -38,23 +40,23 @@ public class permissions {
                     return true;
                 }
                 useNumber++;
-                check = Main.permissionsConfig.yamlMapping("Global").yamlSequence("Roles").string(useNumber);
+                check = permissionsConfig.yamlMapping("Global").yamlSequence("Roles").string(useNumber);
                 checkLong = Long.parseLong(check);
             }
         }
 
         useNumber = 0;
-        check = Main.permissionsConfig.yamlMapping(permission).yamlSequence("Users").string(useNumber);
+        check = permissionsConfig.yamlMapping(permission).yamlSequence("Users").string(useNumber);
         while(check != null) {
             if(check.equals(id)) {
                 return true;
             }
             useNumber++;
-            check = Main.permissionsConfig.yamlMapping(permission).yamlSequence("Users").string(useNumber);
+            check = permissionsConfig.yamlMapping(permission).yamlSequence("Users").string(useNumber);
         }
 
         useNumber = 0;
-        check = Main.permissionsConfig.yamlMapping(permission).yamlSequence("Roles").string(useNumber);
+        check = permissionsConfig.yamlMapping(permission).yamlSequence("Roles").string(useNumber);
         if(check.length() == 2 || check.equals("null")) {} else {
             checkLong = Long.parseLong(check);
             role = guild.getRoleById(checkLong);
@@ -64,7 +66,7 @@ public class permissions {
                     return true;
                 }
                 useNumber++;
-                check = Main.permissionsConfig.yamlMapping(permission).yamlSequence("Roles").string(useNumber);
+                check = permissionsConfig.yamlMapping(permission).yamlSequence("Roles").string(useNumber);
                 checkLong = Long.parseLong(check);
             }
         }

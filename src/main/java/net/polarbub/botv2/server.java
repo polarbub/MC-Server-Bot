@@ -1,6 +1,7 @@
 package net.polarbub.botv2;
 
 import java.io.*;
+import static net.polarbub.botv2.config.*;
 
 public class server extends Thread{
     //Send a command to the server
@@ -38,7 +39,7 @@ public class server extends Thread{
                 if(line.contains("] [Server thread/INFO]: Saved the game") && !line.contains("<") && !line.contains(">")) {
                     git.autoSaveReturn = true;
                 }
-                if(line.contains("] [Server thread/INFO]: Done (") && line.contains(")! For help, type ") && !Main.serverRunning && Main.backupTime > 0) {
+                if(line.contains("] [Server thread/INFO]: Done (") && line.contains(")! For help, type ") && !Main.serverRunning && backupTime > 0) {
                     Main.serverRunning = true;
                     Main.gitThread.start();
                 }

@@ -12,7 +12,7 @@ public class in extends Thread{
                 tosay = myObj.nextLine();
             } catch (NoSuchElementException ignored) {
             }
-            if(!tosay.equals("")) Main.consoleChannel.sendMessageFormat(tosay).queue();
+            if(!tosay.equals("")) config.consoleChannel.sendMessageFormat(tosay).queue();
             if(tosay.toLowerCase().equals("start")) {
                 if(Main.serverRunning) {
                     out.add("Server is Running rn");

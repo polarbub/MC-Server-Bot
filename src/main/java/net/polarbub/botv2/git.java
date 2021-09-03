@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import static net.polarbub.botv2.config.*;
 
 public class git extends Thread {
     public static boolean gitInUse = false;
@@ -17,11 +18,11 @@ public class git extends Thread {
         while(true) {
             inSleep = true;
             try {
-                Thread.sleep(Main.backupTime * 1000);
+                Thread.sleep(backupTime * 1000);
             } catch (InterruptedException ignored) {}
-            if(Main.serverRunning) server.commandUse("say Backup in " + Main.backupWarn + "seconds."); {
+            if(Main.serverRunning) server.commandUse("say Backup in " + backupWarn + "seconds."); {
                 try {
-                    Thread.sleep(Main.backupWarn * 1000);
+                    Thread.sleep(backupWarn * 1000);
                 } catch (InterruptedException ignored) {}
                 inSleep = false;
             }
@@ -67,12 +68,12 @@ public class git extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        runProg(new ProcessBuilder("git", "add", "-A"), Main.serverDir);
+        runProg(new ProcessBuilder("git", "add", "-A"), serverDir);
         out.add("\nBackup started");
         if(comment == null) {
-            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"No Comment\""), Main.serverDir);
+            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"No Comment\""), serverDir);
         } else {
-            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"" + comment + "\""), Main.serverDir);
+            runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"" + comment + "\""), serverDir);
         }
         gitInUse = false;
         out.add("Backup complete\n");
