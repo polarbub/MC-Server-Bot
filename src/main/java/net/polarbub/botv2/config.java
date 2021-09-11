@@ -2,9 +2,9 @@ package net.polarbub.botv2;
 
 import com.amihaiemil.eoyaml.Yaml;
 import com.amihaiemil.eoyaml.YamlMapping;
+import com.amihaiemil.eoyaml.YamlNode;
 import com.amihaiemil.eoyaml.YamlSequence;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 
@@ -12,6 +12,7 @@ import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class config {
@@ -26,13 +27,14 @@ public class config {
     public static String IP;
     public static String serverArgs;
     public static String serverDir;
+    public static int gitPushOn;
+    public static String gitPushOptions;
 
-    public static Pattern[] joinLeavePattern;
-    public static Pattern chatBridgePattern;
+    public static List<normalPattern> normalPatterns;
+    public static List<namedPattern> namedPatterns;
 
     public static TextChannel chatBridgeChannel;
     public static TextChannel consoleChannel;
-    public static MessageChannel returnChannel;
 
     public static YamlMapping permissionsConfig;
 
@@ -47,16 +49,7 @@ public class config {
         port = minecraftConfig.integer("port");
         IP = minecraftConfig.string("ip");
 
-        YamlSequence chatBridgeRegexSeq = discordConfig.yamlSequence("chat_regex");
-        joinLeavePattern = new Pattern[chatBridgeRegexSeq.size()];
-        for(int i = 0; i < chatBridgeRegexSeq.size(); i++) {
-            joinLeavePattern[i] = Pattern.compile(chatBridgeRegexSeq.string(i));
-        }
-        chatBridgePattern = Pattern.compile(discordConfig.string("join&leave_regex"));
         //Get the channel IDs
-        consoleChannel = Main.bot.getTextChannelById(discordConfig.longNumber("CONSOLE_CHANNEL"));
-        chatBridgeChannel = Main.bot.getTextChannelById(discordConfig.longNumber("CHAT_CHANNEL"));
-        webHookURL = new URL(discordConfig.string("chatBridgeWebHookURL"));
         token = discordConfig.string("TOKEN");
         pre = discordConfig.string("PREFIX");
         //init discord jda
@@ -66,8 +59,46 @@ public class config {
         }
         Thread.sleep(1000);
 
+        consoleChannel = Main.bot.getTextChannelById(discordConfig.longNumber("CONSOLE_CHANNEL"));
+        chatBridgeChannel = Main.bot.getTextChannelById(discordConfig.longNumber("CHAT_CHANNEL"));
+
+        //Add all normal regexs to list
+        YamlSequence normalRegexes = discordConfig.yamlSequence("normalRegexes");
+        for(YamlNode regexNode : normalRegexes) {
+            normalPattern NormalPattern = new normalPattern();
+            YamlMapping regexSequence = regexNode.asMapping();
+            NormalPattern.pattern = Pattern.compile(regexSequence.string("string"));
+            NormalPattern.dataGroup = regexSequence.integer("contentGroup");
+            normalPatterns.add(NormalPattern);
+        }
+
+        if(!discordConfig.string("chatBridgeWebHookURL").isEmpty()) {
+            webHookURL = new URL(discordConfig.string("chatBridgeWebHookURL"));
+            //Add all named regexs to list
+            YamlSequence namedRegexs = discordConfig.yamlSequence("webHookRegexes");
+            for(YamlNode regexNode : namedRegexs) {
+                namedPattern NamedPattern = new namedPattern();
+                YamlMapping regexSequence = regexNode.asMapping();
+                NamedPattern.pattern = Pattern.compile(regexSequence.string("string"));
+                NamedPattern.dataGroup = regexSequence.integer("contentGroup");
+                NamedPattern.nameGroup = regexSequence.integer("nameGroup");
+                namedPatterns.add(NamedPattern);
+            }
+        }
+
         backupTime = backupConfig.longNumber("backup_time");
         backupWarn = backupConfig.longNumber("backup_alert");
         serverDir = backupConfig.string("gitDirectory");
+        gitPushOn = backupConfig.integer("on");
+        gitPushOptions = backupConfig.string("options");
     }
+}
+
+class normalPattern {
+    public Pattern pattern;
+    public int dataGroup;
+}
+
+class namedPattern extends normalPattern {
+    public int nameGroup;
 }

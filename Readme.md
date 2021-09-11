@@ -4,15 +4,17 @@
 - URLS
 - Replys
 - Attachments
-- Git push automatically
 - Show less on backup in console channel
-- Censor ips
-- Fix permissions part of config file
+
 #### Low priority:
 - Show bot count in .status
 - Use json builder for discord chat bridge -> mc
 - emoji lookup
 
+#### To test:
+- Censor ips
+- Regex
+- Fix permissions part of config file
 
 ### Help:
 1) Build w/ `gradle build`

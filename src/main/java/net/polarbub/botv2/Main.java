@@ -96,7 +96,6 @@ public class Main extends ListenerAdapter {
 
             } else if (msg.getContentRaw().equals(pre + "status") && permissions.getPermissions("status", event) && Main.serverRunning) {
                 MineStat ms = new MineStat(IP, port);
-                int port2 = 26656;
                 String out = "Server is";
                 if(ms.isServerUp()) {
                     out = String.join(" ", out, "up\n\n");

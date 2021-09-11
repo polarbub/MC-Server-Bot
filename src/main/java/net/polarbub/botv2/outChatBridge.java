@@ -8,7 +8,7 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.json.*;
 
 import static net.polarbub.botv2.config.*;
 
@@ -34,10 +34,10 @@ public class outChatBridge {
                 : resultString;
     }
 
-    private static void processPatternSystem(Pattern pattern, String messageRaw) {
-        Matcher matcher = pattern.matcher(messageRaw);
+    private static void processPatternNormal(normalPattern pattern, String messageRaw) {
+        Matcher matcher = pattern.pattern.matcher(messageRaw);
         if(matcher.matches()) {
-            String message = matcher.group(1);
+            String message = matcher.group(pattern.dataGroup);
             if(message.length() >= 2000) {
                 chatBridgeChannel.sendMessageFormat("This message is too long to send").queue();
             }
@@ -66,12 +66,12 @@ public class outChatBridge {
         connection.getResponseCode();
     }
 
-    private static void processPatternNamed(Pattern pattern, String messageRaw) {
+    private static void processPatternNamed(namedPattern pattern, String messageRaw) {
         if(!pattern.toString().equals("")) {
-            Matcher matcher = pattern.matcher(messageRaw);
+            Matcher matcher = pattern.pattern.matcher(messageRaw);
             if(matcher.matches()) {
                 try {
-                    sendWebHookMessage(matcher.group(4), matcher.group(5));
+                    sendWebHookMessage(matcher.group(pattern.nameGroup), matcher.group(pattern.dataGroup));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -84,19 +84,118 @@ public class outChatBridge {
         if(Main.serverRunning) {
             InUse = true;
 
-            processPatternNamed(chatBridgePattern, messageRaw);
+            for(namedPattern pattern : namedPatterns) {
+                processPatternNamed(pattern, messageRaw);
+            }
 
-            for(Pattern pattern : joinLeavePattern) {
-                processPatternSystem(pattern, messageRaw);
+            for(normalPattern pattern : normalPatterns) {
+                processPatternNormal(pattern, messageRaw);
             }
             InUse = false;
         }
 
     }
+
+    public static boolean say(Server server, Config config, Member member, String message, String link, String[] file_url){
+        JSONArray msgjson = new JSONArray();
+        msgjson.put("");
+        JSONObject jobj = new JSONObject()
+                .put("text","[DISCORD]")
+                .put("color","#7289DA");
+        if(Objects.nonNull(link)){
+            jobj.put("hoverEvent",new JSONObject()
+                    .put("action","show_text")
+                    .put("contents", new JSONArray()
+                            .put(new JSONObject()
+                                    .put("text","Open on Discord")
+                                    .put("italic",true)
+                                    .put("undelined",true)
+                                    .put("color","#7289DA")
+                            )
+                    )
+            );
+            jobj.put("clickEvent",new JSONObject()
+                    .put("action","open_url")
+                    .put("value", link)
+            );
+        }
+        msgjson.put(jobj);
+        msgjson.put(new JSONObject()
+                .put("text"," <")
+        );
+
+        Color color = Optional.ofNullable(member.getColor()).orElse(Color.WHITE);
+
+        String red = Integer.toHexString(color.getRed());
+        String green = Integer.toHexString(color.getGreen());
+        String blue = Integer.toHexString(color.getBlue());
+
+        if (red.length() == 1) red = "0" + red;
+        if (green.length() == 1) green = "0" + green;
+        if (blue.length() == 1) blue = "0" + blue;
+
+        String hexColor = "#" + red + green + blue;
+        msgjson.put(new JSONObject()
+                .put("text",member.getEffectiveName())
+                .put("color",hexColor)
+                .put("hoverEvent",new JSONObject()
+                        .put("action","show_text")
+                        .put("contents", new JSONArray()
+                                .put(new JSONObject()
+                                        .put("text",member.getUser().getAsTag())
+                                        .put("undelined",true)
+                                        .put("color","#7289DA")
+                                )
+                        )
+                )
+
+        );
+
+        msgjson.put(new JSONObject()
+                .put("text","> ")
+        );
+
+        if (Objects.nonNull(file_url) && file_url.length>0){
+            for (String url: file_url) {
+                jobj = new JSONObject();
+                jobj.put("text","[");
+                jobj.put("extra",new JSONArray()
+                        .put(new JSONObject()
+                                .put("text","File")
+                                .put("underlined",true)
+                        ).put(new JSONObject()
+                                .put("text","] ")
+                        )
+                );
+                jobj.put("color","#7289DA");
+                jobj.put("hoverEvent",new JSONObject()
+                        .put("action","show_text")
+                        .put("contents", new JSONArray()
+                                .put(new JSONObject()
+                                        .put("text","Open File in Browser")
+                                        .put("undelined",true)
+                                        .put("color","#7289DA")
+                                )
+                        )
+                );
+                jobj.put("clickEvent",new JSONObject()
+                        .put("action","open_url")
+                        .put("value", url)
+                );
+                msgjson.put(jobj);
+            }
+        }
+
+        msgjson.put(new JSONObject()
+                .put("text",message));
+
+        String command = config.MC_SERVER.say_format;
+        command = command.replace("%username%",member.getEffectiveName());
+        command = command.replace("%color%",hexColor);
+        command = command.replace("%message%",JSONWriter.valueToString(message));
+        command = command.replace("%messageJSON%",msgjson.toString());
+
+        return server.command(command);
+    }
 }
 
-class patternArray {
-    public Pattern[] array;
-    public int nameGroup;
-    public int dataGroup;
-}

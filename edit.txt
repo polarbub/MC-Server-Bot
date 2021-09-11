@@ -1,0 +1,9 @@
+        //Add all normal regexs to list
+        YamlSequence normalRegexes = discordConfig.yamlSequence("normalRegexes");
+        for(YamlNode regexNode : normalRegexes) {
+            namedPattern NamedPattern = new namedPattern();
+            YamlMapping regexSequence = regexNode.asMapping();
+            NamedPattern.pattern = Pattern.compile(regexSequence.string("string"));
+            NamedPattern.dataGroup = regexSequence.integer("contentGroup");
+            NamedPatterns.add(namedPattern);
+        }

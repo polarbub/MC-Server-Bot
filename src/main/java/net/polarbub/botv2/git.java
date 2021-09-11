@@ -75,6 +75,11 @@ public class git extends Thread {
         } else {
             runProg(new ProcessBuilder("git", "commit", "-a", "-m", "\"" + comment + "\""), serverDir);
         }
+
+        if(gitPushOn == 1) {
+            runProg(new ProcessBuilder("git", "push", gitPushOptions), serverDir);
+        }
+
         gitInUse = false;
         out.add("Backup complete\n");
     }
