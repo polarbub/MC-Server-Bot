@@ -1,9 +1,3 @@
-        //Add all normal regexs to list
-        YamlSequence normalRegexes = discordConfig.yamlSequence("normalRegexes");
-        for(YamlNode regexNode : normalRegexes) {
-            namedPattern NamedPattern = new namedPattern();
-            YamlMapping regexSequence = regexNode.asMapping();
-            NamedPattern.pattern = Pattern.compile(regexSequence.string("string"));
-            NamedPattern.dataGroup = regexSequence.integer("contentGroup");
-            NamedPatterns.add(namedPattern);
-        }
+^\[\d\d:\d\d:\d\d] \[Server thread\/INFO][:] (\*([0-9,A-z,_]{3,16}) .+)
+^\[\d\d:\d\d:\d\d] \[Server thread\/INFO][:] <([0-9,A-z,_]{3,16})> (.+)
+^\[\d\d:\d\d:\d\d] \[Server thread\/INFO][:] ((?:[0-9,A-z,_]{3,16}) (?:(?:left)|(?:joined)) the game)

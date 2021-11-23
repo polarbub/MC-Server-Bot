@@ -1,0 +1,111 @@
+DISCORD_BOT:
+  #the discord bot token needed to login
+  TOKEN: ""
+  #the prefix the bot will answer to
+  PREFIX: ";"
+  #the channel ID where to echo the server console
+  CONSOLE_CHANNEL: '796517469224960072'
+  #the channel ID where to write and listen to chat messages
+  CHAT_CHANNEL: '796519072799653899'
+  #webhook in chat bridge channel. Sends messages with the minecraft account's username. Leave blank to turn off.
+  chatBridgeWebHookURL: ""
+
+
+MC_SERVER:
+  #The one line command needed to start the Server. For each argument use an element in the list. Please note that cd doesn't work.
+  #The syntax is weird because my YAML library doesn't support something sane.
+
+  startCMD:
+    - entry:
+        string: "java"
+    - entry:
+        string: "-jar"
+    - entry:
+        string: "-Xmx2G"
+    - entry:
+        string: "-Xms2G"
+    - entry:
+        string: "fabric-server-launch.jar"
+
+  #"-XX:+UseG1GC" "-XX:+ParallelRefProcEnabled" "-XX:MaxGCPauseMillis=200" "-XX:+UnlockExperimentalVMOptions" "-XX:+DisableExplicitGC" "-XX:+AlwaysPreTouch" "-XX:G1NewSizePercent=30" "-XX:G1MaxNewSizePercent=40" "-XX:G1HeapRegionSize=8M" "-XX:G1ReservePercent=20" "-XX:G1HeapWastePercent=5" "-XX:G1MixedGCCountTarget=4" "-XX:InitiatingHeapOccupancyPercent=15" "-XX:G1MixedGCLiveThresholdPercent=90" "-XX:G1RSetUpdatingPauseTimePercent=5" "-XX:SurvivorRatio=32" "-XX:+PerfDisableSharedMem" "-XX:MaxTenuringThreshold=1"
+
+  #The ip that the status command pings
+  ip: "localhost"
+  #The port for the status command
+  port: "25565"
+
+  #If you want to change the command look in the bottom of Main.java
+
+  #for chat bridge
+  normalRegexes:
+    - regex:
+        string: "^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\][:] ((?:[0-9A-z_]{3,16}) (?:(?:left)|(?:joined)) the game)"
+        contentGroup: 1
+
+  webHookRegexes:
+    - regex:
+        string: "^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\][:] <([0-9A-z_]{3,16})> (.+)"
+        prefix: ""
+        nameGroup: 1
+        contentGroup: 2
+    - regex:
+        string: "^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\][:] \* ([0-9A-z_]{3,16}) (.+)"
+        prefix: "* "
+        nameGroup: 1
+        contentGroup: 2
+
+  #This is the regex for the printed line indicating when the server has been started.
+  startRegex: '^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\][:] Done \(\d+.\d+s\)! For help, type "help"'
+
+
+BACKUP:
+  #time in seconds between backups ( 0 means disabled)
+  #backup_time: 1800
+  backup_time: 0
+  #time after warning before backup
+  backup_alert: 30
+  #Where to run server and make backups. Needs to be an initalized git repo
+  gitDirectory: "/mnt/saves/code/java/bot-v2/server"
+
+  #regex for detecting when the server has let go of the world files.
+  gitsavereturnRegex: '^\[\d\d:\d\d:\d\d\] \[Server thread\/INFO\][:] Saved the game'
+
+  gitPush:
+    #1 = on, 0 = off
+    on: 0
+    #same input method as for the server start command
+    #this gets ran after every backup
+    command:
+      - entry:
+          string: "git"
+      - entry:
+          string: "push"
+
+
+#USE IDS HERE
+PERMISSIONS:
+  Global:
+    Roles:
+      - "856719355785904158"
+    Users:
+      - "667155361970782244"
+  server:
+    Roles:
+      - ""
+    Users: 
+      - ""
+  status:
+    Roles:
+      - ""
+    Users:
+      - ""
+  backup:
+    Roles:
+      - ""
+    Users:
+      - ""
+  chatbridge:
+    Roles:
+      - ""
+    Users:
+      - ""
