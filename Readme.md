@@ -1,24 +1,17 @@
-### Todo:
-- Webhooks for chat bridge people
-- Clean up ugly code
-- URLS
-- Replys
-- Attachments
-- Show less on backup in console channel
+### Running:
+1) Run `gradle build` to build the jar
+2) The Jar is in build/libs
+3) Get config file from releases
+4) Edit config file for your needs.
+5) Start the bot with `java -jar bot-v2.jar <path to config file>` **
 
-#### Low priority:
-- Show bot count in .status
-- Use json builder for discord chat bridge -> mc
-- emoji lookup
+### Compatibly:
 
-#### To test:
-- Censor ips
-- Regex
-- Fix permissions part of config file
+#### Windows:
+I don't have a computer with windows to test on. It'll most likely work, but I can't test.
 
-### Help:
-1) Build w/ `gradle build`
-2) Jar is in build/libs
-3) Use config file from releases
-4) Edit config file for needs.
-5) No jvm args are needed so start w/ java -jar bot-v2.jar
+#### Linux:
+It's fully compatible with Linux
+
+#### macOS:
+Same deal as windows

@@ -1,46 +1,71 @@
 package net.polarbub.botv2;
 
 import me.dilley.MineStat;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.polarbub.botv2.config.config;
+import net.polarbub.botv2.message.in;
+import net.polarbub.botv2.message.out;
+import net.polarbub.botv2.server.git;
+import net.polarbub.botv2.server.server;
+
+import static net.polarbub.botv2.config.config.*;
 
 import javax.security.auth.login.LoginException;
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
-import static net.polarbub.botv2.config.*;
-
 public class Main extends ListenerAdapter {
-    public static ProcessBuilder pb;
-    public static Process p;
-    public static BufferedWriter bw;
-    public static BufferedReader br;
-    public static boolean serverRunning = false;
-    public static JDA bot;
+    public static String[] runTimeArgs;
     public static in inThread = new in();
     public static out outThread = new out();
-    public static server serverThread = new server();
+    public static server serverThread;
     public static git gitThread = new git();
     public static status statusThread = new status();
-    public static Pattern ipPattern = Pattern.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+)");
-    public static Pattern urlPattern = Pattern.compile("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}");
+    public static boolean configLoadedFailure = false;
+    public static boolean stopHard = false;
+    public static Pattern ipPattern = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
 
+    public static void main(String[] args) throws InterruptedException, LoginException, IOException {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if(stopHard && server.serverRunning) {
+                server.p.destroy();
+                return;
+            } else if(server.serverRunning) {
+                stopHard = true;
+                System.out.println("\nWarning, killing running server!\nSend SIGINT again to hard stop the server.\nStrangely this doesn't print the normal server stopping lines even though it is stopping it cleanly.\nThe process with exit when the server is stopped.");
+                //FIX: This doesn't print out the normal stopping text
+                server.commandUse("stop");
+                while(server.serverRunning) { //wait for server off
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            bot.shutdown();
+        }));
 
-    public static void main(String[] args) throws IOException, InterruptedException, LoginException {
-        config.readConfig();
-
-        pb = new ProcessBuilder(serverArgs);
-        pb.directory(new File(serverDir));
-        pb.redirectErrorStream(true);
+        runTimeArgs = args;
+        try {
+            config.readConfig();
+        } catch (IOException e) {
+            System.out.println("Invalid config file location");
+            configLoadedFailure = true;
+            throw e;
+        } catch (NullPointerException e) {
+            System.out.println("Invalid config file");
+            configLoadedFailure = true;
+            throw e;
+        } catch (IndexOutOfBoundsException e) {
+            System.out.println("No config file declared, please append config file location to command used to start bot");
+            configLoadedFailure = true;
+            throw e;
+        }
 
         //start the console in a thread
         inThread.start();
@@ -50,91 +75,75 @@ public class Main extends ListenerAdapter {
 
         //Start status thing
         statusThread.start();
+
     }
 
     //message processing
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (!event.getAuthor().isBot()) {
+        if (configLoadedFailure) {
+            bot.shutdown();
+            System.exit(1);
+        } else if (!event.getAuthor().isBot()) {
             Message msg = event.getMessage();
             MessageChannel returnChannel = event.getChannel();
-            System.out.println();
-            if (msg.getContentRaw().equals(pre + "stopbot") && permissions.getPermissions("stopbot", event)) {
-                if(Main.serverRunning) {
-                    out.add("Server is Running rn");
+            if (msg.getContentRaw().equals("start") && String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && !server.serverRunning && permissions.getPermissions("server", event)) {
+                if(server.serverRunning) {
+                    returnChannel.sendMessageFormat("Server is Running.").queue();
                 } else {
-                    System.exit(0);
+                    Main.serverThread = new server();
+                    Main.serverThread.start();
                 }
-
-            } else if (msg.getContentRaw().equals("start") && String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && !serverRunning && permissions.getPermissions("server", event)) {
-                if(serverRunning) {
-                    out.add("Server is Running rn");
-                } else {
-                    serverThread.start();
-                }
-
-            } else if(msg.getContentRaw().equals(pre + "reloadconfig") && permissions.getPermissions("reloadconfig", event)) {
-                try {
-                    config.readConfig();
-                } catch (IOException | InterruptedException | LoginException e) {
-                    e.printStackTrace();
-                }
-                returnChannel.sendMessageFormat("Done").queue();
-
             } else if(msg.getContentRaw().equals(pre + "help")) {
-                returnChannel.sendMessageFormat("**HELP**\n\n" +
-                        "Always add you prefix before the command. Yours is: `" + pre + "` " +
-                        "```\nstopbot                   | Stop server bot. This can also be done in the terminal\n" +
-                        "reloadconfig              | reload the configuration from config.yaml\n" +
-                        "status                    | get the status of the server\n" +
-                        "backup <backup message>   | back up the server```" +
-                        "backup restore <commit id | restore backup```" +
-                        "\nTo send a command to the server send a message in your console channel. This can also be done in the terminal.\n" +
-                        "To send a message through the chat bridge send a message in your chat bridge channel.\n" +
-                        "To start the server send `start` in the console channel. This can also be done in the terminal."
+                returnChannel.sendMessageFormat(
+                        "```\n" +  pre + "status                     | get the status of the server\n" +
+                        pre + "backup <backup message>    | backup the server\n" +
+                        pre + "backup restore <commit id> | restore backup```" +
+                        "\nTo send a command to the server send a message in <#" + consoleChannel.getId() + ">. " +
+                        "To start the server send `start` in <#" + consoleChannel.getId() + ">. Both these things can also be done in the terminal.\n" +
+                        "To send a message through the chat bridge send a message in <#" + chatBridgeChannel.getId() + ">.\n"
                 ).queue();
 
-            } else if (msg.getContentRaw().equals(pre + "status") && permissions.getPermissions("status", event) && Main.serverRunning) {
-                MineStat ms = new MineStat(IP, port);
+            } else if (msg.getContentRaw().equals(pre + "status") && permissions.getPermissions("status", event)) {
                 String out = "Server is";
-                if(ms.isServerUp()) {
-                    out = String.join(" ", out, "up\n\n");
-                    out = String.join("", out, String.valueOf(ms.getCurrentPlayers()), " out of ", String.valueOf(ms.getMaximumPlayers()), " players\n\n");
-                    out = String.join("", out, "MOTD: `", String.valueOf(ms.getMotd()), "`\n\n");
+                if(server.serverStarted) {
+                    MineStat ms = new MineStat(IP, port);
+                    if(ms.isServerUp()) {
+                        out = String.join(" ", out, "up\n\n");
+                        out = String.join("", out, String.valueOf(ms.getCurrentPlayers()), " out of ", String.valueOf(ms.getMaximumPlayers()), " players\n\n");
+                        out = String.join("", out, "MOTD: `", String.valueOf(ms.getMotd()), "`\n\n");
+                    } else {
+                        out = String.join(" ", out, "down\n\n");
+                    }
+                    returnChannel.sendMessageFormat(out).queue();
                 } else {
-                    out = String.join(" ", out, "down\n\n");
+                    returnChannel.sendMessageFormat(out + " off").queue();
                 }
-                returnChannel.sendMessageFormat(out).queue();
 
             } else if(msg.getContentRaw().startsWith(pre + "backup restore") && permissions.getPermissions("backup", event)) {
-                if(!Main.serverRunning) {
-                    git.backup("before rollback");
-                    while (git.gitInUse) {
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    git.gitInUse = true;
-                    git.runProg(new ProcessBuilder("git", "branch", msg.getContentRaw().substring(16) + "_rollback_" + DateTimeFormatter.ofPattern("yyyy/MM/dd_HH:mm:ss").format(LocalDateTime.now())), serverDir);
-                    git.runProg(new ProcessBuilder("git", "reset", "--hard", msg.getContentRaw().substring(16)), serverDir);
-                    git.gitInUse = false;
+                if(!server.serverRunning && msg.getContentRaw().length() >= 16) {
+                    git.rollBack(msg.getContentRaw().substring(16));
+                } else if(server.serverRunning) {
+                    returnChannel.sendMessageFormat("Please stop the server first").queue();
                 } else {
-                    out.add("Please stop the server first");
+                    returnChannel.sendMessageFormat("Please specify a commit id to roll back to. It should be 7 digits of base 62").queue();
                 }
-
             } else if(msg.getContentRaw().startsWith(pre + "backup") && permissions.getPermissions("backup", event)) {
-                git.backup(msg.getContentRaw().substring(8));
+                if(msg.getContentRaw().length() <= 8) {
+                    returnChannel.sendMessageFormat("Please specify a commit comment").queue();
+                } else {
+                    returnChannel.sendMessageFormat(git.backup(msg.getContentRaw().substring(8))).queue();
+                }
 
             } else {
                 System.out.println("Author: " + msg.getAuthor() + " Server: " + event.getGuild() + " Channel: " + msg.getChannel());
                 System.out.println("Content: " + msg.getContentRaw());
 
-                if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && serverRunning && permissions.getPermissions("server", event)) {
+                if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && server.serverRunning && permissions.getPermissions("server", event)) {
                     server.commandUse(msg.getContentRaw());
-                } else if (String.valueOf(returnChannel).equals(String.valueOf(chatBridgeChannel)) && serverRunning && permissions.getPermissions("chatbridge", event)) {
+                } else if (String.valueOf(returnChannel).equals(String.valueOf(chatBridgeChannel)) && server.serverRunning && permissions.getPermissions("chatbridge", event)) {
                     String rgb = "";
+
                     /*String[] url;
 
                     Matcher matcher = urlPattern.matcher(msg.getContentRaw());
@@ -153,6 +162,13 @@ public class Main extends ListenerAdapter {
                         rgb = "#FFFFFF";
                     }
 
+                    /*ADD:
+                        - Attachments
+                        - Use json builder for discord chat bridge -> mc
+                        - Replys
+                        - URLS
+                        - emoji lookup with https://github.com/vdurmont/emoji-java*/
+
                     server.commandUse(
 
                             "/tellraw @a [{\"text\":\"[DISCORD]\",\"color\":\"#7289DA\"},{\"text\":\" <\",\"color\":\"white\"},{\"text\":\"" +
@@ -161,9 +177,11 @@ public class Main extends ListenerAdapter {
                             rgb +
                             "\"},{\"text\":\"> \",\"color\":\"white\"},{\"text\":\"" +
                                     msg.getContentRaw() +
-                            "\",\"color\":\"white\", \"clickEvent\":{\"action\":\"open_url\",\"value\":\"" +
+                            "\",\"color\":\"white\"" +
+
+                                    //", \"clickEvent\":{\"action\":\"open_url\",\"value\":\"" +
                             //url +
-                            "\"}]");
+                            "}]");
                 }
             }
         }

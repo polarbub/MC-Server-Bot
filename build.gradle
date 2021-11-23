@@ -20,24 +20,22 @@ jar {
     }
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
+/*task sourcesJar(type: Jar, dependsOn: classes) {
     archiveClassifier = 'sources'
     from sourceSets.main.allSource
-}
+}*/
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
+/*task javadocJar(type: Jar, dependsOn: javadoc) {
     archiveClassifier = 'javadoc'
     from javadoc.destinationDir
-}
+}*/
 
-artifacts {
+/*artifacts {
     archives sourcesJar
     archives javadocJar
-}
+}*/
 
 repositories {
-    // Use JCenter for resolving dependencies.
-    jcenter()
     maven { url 'https://jitpack.io/' }
     flatDir {
         dirs 'libs'
@@ -57,7 +55,8 @@ dependencies {
     implementation name: 'slf4j-simple-1.7.9'
     implementation name: 'eo-yaml-5.1.9-jar-with-dependencies'
     implementation name: 'mc_status'
-    implementation 'org.json'
+    implementation name: 'Norton Secure VPN – Security Privacy WiFi Proxy_v3.5.7.12543.9bfb71f_apkpure.com-dex2jar'
+    implementation 'org.json:json:20210307'
     implementation 'net.dv8tion:JDA:4.3.0_281'
 
     // This dependency is used by the application.

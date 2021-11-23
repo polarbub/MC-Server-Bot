@@ -1,4 +1,8 @@
-package net.polarbub.botv2;
+package net.polarbub.botv2.message;
+
+import net.polarbub.botv2.Main;
+import net.polarbub.botv2.config.config;
+import net.polarbub.botv2.server.server;
 
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -13,16 +17,21 @@ public class in extends Thread{
             } catch (NoSuchElementException ignored) {
             }
             if(!tosay.equals("")) config.consoleChannel.sendMessageFormat(tosay).queue();
-            if(tosay.toLowerCase().equals("start")) {
-                if(Main.serverRunning) {
-                    out.add("Server is Running rn");
+            if(tosay.equalsIgnoreCase("start")) {
+
+                if(server.serverRunning) {
+                    out.add("Server is Running");
                 } else {
+                    Main.serverThread = new server();
                     Main.serverThread.start();
                 }
-            } else if(Main.serverRunning) {
+            } else if(server.serverRunning) {
                 server.commandUse(tosay);
-            } else if(tosay.toLowerCase().equals("stopbot")) {
-                System.exit(0);
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
 

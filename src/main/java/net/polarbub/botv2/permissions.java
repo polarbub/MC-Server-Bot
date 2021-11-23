@@ -6,13 +6,12 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import java.util.List;
 import java.util.Objects;
 
-import static net.polarbub.botv2.config.*;
+import static net.polarbub.botv2.config.config.*;
 
 public class permissions {
 
     //Permissions grabber
     public static boolean getPermissions(String permission, MessageReceivedEvent event) {
-
         String id = event.getAuthor().getId();
         List userRoles = Objects.requireNonNull(event.getMember()).getRoles();
         Guild guild = event.getGuild();
@@ -31,7 +30,7 @@ public class permissions {
         long checkLong;
         Role role;
         check = permissionsConfig.yamlMapping("Global").yamlSequence("Roles").string(useNumber);
-        if(check.length() == 2 || check.equals("null")) {} else {
+        if(!(check.length() == 2 || check.equals("null"))) {
             checkLong = Long.parseLong(check);
             role = guild.getRoleById(checkLong);
             while(check.length() != 2) {
