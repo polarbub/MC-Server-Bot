@@ -1,3 +1,0 @@
-^\[\d\d:\d\d:\d\d] \[Server thread\/INFO][:] (\*([0-9,A-z,_]{3,16}) .+)
-^\[\d\d:\d\d:\d\d] \[Server thread\/INFO][:] <([0-9,A-z,_]{3,16})> (.+)
-^\[\d\d:\d\d:\d\d] \[Server thread\/INFO][:] ((?:[0-9,A-z,_]{3,16}) (?:(?:left)|(?:joined)) the game)
