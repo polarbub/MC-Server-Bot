@@ -9,7 +9,6 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.polarbub.botv2.Main;
-import net.polarbub.botv2.message.say;
 
 import javax.security.auth.login.LoginException;
 import java.io.File;
