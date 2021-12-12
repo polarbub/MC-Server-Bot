@@ -295,7 +295,6 @@ public class Main extends ListenerAdapter {
                     }
 
                     server.commandUse("/execute if entity @a run tellraw @a " + command.toString());
-                    System.out.println(command);
                 }
             }
         }
