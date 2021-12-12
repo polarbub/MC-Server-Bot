@@ -32,30 +32,34 @@ public class out extends Thread{
     }
 
     public static void add(String message) {
-        inUse = true;
-        System.out.println(message);
-        if(message.length() >= 2000) {
-            consoleChannel.sendMessageFormat("This message is too long to send").queue();
-            return;
-        }
-
-        Matcher matcher = Main.ipPattern.matcher(message);
-        while (matcher.find()) {
-            message = matcher.replaceAll("||censored IP||");
-        }
-
-        temp = String.join("", Final, "\n", message);
-        //temp = String.join("",Final, "\n", message);
-        if(temp.length() <= 2002) {
-            Final = temp;
+        inUse = false;
+        if(Main.stopHard) {
+            //ADD: Buffered stream to shutdown hook.
         } else {
-            try {
-                consoleChannel.sendMessageFormat(Final).queue();
-            } catch (UnknownFormatConversionException ignored) {}
-            Final = message;
+            System.out.println(message);
+            if(message.length() >= 2000) {
+                consoleChannel.sendMessageFormat("This message is too long to send").queue();
+                return;
+            }
+
+            Matcher matcher = Main.ipPattern.matcher(message);
+            while (matcher.find()) {
+                message = matcher.replaceAll("||censored IP||");
+            }
+
+            temp = String.join("", Final, "\n", message);
+            //temp = String.join("",Final, "\n", message);
+            if(temp.length() <= 2002) {
+                Final = temp;
+            } else {
+                try {
+                    consoleChannel.sendMessageFormat(Final).queue();
+                } catch (UnknownFormatConversionException ignored) {}
+                Final = message;
+            }
+
         }
         inUse = false;
-
         outChatBridge.add(message);
     }
 }

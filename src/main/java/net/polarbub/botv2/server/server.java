@@ -14,7 +14,6 @@ public class server extends Thread {
     public static Process p;
     public static boolean serverRunning = false;
     public static boolean serverStarted = false;
-    public static boolean serverStartHold = false;
 
     //Send a command to the server
     public static void commandUse(String command) {
@@ -30,15 +29,15 @@ public class server extends Thread {
     }
 
     public void run() {
-        while(serverStartHold) {
+        serverRunning = true;
+
+        while(git.gitInUse) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-
-        serverRunning = true;
 
         ProcessBuilder pb = new ProcessBuilder("java", "-jar", "-Xmx1G", "-Xms1G", "fabric-server-launch.jar", "-nogui");
         Process p = runProg.runProgProcess(pb);
@@ -67,7 +66,14 @@ public class server extends Thread {
             e.printStackTrace();
         }
         serverStarted = false;
+
+        if (config.backupTime != 0)  {
+            git.gitInUse = true;
+            git.gitCommit("Server Stopped");
+            git.gitInUse = false;
+        }
+
         serverRunning = false;
-        //ADD: Stop backups
+
     }
 }

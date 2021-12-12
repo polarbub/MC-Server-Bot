@@ -1,5 +1,6 @@
 package net.polarbub.botv2.message;
 
+import net.dv8tion.jda.api.entities.Message;
 import net.polarbub.botv2.config.config;
 import net.polarbub.botv2.server.server;
 import org.json.JSONArray;
@@ -11,11 +12,30 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class say {
-    /*public static void sendMCMessage(String message) {
+    public static void Say(Message msg) {
+        JSONArray command = new JSONArray();
 
+        command.put(new JSONObject()
+                .put("color", "#7289DA")
+                .put("text", "[DISCORD]")
+        );
+
+        command.put(new JSONObject()
+                .put("color", "white")
+                .put("text", "<")
+        );
+
+        command.put(new JSONObject()
+                .put("text", "<")
+                .put("color", "white")
+        );
+
+        //mainObject.put("hoverEvent", "test");
+        //mainObject.put("hoverEvent2", secondObject);
+        System.out.println(command.toString());
     }
 
-    static void constructJSON(String message){
+    /*static void constructJSON(String message){
 
 
 

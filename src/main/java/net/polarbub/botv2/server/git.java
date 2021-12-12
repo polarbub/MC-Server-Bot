@@ -64,7 +64,7 @@ public class git extends Thread {
         return true;
     }
 
-    private static String gitCommit(String comment) {
+    public static String gitCommit(String comment) {
         StringBuilder patternStringBuilder = new StringBuilder();
 
         String branch = runProgString(new ProcessBuilder("git", "branch")).substring(2);
@@ -146,8 +146,6 @@ public class git extends Thread {
                     Thread.sleep(10);
                 } catch (InterruptedException ignored) {}
             }
-        } else {
-            server.serverStartHold = true;
         }
 
         try {
@@ -163,14 +161,7 @@ public class git extends Thread {
 
         server.commandUse("save-on");
 
-        //ADD: regex to filter `git push` success / print failure
-        //TEST: git pushing
-        if(gitPushOn == 1) {
-            runProg.runProg(new ProcessBuilder(gitPushOptions));
-        }
-
         gitInUse = false;
-        server.serverStartHold = false;
         return retur;
     }
 }

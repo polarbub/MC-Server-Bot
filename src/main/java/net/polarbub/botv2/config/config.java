@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.polarbub.botv2.Main;
+import net.polarbub.botv2.message.say;
 
 import javax.security.auth.login.LoginException;
 import java.io.File;
@@ -31,10 +32,6 @@ public class config {
     public static String IP;
     public static List<String> serverArgs = new ArrayList<>();
     public static String serverDir;
-    public static int gitPushOn;
-
-    public static List<String> gitPushOptions = new ArrayList<>();
-    //public static String gitPushOptions;
 
     public static List<normalPattern> normalPatterns = new ArrayList<>();
     public static List<namedPattern> namedPatterns = new ArrayList<>();
@@ -132,18 +129,11 @@ public class config {
         IP = minecraftConfig.string("ip");
 
         backupTime = backupConfig.longNumber("backup_time");
+        if(backupTime < 0) throw new IllegalArgumentException("Backup Time cannon be less than one");
         backupWarn = backupConfig.longNumber("backup_alert");
         serverDir = backupConfig.string("gitDirectory");
 
         gitsavereturnPattern = Pattern.compile(backupConfig.string("gitsavereturnRegex"));
-
-        YamlMapping gitPushConfig = backupConfig.yamlMapping("gitPush");
-        gitPushOn = gitPushConfig.integer("on");
-
-        gitPushOptions.clear();
-        for(YamlNode node : gitPushConfig.yamlSequence("command")) {
-            gitPushOptions.add(node.asMapping().yamlMapping("entry").string("string"));
-        }
     }
 }
 

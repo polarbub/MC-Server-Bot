@@ -1,5 +1,6 @@
 package net.polarbub.botv2;
 
+import com.vdurmont.emoji.EmojiParser;
 import me.dilley.MineStat;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
@@ -10,13 +11,17 @@ import net.polarbub.botv2.message.in;
 import net.polarbub.botv2.message.out;
 import net.polarbub.botv2.server.git;
 import net.polarbub.botv2.server.server;
-
-import static net.polarbub.botv2.config.config.*;
+import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import javax.security.auth.login.LoginException;
 import java.awt.*;
 import java.io.IOException;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static net.polarbub.botv2.config.config.*;
 
 public class Main extends ListenerAdapter {
     public static String[] runTimeArgs;
@@ -75,12 +80,11 @@ public class Main extends ListenerAdapter {
 
         //Start status thing
         statusThread.start();
-
     }
 
     //message processing
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (configLoadedFailure) {
             bot.shutdown();
             System.exit(1);
@@ -95,14 +99,15 @@ public class Main extends ListenerAdapter {
                     Main.serverThread.start();
                 }
             } else if(msg.getContentRaw().equals(pre + "help")) {
-                returnChannel.sendMessageFormat(
-                        "```\n" +  pre + "status                     | get the status of the server\n" +
+                StringBuilder sb = new StringBuilder("```\n" +  pre + "status                     | get the status of the server\n");
+                if(backupTime != 0) sb.append(
                         pre + "backup <backup message>    | backup the server\n" +
-                        pre + "backup restore <commit id> | restore backup```" +
-                        "\nTo send a command to the server send a message in <#" + consoleChannel.getId() + ">. " +
+                        pre + "backup restore <commit id> | restore backup```"
+                ); else sb.append("```");
+                sb.append("\nTo send a command to the server send a message in <#" + consoleChannel.getId() + ">. " +
                         "To start the server send `start` in <#" + consoleChannel.getId() + ">. Both these things can also be done in the terminal.\n" +
-                        "To send a message through the chat bridge send a message in <#" + chatBridgeChannel.getId() + ">.\n"
-                ).queue();
+                        "To send a message through the chat bridge send a message in <#" + chatBridgeChannel.getId() + ">.\n");
+                returnChannel.sendMessageFormat(sb.toString()).queue();
 
             } else if (msg.getContentRaw().equals(pre + "status") && permissions.getPermissions("status", event)) {
                 String out = "Server is";
@@ -120,36 +125,45 @@ public class Main extends ListenerAdapter {
                     returnChannel.sendMessageFormat(out + " off").queue();
                 }
 
-            } else if(msg.getContentRaw().startsWith(pre + "backup restore") && permissions.getPermissions("backup", event)) {
-                if(!server.serverRunning && msg.getContentRaw().length() >= 16) {
-                    git.rollBack(msg.getContentRaw().substring(16));
-                } else if(server.serverRunning) {
-                    returnChannel.sendMessageFormat("Please stop the server first").queue();
-                } else {
-                    returnChannel.sendMessageFormat("Please specify a commit id to roll back to. It should be 7 digits of base 62").queue();
-                }
-            } else if(msg.getContentRaw().startsWith(pre + "backup") && permissions.getPermissions("backup", event)) {
-                if(msg.getContentRaw().length() <= 8) {
-                    returnChannel.sendMessageFormat("Please specify a commit comment").queue();
-                } else {
-                    returnChannel.sendMessageFormat(git.backup(msg.getContentRaw().substring(8))).queue();
+            } else if(msg.getContentRaw().startsWith(pre + "backup") && backupTime != 0 && permissions.getPermissions("backup", event)) {
+
+                if(msg.getContentRaw().startsWith(pre + "backup restore")) {
+                    if(!server.serverRunning && msg.getContentRaw().length() >= 15 + pre.length() && msg.getContentRaw().length() <= 22) {
+                        git.rollBack(msg.getContentRaw().substring(15 + pre.length()));
+                    } else if(server.serverRunning) {
+                        returnChannel.sendMessageFormat("Please stop the server first").queue();
+                    } else {
+                        returnChannel.sendMessageFormat("Please specify a commit id to roll back to. It should be 7 digits of base 62").queue();
+                    }
+                } else if(msg.getContentRaw().startsWith(pre + "backup")) {
+                    if(msg.getContentRaw().length() <= 7 + pre.length()) {
+                        returnChannel.sendMessageFormat("Please specify a commit comment").queue();
+                    } else {
+                        returnChannel.sendMessageFormat(git.backup(msg.getContentRaw().substring(7 + pre.length()))).queue();
+                    }
                 }
 
             } else {
                 System.out.println("Author: " + msg.getAuthor() + " Server: " + event.getGuild() + " Channel: " + msg.getChannel());
-                System.out.println("Content: " + msg.getContentRaw());
+                System.out.println("Content: " + msg.getContentDisplay());
 
                 if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && server.serverRunning && permissions.getPermissions("server", event)) {
                     server.commandUse(msg.getContentRaw());
-                } else if (String.valueOf(returnChannel).equals(String.valueOf(chatBridgeChannel)) && server.serverRunning && permissions.getPermissions("chatbridge", event)) {
+                //} else if (String.valueOf(returnChannel).equals(String.valueOf(chatBridgeChannel)) && server.serverRunning && permissions.getPermissions("chatbridge", event)) {
+                } else if (String.valueOf(returnChannel).equals(String.valueOf(chatBridgeChannel)) && permissions.getPermissions("chatbridge", event)) {
+                    JSONArray command = new JSONArray();
+
+                    command.put(new JSONObject()
+                            .put("color", "#7289DA")
+                            .put("text", "[DISCORD]")
+                    );
+
+                    command.put(new JSONObject()
+                            .put("color", "white")
+                            .put("text", " <")
+                    );
+
                     String rgb = "";
-
-                    /*String[] url;
-
-                    Matcher matcher = urlPattern.matcher(msg.getContentRaw());
-                    if(matcher.matches()) {
-
-                    }*/
 
                     try {
                         Color c = event.getMember().getColor();
@@ -162,26 +176,126 @@ public class Main extends ListenerAdapter {
                         rgb = "#FFFFFF";
                     }
 
-                    /*ADD:
-                        - Attachments
-                        - Use json builder for discord chat bridge -> mc
-                        - Replys
-                        - URLS
-                        - emoji lookup with https://github.com/vdurmont/emoji-java*/
+                    command.put(new JSONObject()
+                            .put("text", msg.getAuthor().getName())
+                            .put("color", rgb)
+                    );
 
-                    server.commandUse(
+                    command.put(new JSONObject()
+                            .put("color", "white")
+                            .put("text", "> ")
+                    );
+                    
+                    Message replyMessage = msg.getReferencedMessage();
 
-                            "/tellraw @a [{\"text\":\"[DISCORD]\",\"color\":\"#7289DA\"},{\"text\":\" <\",\"color\":\"white\"},{\"text\":\"" +
-                                    msg.getAuthor().getName() +
-                                    "\",\"color\":\"" +
-                            rgb +
-                            "\"},{\"text\":\"> \",\"color\":\"white\"},{\"text\":\"" +
-                                    msg.getContentRaw() +
-                            "\",\"color\":\"white\"" +
+                    if(replyMessage != null) {
+                        command.put(new JSONObject()
+                                .put("color", "white")
+                                .put("text", "in reply to ")
+                        );
 
-                                    //", \"clickEvent\":{\"action\":\"open_url\",\"value\":\"" +
-                            //url +
-                            "}]");
+                        String rgbReply = "";
+                        try {
+                            Color c = event.getGuild().retrieveMember(replyMessage.getAuthor()).complete().getColor();
+                            int R = c.getRed();
+                            int G = c.getGreen();
+                            int B = c.getBlue();
+
+                            rgbReply =  "#" + Integer.toHexString(R) + Integer.toHexString(G) + Integer.toHexString(B);
+                        } catch (NullPointerException e) {
+                            rgbReply = "#FFFFFF";
+                        }
+
+                        command.put(new JSONObject()
+                                .put("clickEvent", new JSONObject()
+                                        .put("action", "open_url")
+                                        .put("value", replyMessage.getJumpUrl())
+                                )
+                                .put("hoverEvent", new JSONObject()
+                                        .put("action", "show_text")
+                                        .put("value", "Click to open the message")
+                                )
+                                .put("underlined" , "true")
+                                .put("color", rgbReply)
+                                .put("text", replyMessage.getAuthor().getName())
+
+                        );
+
+                        command.put(new JSONObject()
+                                .put("color", "white")
+                                .put("text", ": ")
+                        );
+                    }
+
+                    String msgContent = msg.getContentDisplay();
+                    //ADD: Change flag emoji to use tags
+                    msgContent = EmojiParser.parseToAliases(msgContent, EmojiParser.FitzpatrickAction.PARSE);
+
+                    Pattern pattern = Pattern.compile("https*://[!-~]+");
+                    Matcher matcher = pattern.matcher(msg.getContentDisplay());
+
+                    if(matcher.find()) {
+                        matcher.reset();
+                        int lastend = 0;
+                        while(matcher.find()) {
+                            command.put(new JSONObject()
+                                    .put("color", "white")
+                                    .put("text", msgContent.substring(lastend, matcher.start()))
+                            );
+                            command.put(new JSONObject()
+                                    .put("clickEvent", new JSONObject()
+                                            .put("action", "open_url")
+                                            .put("value", matcher.group())
+                                    )
+                                    .put("hoverEvent", new JSONObject()
+                                            .put("action", "show_text")
+                                            .put("value", "Click to open link")
+                                    )
+                                    .put("underlined" , "true")
+                                    .put("color", "blue")
+                                    .put("text", msgContent.substring(matcher.start(), matcher.end()))
+                            );
+                            lastend = matcher.end();
+                        }
+                    } else {
+                        command.put(new JSONObject()
+                                .put("color", "white")
+                                .put("text", msgContent)
+                        );
+                    }
+
+                    if(!msg.getAttachments().isEmpty()) {
+                        if(msg.getAttachments().size() <= 1) command.put(new JSONObject()
+                                .put("color", "gray")
+                                .put("text", " | Attachment: ")
+                        ); else if(msg.getContentRaw().length() == 0); else command.put(new JSONObject()
+                                .put("color", "gray")
+                                .put("text", " | Attachments: ")
+                        );
+                        for(Message.Attachment attachment : msg.getAttachments()) {
+                            command.put(new JSONObject()
+                                    .put("clickEvent", new JSONObject()
+                                            .put("action", "open_url")
+                                            .put("value", attachment.getUrl())
+                                    )
+                                    .put("hoverEvent", new JSONObject()
+                                            .put("action", "show_text")
+                                            .put("value", "Click to open attachment")
+                                    )
+                                    .put("underlined" , "true")
+                                    .put("color", "blue")
+                                    .put("text", attachment.getFileName())
+                            );
+                            command.put(new JSONObject()
+                                    .put("color", "white")
+                                    .put("text", ", ")
+                            );
+                        }
+                        command.remove(command.length() - 1);
+                    }
+
+                    server.commandUse("/execute if entity @a run tellraw @a " + command.toString());
+                    System.out.println(command);
                 }
             }
         }
