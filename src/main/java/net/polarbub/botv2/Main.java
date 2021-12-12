@@ -144,8 +144,8 @@ public class Main extends ListenerAdapter {
                 }
 
             } else {
-                System.out.println("Author: " + msg.getAuthor() + " Server: " + event.getGuild() + " Channel: " + msg.getChannel());
-                System.out.println("Content: " + msg.getContentDisplay());
+                //System.out.println("Author: " + msg.getAuthor() + " Server: " + event.getGuild() + " Channel: " + msg.getChannel());
+                //System.out.println("Content: " + msg.getContentDisplay());
 
                 if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && server.serverRunning && permissions.getPermissions("server", event)) {
                     server.commandUse(msg.getContentRaw());
