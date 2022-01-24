@@ -102,8 +102,12 @@ public class Main extends ListenerAdapter {
                 StringBuilder sb = new StringBuilder("```\n" +  pre + "status                     | get the status of the server\n");
                 if(backupTime != 0) sb.append(
                         pre + "backup <backup message>    | backup the server\n" +
-                        pre + "backup restore <commit id> | restore backup```"
-                ); else sb.append("```");
+                        pre + "backup restore <commit id> | restore backup\n" +
+                        pre + "backup pause <amount>      | stop backing up for <amount> backups. Set amount to 0 to reset counter\n" +
+                        pre + "backup pause get           | print the amount of backups to be stopped"
+                );
+                sb.append(pre + "help                       | print this message");
+                sb.append("```");
                 sb.append("\nTo send a command to the server send a message in <#" + consoleChannel.getId() + ">. " +
                         "To start the server send `start` in <#" + consoleChannel.getId() + ">. Both these things can also be done in the terminal.\n" +
                         "To send a message through the chat bridge send a message in <#" + chatBridgeChannel.getId() + ">.\n");
@@ -135,6 +139,21 @@ public class Main extends ListenerAdapter {
                     } else {
                         returnChannel.sendMessageFormat("Please specify a commit id to roll back to. It should be 7 digits of base 62").queue();
                     }
+                } else if(msg.getContentRaw().startsWith(pre + "backup pause ")) {
+                    if(msg.getContentRaw().startsWith(pre + "backup pause get")) {
+                        returnChannel.sendMessageFormat(String.valueOf(git.backupPauseAmount)).queue();
+                    } else {
+                        try {
+                            int check = Integer.parseInt(msg.getContentRaw().substring(13 + pre.length()));
+                            if (check < 0) {
+                                returnChannel.sendMessageFormat("Negative Integer. Please type a non-negative integer.").queue();
+                            } else {
+                                git.backupPauseAmount = check;
+                            }
+                        } catch (NumberFormatException e) {
+                            returnChannel.sendMessageFormat("Invalid Integer. Please type a valid integer.").queue();
+                        }
+                    }
                 } else if(msg.getContentRaw().startsWith(pre + "backup")) {
                     if(msg.getContentRaw().length() <= 7 + pre.length()) {
                         returnChannel.sendMessageFormat("Please specify a commit comment").queue();
@@ -149,7 +168,6 @@ public class Main extends ListenerAdapter {
 
                 if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && server.serverRunning && permissions.getPermissions("server", event)) {
                     server.commandUse(msg.getContentRaw());
-                //} else if (String.valueOf(returnChannel).equals(String.valueOf(chatBridgeChannel)) && server.serverRunning && permissions.getPermissions("chatbridge", event)) {
                 } else if (String.valueOf(returnChannel).equals(String.valueOf(chatBridgeChannel)) && permissions.getPermissions("chatbridge", event)) {
                     JSONArray command = new JSONArray();
 

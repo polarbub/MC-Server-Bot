@@ -1,73 +1,53 @@
 package net.polarbub.botv2;
 
-import net.dv8tion.jda.api.entities.Guild;
+import com.amihaiemil.eoyaml.YamlNode;
+import com.amihaiemil.eoyaml.YamlSequence;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+
 import java.util.List;
 import java.util.Objects;
 
-import static net.polarbub.botv2.config.config.*;
+import static net.polarbub.botv2.config.config.permissionsConfig;
 
 public class permissions {
 
     //Permissions grabber
     public static boolean getPermissions(String permission, MessageReceivedEvent event) {
         String id = event.getAuthor().getId();
-        List userRoles = Objects.requireNonNull(event.getMember()).getRoles();
-        Guild guild = event.getGuild();
+        List<Role> userRoles = Objects.requireNonNull(event.getMember()).getRoles();
 
-        int useNumber = 0;
-        String check = permissionsConfig.yamlMapping("Global").yamlSequence("Users").string(useNumber);
-        while(check != null) {
-            if(check.equals(id)) {
-                return true;
-            }
-            useNumber++;
-            check = permissionsConfig.yamlMapping("Global").yamlSequence("Users").string(useNumber);
+
+        int i = 0;
+        YamlSequence yamlSequence = permissionsConfig.yamlMapping("Global").yamlSequence("Users");
+        for(YamlNode node : yamlSequence) {
+            if(id.equals(yamlSequence.string(i))) return true;
+            i++;
         }
 
-        useNumber = 0;
-        long checkLong;
-        Role role;
-        check = permissionsConfig.yamlMapping("Global").yamlSequence("Roles").string(useNumber);
-        if(!(check.length() == 2 || check.equals("null"))) {
-            checkLong = Long.parseLong(check);
-            role = guild.getRoleById(checkLong);
-            while(check.length() != 2) {
-                role = guild.getRoleById(checkLong);
-                if(userRoles.contains(role)) {
-                    return true;
-                }
-                useNumber++;
-                check = permissionsConfig.yamlMapping("Global").yamlSequence("Roles").string(useNumber);
-                checkLong = Long.parseLong(check);
+        i = 0;
+        yamlSequence = permissionsConfig.yamlMapping(permission).yamlSequence("Roles");
+        for(YamlNode node : yamlSequence) {
+            for (Role role : userRoles) {
+                if(role.getId().equals(yamlSequence.string(i))) return true;
             }
+            i++;
         }
 
-        useNumber = 0;
-        check = permissionsConfig.yamlMapping(permission).yamlSequence("Users").string(useNumber);
-        while(check != null) {
-            if(check.equals(id)) {
-                return true;
+        i = 0;
+        yamlSequence = permissionsConfig.yamlMapping("Global").yamlSequence("Roles");
+        for(YamlNode node : yamlSequence) {
+            for (Role role : userRoles) {
+                if(role.getId().equals(yamlSequence.string(i))) return true;
             }
-            useNumber++;
-            check = permissionsConfig.yamlMapping(permission).yamlSequence("Users").string(useNumber);
+            i++;
         }
 
-        useNumber = 0;
-        check = permissionsConfig.yamlMapping(permission).yamlSequence("Roles").string(useNumber);
-        if(check.length() == 2 || check.equals("null")) {} else {
-            checkLong = Long.parseLong(check);
-            role = guild.getRoleById(checkLong);
-            while(check.length() != 2) {
-                role = guild.getRoleById(checkLong);
-                if(userRoles.contains(role)) {
-                    return true;
-                }
-                useNumber++;
-                check = permissionsConfig.yamlMapping(permission).yamlSequence("Roles").string(useNumber);
-                checkLong = Long.parseLong(check);
-            }
+        i = 0;
+        yamlSequence = permissionsConfig.yamlMapping(permission).yamlSequence("Users");
+        for(YamlNode node : yamlSequence) {
+            if(id.equals(yamlSequence.string(i))) return true;
+            i++;
         }
         return false;
     }

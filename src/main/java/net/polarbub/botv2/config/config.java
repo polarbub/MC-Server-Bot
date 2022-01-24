@@ -53,13 +53,16 @@ public class config {
         permissionsConfig = config.yamlMapping("PERMISSIONS");
 
         serverArgs.clear();
+        YamlSequence startCMD = minecraftConfig.yamlSequence("startCMD");
         if (System.getProperty("os.name").equals("Linux")) {
 
             StringBuilder s = new StringBuilder();
 
-            for(YamlNode node : minecraftConfig.yamlSequence("startCMD")) {
-                s.append(node.asMapping().yamlMapping("entry").string("string"));
+            int i = 0;
+            for(YamlNode node : startCMD) {
+                s.append(startCMD.string(i));
                 s.append(" ");
+                i++;
             }
 
             s.delete(s.length() - 1,s.length());
@@ -67,8 +70,10 @@ public class config {
             serverArgs.add(s.toString());
 
         } else {
-            for(YamlNode node : minecraftConfig.yamlSequence("startCMD")) {
-                serverArgs.add(node.asMapping().yamlMapping("entry").string("string"));
+            int i = 0;
+            for(YamlNode node : startCMD) {
+                serverArgs.add(startCMD.string(i));
+                i++;
             }
         }
 
@@ -123,12 +128,13 @@ public class config {
         }
 
         startPattern = Pattern.compile(minecraftConfig.string("startRegex"));
+        startPattern = Pattern.compile("^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: Done \\(\\d+.\\d+s\\)! For help, type \"help");
 
         port = minecraftConfig.integer("port");
         IP = minecraftConfig.string("ip");
 
         backupTime = backupConfig.longNumber("backup_time");
-        if(backupTime < 0) throw new IllegalArgumentException("Backup Time cannon be less than one");
+        if(backupTime < 0) throw new IllegalArgumentException("Backup Time cannon be less than zero");
         backupWarn = backupConfig.longNumber("backup_alert");
         serverDir = backupConfig.string("gitDirectory");
 

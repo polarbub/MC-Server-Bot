@@ -84,6 +84,7 @@ public class outChatBridge {
         if(server.serverRunning) {
             InUse = true;
 
+            //ADD: Make functional death regex.
             for(namedPattern pattern : namedPatterns) {
                 processPatternNamed(pattern, messageRaw);
             }

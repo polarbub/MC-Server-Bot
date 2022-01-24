@@ -50,12 +50,12 @@ public class server extends Thread {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 out.add(line);
                 Matcher matcher = config.gitsavereturnPattern.matcher(line);
-                if(matcher.matches()) {
+                if(matcher.find()) {
                     git.saveReturn = true;
                 }
 
                 Matcher matcher2 = config.startPattern.matcher(line);
-                if(matcher2.matches()) {
+                if(matcher2.find()) {
                     if (config.backupTime != 0) Main.gitThread.start();
                     serverStarted = true;
                 }

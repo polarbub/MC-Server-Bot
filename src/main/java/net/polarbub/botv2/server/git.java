@@ -17,6 +17,7 @@ public class git extends Thread {
     public static boolean gitStopped = false;
     public static boolean inSleep = false;
     public static boolean saveReturn = false;
+    public static int backupPauseAmount = 0;
 
     private static final Pattern commitChangeNumberRegex = Pattern.compile("^\\d+ files changed, \\d+ insertions\\(\\+\\), \\d+ deletions\\(-\\)");
     private static final Pattern commitIDRegex = Pattern.compile("^[a-z0-9]{7}");
@@ -28,13 +29,19 @@ public class git extends Thread {
             try {
                 Thread.sleep(backupTime * 1000);
             } catch (InterruptedException ignored) {}
-            server.commandUse("say Backup in " + backupWarn + " seconds.");
-            try {
-                Thread.sleep(backupWarn * 1000);
-            } catch (InterruptedException ignored) {}
             inSleep = false;
 
-            backup("Timed Backup");
+            if(backupPauseAmount == 0) {
+                server.commandUse("say Backup in " + backupWarn + " seconds.");
+                try {
+                    Thread.sleep(backupWarn * 1000);
+                } catch (InterruptedException ignored) {}
+                backup("Timed Backup");
+            } else if(backupPauseAmount > 0) {
+                backupPauseAmount--;
+            } else {
+                backupPauseAmount = 0;
+            }
 
             if(stopGit) break;
         }
