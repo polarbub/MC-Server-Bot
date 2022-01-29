@@ -79,6 +79,7 @@ public class runProg {
     public static Process runProcessBuilder(ProcessBuilder pb) {
         pb.redirectErrorStream(true);
 
+        //FIX: *this* ... Use /usr/bin/sh not bash and add cmd.exe \c support
         if(System.getProperty("os.name").equals("Linux")) {
             List<String> cache = new ArrayList<>();
 

@@ -1,16 +1,23 @@
 package net.polarbub.botv2;
 
 import com.vdurmont.emoji.EmojiParser;
+
 import me.dilley.MineStat;
+import net.dv8tion.jda.api.EmbedBuilder;
+import rmmccann.Minecraft.*;
+
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+
 import net.polarbub.botv2.config.config;
 import net.polarbub.botv2.message.in;
 import net.polarbub.botv2.message.out;
 import net.polarbub.botv2.server.git;
 import net.polarbub.botv2.server.server;
+import static net.polarbub.botv2.config.config.*;
+
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,10 +25,10 @@ import org.json.JSONObject;
 import javax.security.auth.login.LoginException;
 import java.awt.*;
 import java.io.IOException;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static net.polarbub.botv2.config.config.*;
 
 public class Main extends ListenerAdapter {
     public static String[] runTimeArgs;
@@ -36,13 +43,13 @@ public class Main extends ListenerAdapter {
 
     public static void main(String[] args) throws InterruptedException, LoginException, IOException {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            if(stopHard && server.serverRunning) {
+            if(stopHard || (server.serverRunning && !server.serverStarted)) {
                 server.p.destroy();
                 return;
-            } else if(server.serverRunning) {
+            } else if(server.serverStarted) {
                 stopHard = true;
                 System.out.println("\nWarning, killing running server!\nSend SIGINT again to hard stop the server.\nStrangely this doesn't print the normal server stopping lines even though it is stopping it cleanly.\nThe process with exit when the server is stopped.");
-                //FIX: This doesn't print out the normal stopping text
+                //Fix: This doesn't print out the normal stopping text. The BR doesn't have anything in it. This is a won't fix.
                 server.commandUse("stop");
                 while(server.serverRunning) { //wait for server off
                     try {
@@ -91,7 +98,7 @@ public class Main extends ListenerAdapter {
         } else if (!event.getAuthor().isBot()) {
             Message msg = event.getMessage();
             MessageChannel returnChannel = event.getChannel();
-            if (msg.getContentRaw().equals("start") && String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && !server.serverRunning && permissions.getPermissions("server", event)) {
+            if (msg.getContentRaw().equals("start") && String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && permissions.getPermissions("server", event)) {
                 if(server.serverRunning) {
                     returnChannel.sendMessageFormat("Server is Running.").queue();
                 } else {
@@ -99,35 +106,60 @@ public class Main extends ListenerAdapter {
                     Main.serverThread.start();
                 }
             } else if(msg.getContentRaw().equals(pre + "help")) {
-                StringBuilder sb = new StringBuilder("```\n" +  pre + "status                     | get the status of the server\n");
-                if(backupTime != 0) sb.append(
-                        pre + "backup <backup message>    | backup the server\n" +
-                        pre + "backup restore <commit id> | restore backup\n" +
-                        pre + "backup pause <amount>      | stop backing up for <amount> backups. Set amount to 0 to reset counter\n" +
-                        pre + "backup pause get           | print the amount of backups to be stopped"
-                );
-                sb.append(pre + "help                       | print this message");
-                sb.append("```");
-                sb.append("\nTo send a command to the server send a message in <#" + consoleChannel.getId() + ">. " +
-                        "To start the server send `start` in <#" + consoleChannel.getId() + ">. Both these things can also be done in the terminal.\n" +
-                        "To send a message through the chat bridge send a message in <#" + chatBridgeChannel.getId() + ">.\n");
-                returnChannel.sendMessageFormat(sb.toString()).queue();
+                EmbedBuilder embedBuilder = new EmbedBuilder();
+                embedBuilder.setTitle("Help");
+                embedBuilder.addField("Server Command", "Send a message in <#" + consoleChannel.getId() + ">", false);
+                embedBuilder.addField("Start Server", "Send `start` in <#" + consoleChannel.getId() + ">", false);
+                embedBuilder.addField("Terminal", "Both these things can also be done in the terminal", false);
+                embedBuilder.addField("Chat Bridge", "Send a message in <#" + chatBridgeChannel.getId() + ">", false);
+                embedBuilder.addBlankField(false);
+                if(backupTime != 0) {
+                    embedBuilder.addField(pre + "backup <backup message>", "Backup the server", false);
+                    embedBuilder.addField(pre + "backup restore <commit id>", "Restore backup", false);
+                    embedBuilder.addField(pre + "backup pause <amount>", "Stop backing up for <amount> backups. Set amount to 0 to reset counter", false);
+                    embedBuilder.addField(pre + "backup pause get", "Print the amount of backups to be skipped", false);
+                }
+                embedBuilder.addField(pre + "help", "print this message", false);
+                returnChannel.sendMessageEmbeds(embedBuilder.build()).queue();
 
             } else if (msg.getContentRaw().equals(pre + "status") && permissions.getPermissions("status", event)) {
-                String out = "Server is";
+                EmbedBuilder embedBuilder = new EmbedBuilder();
+                embedBuilder.setTitle("Minecraft Server", null);
+                System.out.println(server.serverStarted);
                 if(server.serverStarted) {
-                    MineStat ms = new MineStat(IP, port);
+                    System.out.println(realIP + "in" + pingPort);
+                    MineStat ms = new MineStat(realIP, pingPort);
                     if(ms.isServerUp()) {
-                        out = String.join(" ", out, "up\n\n");
-                        out = String.join("", out, String.valueOf(ms.getCurrentPlayers()), " out of ", String.valueOf(ms.getMaximumPlayers()), " players\n\n");
-                        out = String.join("", out, "MOTD: `", String.valueOf(ms.getMotd()), "`\n\n");
-                    } else {
-                        out = String.join(" ", out, "down\n\n");
+                        System.out.println("in ms");
+                        try {
+                            QueryResponse fullTest = new MCQuery(realIP, queryPort).fullStat();
+                            embedBuilder.setColor(Color.green);
+                            embedBuilder.setDescription("Server is up");
+                            if(!showIP.isEmpty()) {
+                                embedBuilder.addField("IP", showIP, true);
+                                embedBuilder.addField("Port", String.valueOf(pingPort), true);
+                                embedBuilder.addField("Version", ms.getVersion(), true);
+                            } else {
+                                embedBuilder.addField("Version", ms.getVersion(), false);
+                            }
+                            embedBuilder.addField("MOTD", ms.getMotd(), false);
+                            embedBuilder.addField("Players", ms.getCurrentPlayers() + " out of " + ms.getMaximumPlayers() + " max", false);
+                            if (ms.getCurrentPlayers() > 0) {
+                                embedBuilder.addField("Player List", fullTest.getPlayerList().toString().replaceAll("(?:(?:\\[)|(?:\\]))", ""), false);
+                            }
+                            System.out.println("embed");
+                        } catch (RejectedExecutionException e) {
+                            embedBuilder.setColor(Color.red);
+                            embedBuilder.setDescription("The server could not be contacted over the query protocol");
+                            System.out.println("The server could not be contacted over the query protocol. Please make sure that the port of the query protocol matches the one set in the config");
+                        }
                     }
-                    returnChannel.sendMessageFormat(out).queue();
+
                 } else {
-                    returnChannel.sendMessageFormat(out + " off").queue();
+                    embedBuilder.setColor(Color.red);
+                    embedBuilder.setDescription("Server is off");
                 }
+                returnChannel.sendMessageEmbeds(embedBuilder.build()).queue();
 
             } else if(msg.getContentRaw().startsWith(pre + "backup") && backupTime != 0 && permissions.getPermissions("backup", event)) {
 
@@ -135,30 +167,30 @@ public class Main extends ListenerAdapter {
                     if(!server.serverRunning && msg.getContentRaw().length() >= 15 + pre.length() && msg.getContentRaw().length() <= 22) {
                         git.rollBack(msg.getContentRaw().substring(15 + pre.length()));
                     } else if(server.serverRunning) {
-                        returnChannel.sendMessageFormat("Please stop the server first").queue();
+                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setDescription("Please stop the server first").build()).queue();
                     } else {
-                        returnChannel.sendMessageFormat("Please specify a commit id to roll back to. It should be 7 digits of base 62").queue();
+                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setDescription("Please specify a commit id to roll back to. It should be 7 digits of base 62").build()).queue();
                     }
                 } else if(msg.getContentRaw().startsWith(pre + "backup pause ")) {
                     if(msg.getContentRaw().startsWith(pre + "backup pause get")) {
-                        returnChannel.sendMessageFormat(String.valueOf(git.backupPauseAmount)).queue();
+                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setDescription(git.backupPauseAmount + " Skipped backups left").build()).queue();
                     } else {
                         try {
                             int check = Integer.parseInt(msg.getContentRaw().substring(13 + pre.length()));
                             if (check < 0) {
-                                returnChannel.sendMessageFormat("Negative Integer. Please type a non-negative integer.").queue();
+                                returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setDescription("Negative Integer. Please provide a non-negative integer.").build()).queue();
                             } else {
                                 git.backupPauseAmount = check;
                             }
                         } catch (NumberFormatException e) {
-                            returnChannel.sendMessageFormat("Invalid Integer. Please type a valid integer.").queue();
+                            returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setDescription("Invalid Integer. Please type a valid integer.").build()).queue();
                         }
                     }
                 } else if(msg.getContentRaw().startsWith(pre + "backup")) {
                     if(msg.getContentRaw().length() <= 7 + pre.length()) {
-                        returnChannel.sendMessageFormat("Please specify a commit comment").queue();
+                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setDescription("Please specify a commit comment").build()).queue();
                     } else {
-                        returnChannel.sendMessageFormat(git.backup(msg.getContentRaw().substring(7 + pre.length()))).queue();
+                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setDescription(git.backup(msg.getContentRaw().substring(7 + pre.length()))).build()).queue();
                     }
                 }
 
@@ -166,7 +198,7 @@ public class Main extends ListenerAdapter {
                 //System.out.println("Author: " + msg.getAuthor() + " Server: " + event.getGuild() + " Channel: " + msg.getChannel());
                 //System.out.println("Content: " + msg.getContentDisplay());
 
-                if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && server.serverRunning && permissions.getPermissions("server", event)) {
+                if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && permissions.getPermissions("server", event)) {
                     server.commandUse(msg.getContentRaw());
                 } else if (String.valueOf(returnChannel).equals(String.valueOf(chatBridgeChannel)) && permissions.getPermissions("chatbridge", event)) {
                     JSONArray command = new JSONArray();
@@ -246,7 +278,6 @@ public class Main extends ListenerAdapter {
                     }
 
                     String msgContent = msg.getContentDisplay();
-                    //ADD: Change flag emoji to use tags
                     msgContent = EmojiParser.parseToAliases(msgContent, EmojiParser.FitzpatrickAction.PARSE);
 
                     Pattern pattern = Pattern.compile("https*://[!-~]+");

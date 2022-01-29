@@ -59,6 +59,8 @@ public class server extends Thread {
                     if (config.backupTime != 0) Main.gitThread.start();
                     serverStarted = true;
                 }
+
+                if(Main.stopHard) break;
             }
             p.waitFor();
 

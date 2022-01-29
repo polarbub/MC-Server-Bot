@@ -36,21 +36,6 @@ public class outChatBridge {
                 : resultString;
     }
 
-    private static void processPatternNormal(normalPattern pattern, String messageRaw) {
-        Matcher matcher = pattern.pattern.matcher(messageRaw);
-        if(matcher.matches()) {
-
-            String message = matcher.group(pattern.dataGroup);
-
-            if(message.length() >= 2000) {
-                chatBridgeChannel.sendMessageFormat("This message is too long to send").queue();
-            } else {
-                chatBridgeChannel.sendMessageFormat(message).queue();
-            }
-
-        }
-    }
-
     private static void sendWebHookMessage(String Username, String Message) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) webHookURL.openConnection();
 
@@ -66,22 +51,34 @@ public class outChatBridge {
         connection.getResponseCode();
     }
 
-    private static void processPatternNamed(namedPattern pattern, String messageRaw) {
-        if(!pattern.toString().equals("")) {
-            Matcher matcher = pattern.pattern.matcher(messageRaw);
-            if(matcher.matches()) {
-                try {
-                    sendWebHookMessage(matcher.group(pattern.nameGroup), pattern.prefix + matcher.group(pattern.dataGroup));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+    private static void processPatternNormal(normalPattern pattern, String messageRaw) {
+        Matcher matcher = pattern.pattern.matcher(messageRaw);
+        if(matcher.matches()) {
 
+            String message = matcher.group(pattern.dataGroup);
+
+            if(message.length() >= 2000) {
+                chatBridgeChannel.sendMessageFormat("This message is too long to send").queue();
+            } else {
+                chatBridgeChannel.sendMessageFormat(message).queue();
+            }
+
+        }
+    }
+
+    private static void processPatternNamed(namedPattern pattern, String messageRaw) {
+        Matcher matcher = pattern.pattern.matcher(messageRaw);
+        if(matcher.matches()) {
+            try {
+                sendWebHookMessage(matcher.group(pattern.nameGroup), pattern.prefix + matcher.group(pattern.dataGroup));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
 
     public static void add(String messageRaw) {
-        if(server.serverRunning) {
+        if(server.serverStarted) {
             InUse = true;
 
             //ADD: Make functional death regex.

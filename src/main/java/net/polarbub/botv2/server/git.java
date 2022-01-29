@@ -96,6 +96,7 @@ public class git extends Thread {
 
         BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
+        //FIX: git backup returns on timed backups
         String retur = "";
         try {
             for (String line = br.readLine(); line != null; line = br.readLine()) {

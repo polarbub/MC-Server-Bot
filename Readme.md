@@ -3,7 +3,8 @@
 2) The Jar is in build/libs
 3) Get config file from releases
 4) Edit config file for your needs.
-5) Start the bot with `java -jar bot-v2.jar <path to config file>`
+5) Edit your server's server.properties and set `enable-query` to true
+6) Start the bot with `java -jar bot-v2.jar <path to config file>`
 
 ### Compatibly:
 

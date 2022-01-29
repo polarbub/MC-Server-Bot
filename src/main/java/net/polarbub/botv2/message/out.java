@@ -1,6 +1,7 @@
 package net.polarbub.botv2.message;
 
 import net.polarbub.botv2.Main;
+import net.polarbub.botv2.server.server;
 
 import java.util.UnknownFormatConversionException;
 import java.util.regex.Matcher;
@@ -18,10 +19,6 @@ public class out extends Thread{
                 consoleChannel.sendMessage(Final).queue();
                 Final = "";
             }
-            /*if(!outChatBridge.InUse && !outChatBridge.Final.equals("")) {
-                chatBridgeChannel.sendMessage(outChatBridge.Final).queue();
-                outChatBridge.Final = "";
-            }*/
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -33,9 +30,6 @@ public class out extends Thread{
 
     public static void add(String message) {
         inUse = false;
-        if(Main.stopHard) {
-            //ADD: Buffered stream to shutdown hook.
-        } else {
             System.out.println(message);
             if(message.length() >= 2000) {
                 consoleChannel.sendMessageFormat("This message is too long to send").queue();
@@ -48,7 +42,6 @@ public class out extends Thread{
             }
 
             temp = String.join("", Final, "\n", message);
-            //temp = String.join("",Final, "\n", message);
             if(temp.length() <= 2002) {
                 Final = temp;
             } else {
@@ -57,8 +50,6 @@ public class out extends Thread{
                 } catch (UnknownFormatConversionException ignored) {}
                 Final = message;
             }
-
-        }
         inUse = false;
         outChatBridge.add(message);
     }

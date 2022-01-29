@@ -27,8 +27,10 @@ public class config {
     public static long backupTime;
     public static long backupWarn;
 
-    public static int port;
-    public static String IP;
+    public static int pingPort;
+    public static int queryPort;
+    public static String realIP;
+    public static String showIP;
     public static List<String> serverArgs = new ArrayList<>();
     public static String serverDir;
 
@@ -82,7 +84,7 @@ public class config {
         //Get the channel IDs
         token = discordConfig.string("TOKEN");
         pre = discordConfig.string("PREFIX");
-            //init discord jda
+        //init discord jda
         bot = JDABuilder.createLight(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES).addEventListeners(new Main()).build();
         while(!String.valueOf(bot.getStatus()).equals("CONNECTED")) { //wait for connected
             Thread.sleep(10);
@@ -121,17 +123,16 @@ public class config {
             NamedPattern.dataGroup = regexSequence.integer("contentGroup");
             NamedPattern.nameGroup = regexSequence.integer("nameGroup");
 
-            //System.out.println(regexSequence.integer("contentGroup"));
-            //System.out.println(regexSequence.integer("nameGroup"));
-
             namedPatterns.add(NamedPattern);
         }
 
         startPattern = Pattern.compile(minecraftConfig.string("startRegex"));
         startPattern = Pattern.compile("^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: Done \\(\\d+.\\d+s\\)! For help, type \"help");
 
-        port = minecraftConfig.integer("port");
-        IP = minecraftConfig.string("ip");
+        pingPort = minecraftConfig.integer("pingPort");
+        queryPort = minecraftConfig.integer("queryPort");
+        realIP = minecraftConfig.string("realIP");
+        showIP = minecraftConfig.string("showIP");
 
         backupTime = backupConfig.longNumber("backup_time");
         if(backupTime < 0) throw new IllegalArgumentException("Backup Time cannon be less than zero");
