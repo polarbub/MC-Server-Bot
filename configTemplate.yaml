@@ -2,7 +2,7 @@ DISCORD_BOT:
   #the discord bot token needed to log in
   TOKEN: ""
   #the prefix the bot will answer to
-  PREFIX: ""
+  PREFIX: ";"
   #the channel ID where to echo the server console
   CONSOLE_CHANNEL: ''
   #the channel ID where to write and listen to chat messages
@@ -10,32 +10,39 @@ DISCORD_BOT:
   #webhook in chat bridge channel. It sends messages with the minecraft account's username.
   chatBridgeWebHookURL: ""
 
+
 MC_SERVER:
   #The one line command needed to start the Server. For each argument use an element in the list. Please note that cd doesn't work.
-  #The syntax is weird because my YAML library doesn't support something sane.
-
   startCMD:
     - "java"
     - "-jar"
-    - ""
+    - "-Xmx2G"
+    - "-Xms2G"
+    - "server.jar"
 
   #The ip that the status command pings
-  ip: "localhost"
-  #The port for the status command
-  port: "25565"
+  realIP: "localhost"
+  #The ip that the status command shows.
+  #If left empty no name or port will be shown
+  showIP: "localhost"
+  #The port that players connect to
+  pingPort: "25565"
+  # `query.port` in server.properties
+  queryPort: "25566"
 
+  #Due to oddities with YAML any `: ` or `- ` must have the space escaped. (`:\ ` or `-\ `)
   #for chat bridge
   normalRegexes:
     - regex:
-        string: "^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\]: ((?:[0-9A-z_]{3,16}) (?:(?:left)|(?:joined)) the game)"
+        string: '^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\]:\ ((?:[0-9A-z_]{3,16}) (?:(?:left)|(?:joined)) the game)'
         contentGroup: 1
     - regex:
-        string: "^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\]: \* ([0-9A-z_]{3,16} .+)"
+        string: '^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\]:\ (\* [0-9A-z_]{3,16} .+)'
         contentGroup: 1
 
   webHookRegexes:
     - regex:
-        string: "^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\]: <([0-9A-z_]{3,16})> (.+)"
+        string: '^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\]:\ <([0-9A-z_]{3,16})> (.+)'
         prefix: ""
         nameGroup: 1
         contentGroup: 2
@@ -49,11 +56,11 @@ BACKUP:
   backup_time: 0
   #time after warning before backup
   backup_alert: 30
-  #Where to run server and make backups. Needs to be an initialized git repo
-  gitDirectory: "server"
+  #Where to run server and make backups. Needs to be an initialized git repo. A git repo can be initialized by running `git init`.
+  gitDirectory: "."
 
   #regex for detecting when the server has let go of the world files.
-  gitsavereturnRegex: '^\[\d\d:\d\d:\d\d\] \[Server thread\/INFO\]: Saved the game'
+  gitsavereturnRegex: '^\[\d\d:\d\d:\d\d\] \[Server thread\/INFO\]:\ Saved the game'
 
 
 #USE IDS HERE
@@ -66,7 +73,7 @@ PERMISSIONS:
   server:
     Roles:
       - ""
-    Users: 
+    Users:
       - ""
   status:
     Roles:

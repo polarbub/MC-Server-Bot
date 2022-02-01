@@ -49,6 +49,7 @@ public class server extends Thread {
         try {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 out.add(line);
+
                 Matcher matcher = config.gitsavereturnPattern.matcher(line);
                 if(matcher.find()) {
                     git.saveReturn = true;

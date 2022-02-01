@@ -19,8 +19,9 @@ public class git extends Thread {
     public static boolean saveReturn = false;
     public static int backupPauseAmount = 0;
 
-    private static final Pattern commitChangeNumberRegex = Pattern.compile("^\\d+ files changed, \\d+ insertions\\(\\+\\), \\d+ deletions\\(-\\)");
+    private static final Pattern commitChangeNumberRegex = Pattern.compile("^\\d+ files changed(?:, \\d+ insertions\\(\\+\\))?(?:, \\d+ deletions\\(-\\))?");
     private static final Pattern commitIDRegex = Pattern.compile("^[a-z0-9]{7}");
+    private static final Pattern branchRegex = Pattern.compile("\\* ([^\\n]+)");
 
     //Backup waiting
     public void run() {
@@ -71,17 +72,12 @@ public class git extends Thread {
         return true;
     }
 
-    public static String gitCommit(String comment) {
-        StringBuilder patternStringBuilder = new StringBuilder();
+    public static List<String> gitCommit(String comment) {
+        Matcher branchMatcher = branchRegex.matcher(runProgString(new ProcessBuilder("git", "branch")));
+        branchMatcher.find();
+        String branch = branchMatcher.group(1);
 
-        String branch = runProgString(new ProcessBuilder("git", "branch")).substring(2);
-
-        patternStringBuilder.append("^\\[");
-        patternStringBuilder.append(branch);
-        patternStringBuilder.append(" ([a-z0-9]{7})\\] ");
-        patternStringBuilder.append(comment);
-
-        Pattern commitPattern = Pattern.compile(patternStringBuilder.toString());
+        Pattern commitPattern = Pattern.compile("^\\[" + branch + " ([a-z0-9]{7})\\] " + comment);
 
         List<String> options = new ArrayList<>();
         options.add("git");
@@ -90,28 +86,29 @@ public class git extends Thread {
         options.add("-m");
         options.add("\"" + comment + "\"");
 
+        runProg.runProg(new ProcessBuilder("git", "add", "-A"));
+
         ProcessBuilder pb = new ProcessBuilder(options);
         pb.redirectErrorStream(true);
         Process p = runProg.runProgProcess(pb);
 
         BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-        //FIX: git backup returns on timed backups
-        String retur = "";
+        List<String> retur = new ArrayList<>();
         try {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 Matcher matcher = commitPattern.matcher(line);
                 Matcher matcher2 = commitChangeNumberRegex.matcher(line);
 
-                if(matcher.matches()) {
-                    retur = "Backup compete on branch " + branch + ", with commit id " + matcher.group(1);
-                    if(server.serverStarted) server.commandUse("say " + retur); else out.add(retur);
+                if(matcher.find()) {
+                    retur.add("Backup compete on branch " + branch + ", with commit id " + matcher.group(1));
 
-                } else if(matcher2.matches()) {
-                    if(server.serverStarted) server.commandUse("say " + line); else out.add(line);
+                } else if(matcher2.find()) {
+                    retur.add(line);
+                    //if(server.serverStarted) server.commandUse("say " + line); else out.add(line);
+
                 } else if(line.equals("nothing to commit, working tree clean")) {
-                    retur = "Nothing to backup.";
-                    if(server.serverStarted) server.commandUse("say " + retur); else out.add(retur);
+                    retur.add("Nothing to backup");
                 }
             }
             p.waitFor();
@@ -122,7 +119,7 @@ public class git extends Thread {
         return retur;
     }
 
-    public static String backup(String comment) {
+    public static List<String> backup(String comment) {
         while(gitInUse) {
             try {
                 Thread.sleep(100);
@@ -162,11 +159,12 @@ public class git extends Thread {
             e.printStackTrace();
         }
 
-        runProg.runProg(new ProcessBuilder("git", "add", "-A"));
-        out.add("\nBackup started");
+        server.commandUse("say Backup started");
 
-        String retur = gitCommit(comment);
-
+        List<String> retur = gitCommit(comment);
+        for (String s : retur) {
+            server.commandUse("say " + s);
+        }
         server.commandUse("save-on");
 
         gitInUse = false;

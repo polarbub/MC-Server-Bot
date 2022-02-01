@@ -79,13 +79,15 @@ public class runProg {
     public static Process runProcessBuilder(ProcessBuilder pb) {
         pb.redirectErrorStream(true);
 
-        //FIX: *this* ... Use /usr/bin/sh not bash and add cmd.exe \c support
+        List<String> cache = new ArrayList<>();
         if(System.getProperty("os.name").equals("Linux")) {
-            List<String> cache = new ArrayList<>();
-
-            cache.add("/usr/bin/bash");
+            cache.add("/usr/bin/sh");
             cache.add("-c");
-
+        } else if (System.getProperty("os.name").contains("Windows")) {
+            cache.add("cmd.exe");
+            cache.add("/c");
+        }
+        if(cache.size() > 0) {
             StringBuilder sb = new StringBuilder();
 
             for(String s : pb.command()) {

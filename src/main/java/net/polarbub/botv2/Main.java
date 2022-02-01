@@ -24,6 +24,7 @@ import org.json.JSONObject;
 
 import javax.security.auth.login.LoginException;
 import java.awt.*;
+import java.util.List;
 import java.io.IOException;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Matcher;
@@ -39,6 +40,7 @@ public class Main extends ListenerAdapter {
     public static status statusThread = new status();
     public static boolean configLoadedFailure = false;
     public static boolean stopHard = false;
+    public static Color Green = new Color(44,203,115);
     public static Pattern ipPattern = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
 
     public static void main(String[] args) throws InterruptedException, LoginException, IOException {
@@ -49,7 +51,7 @@ public class Main extends ListenerAdapter {
             } else if(server.serverStarted) {
                 stopHard = true;
                 System.out.println("\nWarning, killing running server!\nSend SIGINT again to hard stop the server.\nStrangely this doesn't print the normal server stopping lines even though it is stopping it cleanly.\nThe process with exit when the server is stopped.");
-                //Fix: This doesn't print out the normal stopping text. The BR doesn't have anything in it. This is a won't fix.
+                //FIX: This doesn't print out the normal stopping text. The BR doesn't have anything in it. This is a won't fix.
                 server.commandUse("stop");
                 while(server.serverRunning) { //wait for server off
                     try {
@@ -114,26 +116,24 @@ public class Main extends ListenerAdapter {
                 embedBuilder.addField("Chat Bridge", "Send a message in <#" + chatBridgeChannel.getId() + ">", false);
                 embedBuilder.addBlankField(false);
                 if(backupTime != 0) {
-                    embedBuilder.addField(pre + "backup <backup message>", "Backup the server", false);
+                    embedBuilder.addField(pre + "backup save <backup message>", "Backup the server", false);
                     embedBuilder.addField(pre + "backup restore <commit id>", "Restore backup", false);
-                    embedBuilder.addField(pre + "backup pause <amount>", "Stop backing up for <amount> backups. Set amount to 0 to reset counter", false);
+                    embedBuilder.addField(pre + "backup pause <amount>", "Stop backing up for `amount` backups. Set `amount` to `0` to reset counter", false);
                     embedBuilder.addField(pre + "backup pause get", "Print the amount of backups to be skipped", false);
+                    embedBuilder.addBlankField(false);
                 }
-                embedBuilder.addField(pre + "help", "print this message", false);
+                embedBuilder.addField(pre + "help", "Print this message", false);
                 returnChannel.sendMessageEmbeds(embedBuilder.build()).queue();
 
             } else if (msg.getContentRaw().equals(pre + "status") && permissions.getPermissions("status", event)) {
                 EmbedBuilder embedBuilder = new EmbedBuilder();
-                embedBuilder.setTitle("Minecraft Server", null);
-                System.out.println(server.serverStarted);
+                embedBuilder.setTitle("Minecraft Server status", null);
                 if(server.serverStarted) {
-                    System.out.println(realIP + "in" + pingPort);
                     MineStat ms = new MineStat(realIP, pingPort);
                     if(ms.isServerUp()) {
-                        System.out.println("in ms");
                         try {
                             QueryResponse fullTest = new MCQuery(realIP, queryPort).fullStat();
-                            embedBuilder.setColor(Color.green);
+                            embedBuilder.setColor(Green);
                             embedBuilder.setDescription("Server is up");
                             if(!showIP.isEmpty()) {
                                 embedBuilder.addField("IP", showIP, true);
@@ -147,7 +147,6 @@ public class Main extends ListenerAdapter {
                             if (ms.getCurrentPlayers() > 0) {
                                 embedBuilder.addField("Player List", fullTest.getPlayerList().toString().replaceAll("(?:(?:\\[)|(?:\\]))", ""), false);
                             }
-                            System.out.println("embed");
                         } catch (RejectedExecutionException e) {
                             embedBuilder.setColor(Color.red);
                             embedBuilder.setDescription("The server could not be contacted over the query protocol");
@@ -162,36 +161,48 @@ public class Main extends ListenerAdapter {
                 returnChannel.sendMessageEmbeds(embedBuilder.build()).queue();
 
             } else if(msg.getContentRaw().startsWith(pre + "backup") && backupTime != 0 && permissions.getPermissions("backup", event)) {
-
                 if(msg.getContentRaw().startsWith(pre + "backup restore")) {
                     if(!server.serverRunning && msg.getContentRaw().length() >= 15 + pre.length() && msg.getContentRaw().length() <= 22) {
                         git.rollBack(msg.getContentRaw().substring(15 + pre.length()));
+                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Green).setTitle("Backup restore").setDescription("Server rolled back to commit " + msg.getContentRaw().substring(15 + pre.length())).build()).queue();
                     } else if(server.serverRunning) {
-                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setDescription("Please stop the server first").build()).queue();
+                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setTitle("Backup restore").setDescription("Please stop the server first").build()).queue();
                     } else {
-                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setDescription("Please specify a commit id to roll back to. It should be 7 digits of base 62").build()).queue();
+                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setTitle("Backup restore").setDescription("Please specify a valid commit id to roll back to. It should be 7 digits of base 62").build()).queue();
                     }
-                } else if(msg.getContentRaw().startsWith(pre + "backup pause ")) {
+                } else if(msg.getContentRaw().startsWith(pre + "backup pause")) {
                     if(msg.getContentRaw().startsWith(pre + "backup pause get")) {
                         returnChannel.sendMessageEmbeds(new EmbedBuilder().setDescription(git.backupPauseAmount + " Skipped backups left").build()).queue();
                     } else {
                         try {
                             int check = Integer.parseInt(msg.getContentRaw().substring(13 + pre.length()));
                             if (check < 0) {
-                                returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setDescription("Negative Integer. Please provide a non-negative integer.").build()).queue();
+                                returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup pause").setColor(Color.red).setDescription("Negative Integer. Please provide a non-negative integer").build()).queue();
                             } else {
                                 git.backupPauseAmount = check;
+                                returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup pause").setColor(Green).setDescription(check + " backup(s) paused").build()).queue();
                             }
                         } catch (NumberFormatException e) {
-                            returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setDescription("Invalid Integer. Please type a valid integer.").build()).queue();
+                            returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup pause").setColor(Color.red).setDescription("Invalid Integer. Please type a valid integer").build()).queue();
+                        } catch (IndexOutOfBoundsException e) {
+                            returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup pause").setColor(Color.red).setDescription("No value provided. Please specify a valid integer").build()).queue();
                         }
                     }
-                } else if(msg.getContentRaw().startsWith(pre + "backup")) {
-                    if(msg.getContentRaw().length() <= 7 + pre.length()) {
-                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setDescription("Please specify a commit comment").build()).queue();
+                } else if(msg.getContentRaw().startsWith(pre + "backup save")) {
+                    if(msg.getContentRaw().length() <= 12 + pre.length()) {
+                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup save").setColor(Color.red).setDescription("Please specify a commit comment").build()).queue();
                     } else {
-                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setDescription(git.backup(msg.getContentRaw().substring(7 + pre.length()))).build()).queue();
+                        List<String> retur = git.backup(msg.getContentRaw().substring(12 + pre.length()));
+                        StringBuilder ss =  new StringBuilder();
+                        for (String s : retur) {
+                            ss.append(s);
+                            ss.append("\n");
+                        }
+                        ss.deleteCharAt(ss.length());
+                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup save").setDescription(ss.toString()).build()).queue();
                     }
+                } else {
+                    returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup").setColor(Color.red).setDescription("Please specify a subcommand").build()).queue();
                 }
 
             } else {
