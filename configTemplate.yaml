@@ -48,7 +48,7 @@ MC_SERVER:
         contentGroup: 2
 
   #This is the regex for the printed line indicating when the server has been started.
-  startRegex: '^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\]: Done \(\d+.\d+s\)! For help, type "help"'
+  startRegex: '^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\]:\ Done \(\d+.\d+s\)! For help, type "help"'
 
 
 BACKUP:
