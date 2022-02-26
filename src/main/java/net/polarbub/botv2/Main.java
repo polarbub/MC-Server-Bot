@@ -324,14 +324,21 @@ public class Main extends ListenerAdapter {
                         );
                     }
 
+                    //FIX: Attachments with no message look wrong
                     if(!msg.getAttachments().isEmpty()) {
-                        if(msg.getAttachments().size() <= 1) command.put(new JSONObject()
+                        if(!msg.getContentRaw().isEmpty()) command.put(new JSONObject()
                                 .put("color", "gray")
-                                .put("text", " | Attachment: ")
-                        ); else if(msg.getContentRaw().length() == 0); else command.put(new JSONObject()
-                                .put("color", "gray")
-                                .put("text", " | Attachments: ")
+                                .put("text", " | ")
                         );
+                        if(msg.getAttachments().size() > 1) command.put(new JSONObject()
+                                .put("color", "gray")
+                                .put("text", "Attachments: ")
+                        );
+                        else command.put(new JSONObject()
+                                .put("color", "gray")
+                                .put("text", "Attachment: ")
+                        );
+                        //else if(msg.getContentRaw().length() == 0) System.out.println("length 0");
                         for(Message.Attachment attachment : msg.getAttachments()) {
                             command.put(new JSONObject()
                                     .put("clickEvent", new JSONObject()

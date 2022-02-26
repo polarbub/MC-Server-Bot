@@ -48,12 +48,7 @@ repositories {
 }
 
 dependencies {
-    //jar libs
-    //implementation name: 'mc_status'
-    //implementation name: 'slf4j-simple-1.7.9'
-    //implementation name: 'eo-yaml-5.1.9-jar-with-dependencies'
-
-    //binary libs
+    //Maven libs
     implementation 'com.amihaiemil.web:eo-yaml:6.0.0'
     implementation 'org.slf4j:slf4j-simple:1.7.32'
     implementation 'io.github.fragland:MineStat:2.0.0'
