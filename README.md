@@ -1,6 +1,7 @@
 # MC-Server-Bot
 This it the main Repo of The_Matty's Minecraft Server Bot.
 
+## This branch is no longer maintained and one package used (simple-git) has a rce so don't use this.
 
 ## Dependencies:
 Java and Npm
