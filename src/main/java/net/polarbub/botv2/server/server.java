@@ -68,15 +68,24 @@ public class server extends Thread {
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-        serverStarted = false;
 
         if (config.backupTime != 0)  {
+            if(git.inSleep) {
+                Main.gitThread.stop();
+            } else {
+                git.stopGit = true;
+            }
+
+            Main.gitThread = new git();
+
             git.gitInUse = true;
             git.gitCommit("Server Stopped");
             git.gitInUse = false;
         }
 
-        serverRunning = false;
 
+
+        serverStarted = false;
+        serverRunning = false;
     }
 }
