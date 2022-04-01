@@ -32,6 +32,8 @@ public class git extends Thread {
             } catch (InterruptedException ignored) {}
             inSleep = false;
 
+            if(stopGit) break;
+
             if(backupPauseAmount == 0) {
                 server.commandUse("say Backup in " + backupWarn + " seconds.");
                 try {

@@ -70,10 +70,12 @@ public class server extends Thread {
         }
 
         if (config.backupTime != 0)  {
+            if(!git.inSleep) {
+                git.stopGit = true;
+            }
+
             if(git.inSleep) {
                 Main.gitThread.stop();
-            } else {
-                git.stopGit = true;
             }
 
             Main.gitThread = new git();

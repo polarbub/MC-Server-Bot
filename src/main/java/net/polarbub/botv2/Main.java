@@ -24,6 +24,10 @@ import org.json.JSONObject;
 
 import javax.security.auth.login.LoginException;
 import java.awt.*;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.io.IOException;
 import java.util.concurrent.RejectedExecutionException;
@@ -42,6 +46,15 @@ public class Main extends ListenerAdapter {
     public static boolean stopHard = false;
     public static Color Green = new Color(44,203,115);
     public static Pattern ipPattern = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
+
+    public static byte[] toBytes(char[] chars) {
+        CharBuffer charBuffer = CharBuffer.wrap(chars);
+        ByteBuffer byteBuffer = StandardCharsets.UTF_8.encode(charBuffer);
+        byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
+                byteBuffer.position(), byteBuffer.limit());
+        Arrays.fill(byteBuffer.array(), (byte) 0); // clear sensitive data
+        return bytes;
+    }
 
     public static void main(String[] args) throws InterruptedException, LoginException, IOException {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
