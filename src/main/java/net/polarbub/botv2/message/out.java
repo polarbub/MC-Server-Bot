@@ -70,7 +70,8 @@ public class out extends Thread{
             Final = temp;
         } else {
             try {
-                consoleChannel.sendMessageFormat(message).queue();
+                consoleChannel.sendMessage(Final).queue();
+                Final = message;
             } catch (UnknownFormatConversionException ignored) {}
         }
         getsetInUse(true, false);
