@@ -25,6 +25,7 @@ public class server extends Thread {
 
     public static Pattern playerJoinPattern = Pattern.compile("^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) joined the game");
     public static Pattern playerLeavePattern = Pattern.compile("^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) left the game");
+    public static Pattern lostConnectionPattern = Pattern.compile("^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: [0-9A-z_]{3,16} lost connection: ");
 
     //Send a command to the server
     public void commandUse(String command) {
@@ -89,6 +90,12 @@ public class server extends Thread {
                     players.remove(matcher4.group(1));
                     found = true;
                 }
+
+                Matcher matcher5 = lostConnectionPattern.matcher(line);
+                if(matcher5.find()) {
+                    found = true;
+                }
+
 
 
                 if (line.length() >= 33) {
