@@ -1,5 +1,6 @@
 package net.polarbub.botv2.message;
 
+import net.polarbub.botv2.Main;
 import net.polarbub.botv2.config.namedPattern;
 import net.polarbub.botv2.config.normalPattern;
 import net.polarbub.botv2.server.server;
@@ -78,7 +79,7 @@ public class outChatBridge {
     }
 
     public static void add(String messageRaw) {
-        if(server.serverStarted) {
+        if(Main.serverThread.serverStarted) {
             InUse = true;
 
             //ADD: Make functional death regex.

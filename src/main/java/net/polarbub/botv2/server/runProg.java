@@ -48,7 +48,7 @@ public class runProg {
         BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
         try {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
-                stringBuilder.append(line);
+                stringBuilder.append(line).append("\n");
             }
             p.waitFor();
 
@@ -56,7 +56,7 @@ public class runProg {
             e.printStackTrace();
 
         }
-        //stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         return stringBuilder.toString();
     }
 

@@ -37,9 +37,6 @@ jar {
 
 repositories {
     maven { url 'https://jitpack.io/' }
-    flatDir {
-        dirs 'libs'
-    }
     mavenCentral() // for transitive dependencies
     maven {
         name 'm2-dv8tion'

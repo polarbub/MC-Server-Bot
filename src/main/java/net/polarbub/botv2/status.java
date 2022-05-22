@@ -15,7 +15,7 @@ public class status extends Thread{
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (server.serverStarted) {
+            if (Main.serverThread.serverStarted) {
                 MineStat ms = new MineStat(realIP, pingPort);
                 if (ms.getCurrentPlayers() == 0) {
                     config.bot.getPresence().setActivity(Activity.playing("No one is online"));

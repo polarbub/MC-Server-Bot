@@ -17,6 +17,7 @@ import net.polarbub.botv2.message.out;
 import net.polarbub.botv2.server.git;
 import net.polarbub.botv2.server.server;
 import static net.polarbub.botv2.config.config.*;
+import static net.polarbub.botv2.server.runProg.runProgString;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -39,7 +40,7 @@ public class Main extends ListenerAdapter {
     public static String[] runTimeArgs;
     public static in inThread = new in();
     public static out outThread = new out();
-    public static server serverThread;
+    public static server serverThread = new server();
     public static git gitThread = new git();
     public static status statusThread = new status();
     public static boolean configLoadedFailure = false;
@@ -58,15 +59,15 @@ public class Main extends ListenerAdapter {
 
     public static void main(String[] args) throws InterruptedException, LoginException, IOException {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            if(stopHard || (server.serverRunning && !server.serverStarted)) {
-                server.p.destroy();
+            if(stopHard || (Main.serverThread.serverRunning && !Main.serverThread.serverStarted)) {
+                Main.serverThread.p.destroy();
                 return;
-            } else if(server.serverStarted) {
+            } else if(Main.serverThread.serverStarted) {
                 stopHard = true;
                 System.out.println("\nWarning, killing running server!\nSend SIGINT again to hard stop the server.\nStrangely this doesn't print the normal server stopping lines even though it is stopping it cleanly.\nThe process with exit when the server is stopped.");
                 //FIX: This doesn't print out the normal stopping text. The BR doesn't have anything in it. This is a won't fix.
-                server.commandUse("stop");
-                while(server.serverRunning) { //wait for server off
+                Main.serverThread.commandUse("stop");
+                while(Main.serverThread.serverRunning) { //wait for server off
                     try {
                         Thread.sleep(10);
                     } catch (InterruptedException e) {
@@ -93,6 +94,38 @@ public class Main extends ListenerAdapter {
             configLoadedFailure = true;
             throw e;
         }
+        if(backupTime > 0) {
+            String statusText = runProgString(new ProcessBuilder("git", "status"));
+
+            if(statusText.startsWith("fatal: ")) {
+                boolean printed = false;
+
+                if (statusText.startsWith("fatal: unsafe repository ('" +
+                        serverDir +
+                        "' is owned by someone else)\n" +
+                        "To add an exception for this directory, call:")) {
+
+                    System.out.println(statusText);
+                    printed = true;
+
+                } else if (statusText.startsWith("fatal: not a git repository")) {
+                    System.out.println("fatal: '" + serverDir + "' is not a git initialized repo\n" +
+                            "To make a git repo there call, call:\n" +
+                            "\n" +
+                            "        git init " + serverDir + "\n");
+                    printed = true;
+                }
+
+                if(!printed) {
+                    System.out.println(statusText);
+                }
+                bot.shutdown();
+                System.exit(1);
+            }
+
+
+        }
+
 
         //start the console in a thread
         inThread.start();
@@ -114,7 +147,7 @@ public class Main extends ListenerAdapter {
             Message msg = event.getMessage();
             MessageChannel returnChannel = event.getChannel();
             if (msg.getContentRaw().equals("start") && String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && permissions.getPermissions("server", event)) {
-                if(server.serverRunning) {
+                if(Main.serverThread.serverRunning) {
                     returnChannel.sendMessageFormat("Server is Running.").queue();
                 } else {
                     Main.serverThread = new server();
@@ -141,7 +174,7 @@ public class Main extends ListenerAdapter {
             } else if (msg.getContentRaw().equals(pre + "status") && permissions.getPermissions("status", event)) {
                 EmbedBuilder embedBuilder = new EmbedBuilder();
                 embedBuilder.setTitle("Minecraft Server status", null);
-                if(server.serverStarted) {
+                if(Main.serverThread.serverStarted) {
                     MineStat ms = new MineStat(realIP, pingPort);
                     if(ms.isServerUp()) {
                         try {
@@ -175,35 +208,50 @@ public class Main extends ListenerAdapter {
 
             } else if(msg.getContentRaw().startsWith(pre + "backup") && backupTime != 0 && permissions.getPermissions("backup", event)) {
                 if(msg.getContentRaw().startsWith(pre + "backup restore")) {
-                    if(!server.serverRunning && msg.getContentRaw().length() >= 15 + pre.length() && msg.getContentRaw().length() <= 22) {
-                        git.rollBack(msg.getContentRaw().substring(15 + pre.length()));
-                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Green).setTitle("Backup restore").setDescription("Server rolled back to commit " + msg.getContentRaw().substring(15 + pre.length())).build()).queue();
-                    } else if(server.serverRunning) {
+
+                    if(!Main.serverThread.serverRunning && msg.getContentRaw().length() >= 15 + pre.length() && msg.getContentRaw().length() <= 22) {
+                        if(git.rollBack(msg.getContentRaw().substring(15 + pre.length()))) {
+                            returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Green).setTitle("Backup restore").setDescription("Server rolled back to commit " + msg.getContentRaw().substring(15 + pre.length())).build()).queue();
+                        } else {
+                            returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setTitle("Backup restore").setDescription("Please specify a valid commit id to roll back to. It should be 7 digits of base 62").build()).queue();
+                        }
+
+
+                    } else if(Main.serverThread.serverRunning) {
                         returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setTitle("Backup restore").setDescription("Please stop the server first").build()).queue();
+
                     } else {
                         returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setTitle("Backup restore").setDescription("Please specify a valid commit id to roll back to. It should be 7 digits of base 62").build()).queue();
                     }
+
                 } else if(msg.getContentRaw().startsWith(pre + "backup pause")) {
                     if(msg.getContentRaw().startsWith(pre + "backup pause get")) {
                         returnChannel.sendMessageEmbeds(new EmbedBuilder().setDescription(git.backupPauseAmount + " Skipped backups left").build()).queue();
+
                     } else {
                         try {
                             int check = Integer.parseInt(msg.getContentRaw().substring(13 + pre.length()));
                             if (check < 0) {
                                 returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup pause").setColor(Color.red).setDescription("Negative Integer. Please provide a non-negative integer").build()).queue();
+
                             } else {
                                 git.backupPauseAmount = check;
                                 returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup pause").setColor(Green).setDescription(check + " backup(s) paused").build()).queue();
+
                             }
                         } catch (NumberFormatException e) {
                             returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup pause").setColor(Color.red).setDescription("Invalid Integer. Please type a valid integer").build()).queue();
+
                         } catch (IndexOutOfBoundsException e) {
                             returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup pause").setColor(Color.red).setDescription("No value provided. Please specify a valid integer").build()).queue();
                         }
+
                     }
                 } else if(msg.getContentRaw().startsWith(pre + "backup save")) {
+
                     if(msg.getContentRaw().length() <= 12 + pre.length()) {
                         returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup save").setColor(Color.red).setDescription("Please specify a commit comment").build()).queue();
+
                     } else {
                         List<String> retur = git.backup(msg.getContentRaw().substring(12 + pre.length()));
                         StringBuilder ss =  new StringBuilder();
@@ -211,9 +259,10 @@ public class Main extends ListenerAdapter {
                             ss.append(s);
                             ss.append("\n");
                         }
-                        ss.deleteCharAt(ss.length());
+
                         returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup save").setDescription(ss.toString()).build()).queue();
                     }
+
                 } else {
                     returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup").setColor(Color.red).setDescription("Please specify a subcommand").build()).queue();
                 }
@@ -223,7 +272,7 @@ public class Main extends ListenerAdapter {
                 //System.out.println("Content: " + msg.getContentDisplay());
 
                 if (String.valueOf(returnChannel).equals(String.valueOf(consoleChannel)) && permissions.getPermissions("server", event)) {
-                    server.commandUse(msg.getContentRaw());
+                    Main.serverThread.commandUse(msg.getContentRaw());
                 } else if (String.valueOf(returnChannel).equals(String.valueOf(chatBridgeChannel)) && permissions.getPermissions("chatbridge", event)) {
                     JSONArray command = new JSONArray();
 
@@ -337,7 +386,6 @@ public class Main extends ListenerAdapter {
                         );
                     }
 
-                    //FIX: Attachments with no message look wrong
                     if(!msg.getAttachments().isEmpty()) {
                         if(!msg.getContentRaw().isEmpty()) command.put(new JSONObject()
                                 .put("color", "gray")
@@ -374,7 +422,7 @@ public class Main extends ListenerAdapter {
                         command.remove(command.length() - 1);
                     }
 
-                    server.commandUse("/execute if entity @a run tellraw @a " + command.toString());
+                    Main.serverThread.commandUse("/execute if entity @a run tellraw @a " + command.toString());
                 }
             }
         }

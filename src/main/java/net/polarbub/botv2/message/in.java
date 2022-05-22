@@ -28,14 +28,14 @@ public class in extends Thread{
             }
 
             if(tosay.equalsIgnoreCase("start")) {
-                if(server.serverRunning) {
+                if(Main.serverThread.serverRunning) {
                     out.add("Server is Running");
                 } else {
                     Main.serverThread = new server();
                     Main.serverThread.start();
                 }
-            } else if(server.serverRunning) {
-                server.commandUse(tosay);
+            } else if(Main.serverThread.serverRunning) {
+                Main.serverThread.commandUse(tosay);
             }
             try {
                 Thread.sleep(10);
