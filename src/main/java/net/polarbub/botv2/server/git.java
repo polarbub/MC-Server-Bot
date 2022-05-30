@@ -105,7 +105,6 @@ public class git extends Thread {
                 } else if(line.equals("nothing to commit, working tree clean")) {
                     retur.add("Nothing to backup");
                 }
-                System.out.println(line);
             }
             p.waitFor();
 
@@ -141,7 +140,7 @@ public class git extends Thread {
                 }
             }
 
-            Main.serverThread.commandUse("say Backup Happening!");
+            Main.serverThread.commandUse("say Backup Happening");
             Main.serverThread.commandUse("save-off");
             Main.serverThread.commandUse("save-all flush");
 
@@ -159,8 +158,6 @@ public class git extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        Main.serverThread.commandUse("say Backup started");
 
         List<String> retur = gitCommit(comment);
         for (String s : retur) {

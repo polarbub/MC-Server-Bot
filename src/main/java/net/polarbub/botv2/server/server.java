@@ -96,8 +96,6 @@ public class server extends Thread {
                     found = true;
                 }
 
-
-
                 if (line.length() >= 33) {
                     String trimmedLine = line.substring(33);
                     for (String player : players) if (!found && trimmedLine.startsWith(player)) {
