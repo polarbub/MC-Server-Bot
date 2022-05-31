@@ -81,10 +81,9 @@ public class git extends Thread {
 
     public static List<String> gitCommit(String comment) {
         String branch = runProgString(new ProcessBuilder("git", "branch", "--show-current"));
-        Pattern commitPattern = Pattern.compile("^\\[" + branch + " ([a-z0-9]{7})\\] " + comment);
+        Pattern commitPattern = Pattern.compile("^\\[" + branch + " ([a-z0-9]{4,40})\\] " + comment);
 
         runProg.runProg(new ProcessBuilder("git", "add", "-A"));
-
 
         Process p = runProg.runProgProcess(new ProcessBuilder("git", "commit", "-a", "-m", "\"" + comment + "\""));
         BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));

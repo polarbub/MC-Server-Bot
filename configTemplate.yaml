@@ -2,13 +2,13 @@ DISCORD_BOT:
   #the discord bot token needed to log in
   TOKEN: ""
   #the prefix the bot will answer to
-  PREFIX: ";"
+  PREFIX: "."
   #the channel ID where to echo the server console
-  CONSOLE_CHANNEL: ''
+  CONSOLE_CHANNEL: '796517469224960072'
   #the channel ID where to write and listen to chat messages
-  CHAT_CHANNEL: ''
-  #webhook in chat bridge channel. It sends messages with the minecraft account's username.
-  chatBridgeWebHookURL: ""
+  CHAT_CHANNEL: '796519072799653899'
+  #webhook url  in chat bridge channel. It sends messages with the minecraft account's username.
+  chatBridgeWebHookURL: "https://discord.com/api/webhooks/<webhook id here>/<webhook token here>"
 
 
 MC_SERVER:
@@ -19,6 +19,7 @@ MC_SERVER:
     - "-Xmx2G"
     - "-Xms2G"
     - "server.jar"
+    - "-nogui"
 
   #The ip that the status command pings
   realIP: "localhost"
@@ -27,7 +28,7 @@ MC_SERVER:
   showIP: "localhost"
   #The port that players connect to
   pingPort: "25565"
-  # `query.port` in server.properties
+  #The port that `query.port` in server.properties
   queryPort: "25566"
 
   #Due to oddities with YAML any `: ` or `- ` must have the space escaped. (`:\ ` or `-\ `)
@@ -48,16 +49,16 @@ MC_SERVER:
         contentGroup: 2
 
   #This is the regex for the printed line indicating when the server has been started.
-  startRegex: '^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\]:\ Done \(\d+.\d+s\)! For help, type "help"'
+  startRegex: '^\[\d\d:\d\d:\d\d] \[Server thread\/INFO\]: Done \(\d+.\d+s\)! For help, type "help"'
 
 
 BACKUP:
   #time in seconds between backups ( 0 means disabled)
-  backup_time: 0
+  backup_time: 1800
   #time after warning before backup
   backup_alert: 30
   #Where to run server and make backups. Needs to be an initialized git repo. A git repo can be initialized by running `git init`.
-  gitDirectory: "."
+  gitDirectory: "/server"
 
   #regex for detecting when the server has let go of the world files.
   gitsavereturnRegex: '^\[\d\d:\d\d:\d\d\] \[Server thread\/INFO\]:\ Saved the game'
@@ -67,7 +68,7 @@ BACKUP:
 PERMISSIONS:
   Global:
     Roles:
-      - ""
+      - "856719355785904158"
     Users:
       - ""
   server:
