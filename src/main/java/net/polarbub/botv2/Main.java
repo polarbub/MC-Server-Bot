@@ -4,6 +4,7 @@ import com.vdurmont.emoji.EmojiParser;
 
 import me.dilley.MineStat;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
 import rmmccann.Minecraft.*;
 
 import net.dv8tion.jda.api.entities.Message;
@@ -300,8 +301,12 @@ public class Main extends ListenerAdapter {
                     }
 
                     command.put(new JSONObject()
-                            .put("text", msg.getAuthor().getName())
+                            .put("text", event.getMember().getEffectiveName())
                             .put("color", rgb)
+                            .put("hoverEvent", new JSONObject()
+                                    .put("action", "show_text")
+                                    .put("value", msg.getAuthor().getAsTag())
+                            )
                     );
 
                     command.put(new JSONObject()
@@ -317,9 +322,10 @@ public class Main extends ListenerAdapter {
                                 .put("text", "in reply to ")
                         );
 
+                        Member member = event.getGuild().retrieveMember(replyMessage.getAuthor()).complete();
                         String rgbReply = "";
                         try {
-                            Color c = event.getGuild().retrieveMember(replyMessage.getAuthor()).complete().getColor();
+                            Color c = member.getColor();
                             int R = c.getRed();
                             int G = c.getGreen();
                             int B = c.getBlue();
@@ -336,12 +342,11 @@ public class Main extends ListenerAdapter {
                                 )
                                 .put("hoverEvent", new JSONObject()
                                         .put("action", "show_text")
-                                        .put("value", "Click to open the message")
+                                        .put("value", "Click to open the message\n" + replyMessage.getAuthor().getAsTag())
                                 )
                                 .put("underlined" , "true")
                                 .put("color", rgbReply)
-                                .put("text", replyMessage.getAuthor().getName())
-
+                                .put("text", member.getEffectiveName())
                         );
 
                         command.put(new JSONObject()
