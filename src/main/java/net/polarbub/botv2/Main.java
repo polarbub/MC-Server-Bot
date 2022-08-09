@@ -154,7 +154,7 @@ public class Main extends ListenerAdapter {
                     Main.serverThread = new server();
                     Main.serverThread.start();
                 }
-            } else if(msg.getContentRaw().equals(pre + "help")) {
+            } else if(msg.getContentRaw().equals(pre + "help") && permissions.getPermissions("help", event)) {
                 EmbedBuilder embedBuilder = new EmbedBuilder();
                 embedBuilder.setTitle("Help");
                 embedBuilder.addField("Server Command", "Send a message in <#" + consoleChannel.getId() + ">", false);

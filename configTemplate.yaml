@@ -91,3 +91,8 @@ PERMISSIONS:
       - ""
     Users:
       - ""
+  help:
+    Roles:
+      - ""
+    Users:
+      - ""
