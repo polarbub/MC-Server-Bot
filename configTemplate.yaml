@@ -71,26 +71,37 @@ PERMISSIONS:
       - "856719355785904158"
     Users:
       - ""
+  #Start and stop the server
   server:
     Roles:
       - ""
     Users:
       - ""
+  #Get the status of the server
   status:
     Roles:
       - ""
     Users:
       - ""
+  #Do all backup related actions except take a backup
   backup:
     Roles:
       - ""
     Users:
       - ""
+  #Take a backup
+  backupSave:
+    Roles:
+      - ""
+    Users:
+      - ""
+  #Use the chat bridge
   chatbridge:
     Roles:
       - ""
     Users:
       - ""
+  #Use the help command
   help:
     Roles:
       - ""

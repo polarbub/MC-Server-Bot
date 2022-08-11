@@ -207,14 +207,22 @@ public class Main extends ListenerAdapter {
                 }
                 returnChannel.sendMessageEmbeds(embedBuilder.build()).queue();
 
-            } else if(msg.getContentRaw().startsWith(pre + "backup") && backupTime != 0 && permissions.getPermissions("backup", event)) {
-                if(msg.getContentRaw().startsWith(pre + "backup restore")) {
+            } else if(msg.getContentRaw().startsWith(pre + "backup") && backupTime != 0) {
+                if(msg.getContentRaw().startsWith(pre + "backup restore") && permissions.getPermissions("backup", event)) {
+                    String ID = msg.getContentRaw().substring(15 + pre.length());
 
-                    if(!Main.serverThread.serverRunning && msg.getContentRaw().length() >= 15 + pre.length() && msg.getContentRaw().length() <= 22) {
-                        if(git.rollBack(msg.getContentRaw().substring(15 + pre.length()))) {
-                            returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Green).setTitle("Backup restore").setDescription("Server rolled back to commit " + msg.getContentRaw().substring(15 + pre.length())).build()).queue();
+                    if(!Main.serverThread.serverRunning && git.commitIDRegex.matcher(ID).find()) {
+                        String rollbackReturnString = git.rollBack(ID);
+
+                        if(rollbackReturnString.startsWith("HEAD is now at " + ID)) {
+                            returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Green).setTitle("Backup restore").setDescription("Server rolled back to commit " + ID).build()).queue();
+
+                        } else if(rollbackReturnString.contains("fatal: Cannot do hard reset with paths.")) {
+                            returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setTitle("Backup restore").setDescription("Invalid Commit ID. It probably has a space in it").build()).queue();
+                        } else if(rollbackReturnString.contains("unknown revision or path not in the working tree.")) {
+                            returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setTitle("Backup restore").setDescription("The specified commit ID was not found").build()).queue();
                         } else {
-                            returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setTitle("Backup restore").setDescription("Please specify a valid commit id to roll back to. It should be 7 digits of base 62").build()).queue();
+                            returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setTitle("Backup restore").setDescription(rollbackReturnString).build()).queue();
                         }
 
 
@@ -222,10 +230,10 @@ public class Main extends ListenerAdapter {
                         returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setTitle("Backup restore").setDescription("Please stop the server first").build()).queue();
 
                     } else {
-                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setTitle("Backup restore").setDescription("Please specify a valid commit id to roll back to. It should be 7 digits of base 62").build()).queue();
+                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.red).setTitle("Backup restore").setDescription("Please specify a valid commit id to roll back to. It should be 4-40 digits of base 62").build()).queue();
                     }
 
-                } else if(msg.getContentRaw().startsWith(pre + "backup pause")) {
+                } else if(msg.getContentRaw().startsWith(pre + "backup pause") && permissions.getPermissions("backup", event)) {
                     if(msg.getContentRaw().startsWith(pre + "backup pause get")) {
                         returnChannel.sendMessageEmbeds(new EmbedBuilder().setDescription(git.backupPauseAmount + " Skipped backups left").build()).queue();
 
@@ -248,7 +256,7 @@ public class Main extends ListenerAdapter {
                         }
 
                     }
-                } else if(msg.getContentRaw().startsWith(pre + "backup save")) {
+                } else if(msg.getContentRaw().startsWith(pre + "backup save") && permissions.getPermissions("backupSave", event)) {
 
                     if(msg.getContentRaw().length() <= 12 + pre.length()) {
                         returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup save").setColor(Color.red).setDescription("Please specify a commit comment").build()).queue();
@@ -261,7 +269,14 @@ public class Main extends ListenerAdapter {
                             ss.append("\n");
                         }
 
-                        returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup save").setDescription(ss.toString()).build()).queue();
+                        EmbedBuilder returnEmbed = new EmbedBuilder().setTitle("Backup save").setDescription(ss.toString());
+
+                        if(ss.toString().contains("Backup complete on")) {
+                            returnEmbed.setColor(Green);
+                        } else {
+                            returnEmbed.setColor(Color.red);
+                        }
+                        returnChannel.sendMessageEmbeds(returnEmbed.build()).queue();
                     }
 
                 } else {

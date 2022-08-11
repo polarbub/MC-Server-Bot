@@ -21,7 +21,7 @@ public class git extends Thread {
     public static int backupPauseAmount = 0;
 
     private static final Pattern commitChangeNumberRegex = Pattern.compile("^\\d+ files changed(?:, \\d+ insertions\\(\\+\\))?(?:, \\d+ deletions\\(-\\))?");
-    private static final Pattern commitIDRegex = Pattern.compile("^[a-z0-9]{7}");
+    public static final Pattern commitIDRegex = Pattern.compile("^[a-z0-9]{4,40}");
     private static final Pattern branchRegex = Pattern.compile("\\* ([^\\n]+)");
 
     //Backup waiting
@@ -60,7 +60,7 @@ public class git extends Thread {
         gitStopped = true;
     }
 
-    public static boolean rollBack(String ID) {
+    public static String rollBack(String ID) {
 
         git.backup("before rollback");
         while (getsetInUse(false, false)) {
@@ -72,11 +72,10 @@ public class git extends Thread {
         }
 
         getsetInUse(true, true);
-        runProg.runProg(new ProcessBuilder("git", "branch", ID + "-rollback" ));
-        runProg.runProg(new ProcessBuilder("git", "reset", "--hard", ID));
+        runProg.runProgString(new ProcessBuilder("git", "branch", "\"" +ID + " rollback\"" ));
+        String returnValue = runProg.runProgString(new ProcessBuilder("git", "reset", "--hard", ID));
         getsetInUse(true, false);
-
-        return true;
+        return returnValue;
     }
 
     public static List<String> gitCommit(String comment) {
