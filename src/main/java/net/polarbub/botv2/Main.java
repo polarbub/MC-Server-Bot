@@ -279,7 +279,7 @@ public class Main extends ListenerAdapter {
                         returnChannel.sendMessageEmbeds(returnEmbed.build()).queue();
                     }
 
-                } else {
+                } else if (permissions.getPermissions("backup", event) || permissions.getPermissions("backupSave", event)) {
                     returnChannel.sendMessageEmbeds(new EmbedBuilder().setTitle("Backup").setColor(Color.red).setDescription("Please specify a subcommand").build()).queue();
                 }
 
