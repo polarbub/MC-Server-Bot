@@ -40,6 +40,7 @@ public class outChatBridge {
     private static void sendWebHookMessage(String Username, String Message) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) webHookURL.openConnection();
 
+        //ADD: Make this do pictures too
         Map<String, String> parameters = new HashMap<>();
         parameters.put("content", Message);
         parameters.put("username", Username);
