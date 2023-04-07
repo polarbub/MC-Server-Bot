@@ -47,6 +47,7 @@ public class outChatBridge {
 
         connection.setDoOutput(true);
         DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+        System.out.println(out);
         out.writeBytes(getParamsString(parameters));
         out.flush();
         out.close();

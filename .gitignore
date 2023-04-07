@@ -2,6 +2,6 @@
 gradle
 .idea
 build
-server
+/server
 edit.txt
 config.yaml

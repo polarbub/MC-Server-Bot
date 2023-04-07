@@ -5,12 +5,14 @@ import com.vdurmont.emoji.EmojiParser;
 import me.dilley.MineStat;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import rmmccann.Minecraft.*;
 
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.entities.User;
 
 import net.polarbub.botv2.config.config;
 import net.polarbub.botv2.message.in;
@@ -59,26 +61,6 @@ public class Main extends ListenerAdapter {
     }
 
     public static void main(String[] args) throws InterruptedException, LoginException, IOException {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            if(stopHard || (Main.serverThread.serverRunning && !Main.serverThread.serverStarted)) {
-                Main.serverThread.p.destroy();
-                return;
-            } else if(Main.serverThread.serverStarted) {
-                stopHard = true;
-                System.out.println("\nWarning, killing running server!\nSend SIGINT again to hard stop the server.\nStrangely this doesn't print the normal server stopping lines even though it is stopping it cleanly.\nThe process with exit when the server is stopped.");
-                //FIX: This doesn't print out the normal stopping text. The BR doesn't have anything in it. This is a won't fix.
-                Main.serverThread.commandUse("stop");
-                while(Main.serverThread.serverRunning) { //wait for server off
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            bot.shutdown();
-        }));
-
         runTimeArgs = args;
         try {
             config.readConfig();
@@ -94,7 +76,12 @@ public class Main extends ListenerAdapter {
             System.out.println("No config file declared, please append config file location to command used to start bot");
             configLoadedFailure = true;
             throw e;
+        } catch (ErrorResponseException e) {
+            System.out.println("Could not connect to discord. Check your network");
+            configLoadedFailure = true;
+            System.exit(1);
         }
+
         if(backupTime > 0) {
             String statusText = runProgString(new ProcessBuilder("git", "status"));
 
@@ -123,10 +110,27 @@ public class Main extends ListenerAdapter {
                 bot.shutdown();
                 System.exit(1);
             }
-
-
         }
 
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if(stopHard || (Main.serverThread.serverRunning && !Main.serverThread.serverStarted)) {
+                Main.serverThread.p.destroy();
+                return;
+            } else if(Main.serverThread.serverStarted) {
+                stopHard = true;
+                System.out.println("\nWarning, killing running server!\nSend SIGINT again to hard stop the server.\nStrangely this doesn't print the normal server stopping lines even though it is stopping it cleanly.\nThe process with exit when the server is stopped.");
+                //FIX: This doesn't print out the normal stopping text. The BR doesn't have anything in it. This is a won't fix.
+                Main.serverThread.commandUse("stop");
+                while(Main.serverThread.serverRunning) { //wait for server off
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            bot.shutdown();
+        }));
 
         //start the console in a thread
         inThread.start();
@@ -337,17 +341,25 @@ public class Main extends ListenerAdapter {
                                 .put("text", "in reply to ")
                         );
 
-                        Member member = event.getGuild().retrieveMember(replyMessage.getAuthor()).complete();
-                        String rgbReply = "";
-                        try {
-                            Color c = member.getColor();
-                            int R = c.getRed();
-                            int G = c.getGreen();
-                            int B = c.getBlue();
+                        String replyAuthorColor = "";
+                        String name = "";
+                        if (!replyMessage.isWebhookMessage()) {
+                            Member member = event.getGuild().retrieveMember(replyMessage.getAuthor()).complete();
+                            name = member.getEffectiveName();
 
-                            rgbReply =  "#" + Integer.toHexString(R) + Integer.toHexString(G) + Integer.toHexString(B);
-                        } catch (NullPointerException e) {
-                            rgbReply = "#FFFFFF";
+                            try {
+                                Color c = member.getColor();
+                                int R = c.getRed();
+                                int G = c.getGreen();
+                                int B = c.getBlue();
+
+                                replyAuthorColor =  "#" + Integer.toHexString(R) + Integer.toHexString(G) + Integer.toHexString(B);
+                            } catch (NullPointerException e) {
+                                replyAuthorColor = "#FFFFFF";
+                            }
+                        } else {
+                            name = replyMessage.getAuthor().getName();
+                            replyAuthorColor = "#FFFFFF";
                         }
 
                         command.put(new JSONObject()
@@ -360,8 +372,8 @@ public class Main extends ListenerAdapter {
                                         .put("value", "Click to open the message\n" + replyMessage.getAuthor().getAsTag())
                                 )
                                 .put("underlined" , "true")
-                                .put("color", rgbReply)
-                                .put("text", member.getEffectiveName())
+                                .put("color", replyAuthorColor)
+                                .put("text", name)
                         );
 
                         command.put(new JSONObject()

@@ -48,9 +48,9 @@ dependencies {
     //Maven libs
     implementation 'com.amihaiemil.web:eo-yaml:6.0.0'
     implementation 'org.slf4j:slf4j-simple:1.7.32'
-    implementation 'io.github.fragland:MineStat:2.0.0'
-    implementation 'org.json:json:20210307'
-    implementation 'net.dv8tion:JDA:4.4.0_350'
+    implementation 'io.github.fragland:MineStat:3.0.5'
+    implementation 'org.json:json:20230227'
+    implementation 'net.dv8tion:JDA:4.4.1_353'
     implementation 'com.vdurmont:emoji-java:5.1.1'
 
 }

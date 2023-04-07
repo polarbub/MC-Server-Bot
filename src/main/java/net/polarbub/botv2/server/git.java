@@ -88,6 +88,7 @@ public class git extends Thread {
         BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
         List<String> retur = new ArrayList<>();
+        List<String> lines = new ArrayList<>();
         try {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 Matcher matcher = commitPattern.matcher(line);
@@ -103,6 +104,8 @@ public class git extends Thread {
                 } else if(line.equals("nothing to commit, working tree clean")) {
                     retur.add("Nothing to backup");
                 }
+
+                lines.add(line);
             }
             p.waitFor();
 
@@ -112,6 +115,7 @@ public class git extends Thread {
 
         if(retur.isEmpty()) {
             retur.add("Failed. Maybe a there was an invalid escape?");
+            retur.addAll(lines);
         }
 
         return retur;
