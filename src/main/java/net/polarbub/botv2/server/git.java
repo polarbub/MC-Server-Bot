@@ -162,12 +162,13 @@ public class git extends Thread {
         }
 
         List<String> retur = gitCommit(comment);
-        for (String s : retur) {
-            Main.serverThread.commandUse("say " + s);
-        }
-        Main.serverThread.commandUse("save-on");
 
-        if(!Main.serverThread.serverStarted) {
+        if(Main.serverThread.serverStarted) {
+            for (String s : retur) {
+                Main.serverThread.commandUse("say " + s);
+            }
+            Main.serverThread.commandUse("save-on");
+        } else {
             for (String s : retur) {
                 out.add(s);
             }
@@ -176,6 +177,5 @@ public class git extends Thread {
         getsetInUse(true, false);
 
         return retur;
-
     }
 }

@@ -21,12 +21,6 @@ public class server extends Thread {
     public boolean serverRunning = false;
     public boolean serverStarted = false;
 
-    public List<String> players = new ArrayList<>();
-
-    public static Pattern playerJoinPattern = Pattern.compile("^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) joined the game");
-    public static Pattern playerLeavePattern = Pattern.compile("^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) left the game");
-    public static Pattern lostConnectionPattern = Pattern.compile("^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: [0-9A-z_]{3,16} lost connection: ");
-
     //Send a command to the server
     public void commandUse(String command) {
         if (this.serverRunning) {
@@ -57,8 +51,6 @@ public class server extends Thread {
         bw = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
         br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-        boolean found = false;
-
         try {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 out.add(line);
@@ -75,36 +67,6 @@ public class server extends Thread {
                         serverStarted = true;
                     }
                 }
-
-
-                found = false;
-                //Detect when someone dies
-                Matcher matcher3 = playerJoinPattern.matcher(line);
-                if(matcher3.find()) {
-                    players.add(matcher3.group(1));
-                    found = true;
-                }
-
-                Matcher matcher4 = playerLeavePattern.matcher(line);
-                if(matcher4.find()) {
-                    players.remove(matcher4.group(1));
-                    found = true;
-                }
-
-                Matcher matcher5 = lostConnectionPattern.matcher(line);
-                if(matcher5.find()) {
-                    found = true;
-                }
-
-                if (line.length() >= 33) {
-                    String trimmedLine = line.substring(33);
-                    for (String player : players) if (!found && trimmedLine.startsWith(player)) {
-                        chatBridgeChannel.sendMessageFormat(trimmedLine).queue();
-                    }
-                }
-
-
-                if(Main.stopHard) break;
             }
             p.waitFor();
 
@@ -117,14 +79,23 @@ public class server extends Thread {
         if (config.backupTime != 0)  {
             if(!git.inSleep) {
                 git.stopGit = true;
+
+                while(!git.gitStopped) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
 
             if(git.inSleep) {
                 Main.gitThread.stop();
             }
 
-            Main.gitThread = new git();
-
+            //We don't use git.backup() here because if serverRunning is true and serverStarted is false it will wait for
+            // the server to start and serverStarted to be set to true before running the backup. The server will never
+            // start though because this is after the server has been stopped.
             while(git.getsetInUse(false, false)) {
                 try {
                     Thread.sleep(100);
@@ -140,6 +111,8 @@ public class server extends Thread {
             }
 
             git.getsetInUse(true, false);
+
+            Main.gitThread = new git();
         }
 
         serverRunning = false;
