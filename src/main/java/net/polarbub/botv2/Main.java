@@ -113,6 +113,8 @@ public class Main extends ListenerAdapter {
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            //FIX: The second one can be true when the server process is stopped and null, but the after stop backup is still running.
+            // This causes a null pointer exception trying to stop an already stopped process.
             if(stopHard || (Main.serverThread.serverRunning && !Main.serverThread.serverStarted)) {
                 Main.serverThread.p.destroy();
                 return;

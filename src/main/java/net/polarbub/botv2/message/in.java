@@ -13,19 +13,19 @@ import static net.polarbub.botv2.config.config.consoleChannel;
 public class in extends Thread{
     public static String tosay;
     public void run() {
+        Scanner scanner = new Scanner(System.in);  // Create a Scanner object
         while(true) {
             try {
-                Scanner myObj = new Scanner(System.in);  // Create a Scanner object
-                tosay = myObj.nextLine();
+                tosay = scanner.nextLine();
             } catch (NoSuchElementException ignored) {}
 
-            if(!tosay.equals(""))
-            if (tosay.length() >= 2000) {
-                consoleChannel.sendFile(toBytes(tosay.toCharArray()), "longmessage.txt").queue();
-                //consoleChannel.sendMessageFormat("This message is too long to send").queue();
-            } else {
-                config.consoleChannel.sendMessageFormat(tosay).queue();
-            }
+            if(!tosay.isEmpty())
+                if(tosay.length() >= 2000) {
+                    consoleChannel.sendFile(toBytes(tosay.toCharArray()), "longmessage.txt").queue();
+                    //consoleChannel.sendMessageFormat("This message is too long to send").queue();
+                } else {
+                    config.consoleChannel.sendMessageFormat(tosay).queue();
+                }
 
             if(tosay.equalsIgnoreCase("start")) {
                 if(Main.serverThread.serverRunning) {

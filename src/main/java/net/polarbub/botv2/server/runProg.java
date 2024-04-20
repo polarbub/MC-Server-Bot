@@ -65,7 +65,6 @@ public class runProg {
         pb.directory(new File(dir));
         Process p = runProcessBuilder(pb);
         return p;
-
     }
 
     //returns the process and has no dir set

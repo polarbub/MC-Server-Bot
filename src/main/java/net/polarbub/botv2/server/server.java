@@ -18,6 +18,7 @@ public class server extends Thread {
     public BufferedReader br;
     public Process p;
 
+    //FIX: Replace these with an enum
     public boolean serverRunning = false;
     public boolean serverStarted = false;
 
@@ -77,20 +78,15 @@ public class server extends Thread {
         serverStarted = false;
 
         if (config.backupTime != 0)  {
-            if(!git.inSleep) {
-                git.stopGit = true;
+            git.stopGit = true;
+            Main.gitThread.interrupt();
 
-                while(!git.gitStopped) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+            while(!git.gitStopped) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            }
-
-            if(git.inSleep) {
-                Main.gitThread.stop();
             }
 
             //We don't use git.backup() here because if serverRunning is true and serverStarted is false it will wait for
