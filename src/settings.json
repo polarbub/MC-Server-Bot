@@ -1,0 +1,26 @@
+{
+  "discord": {
+    "token": "XXXXXXX",
+    "guild": 0,
+    "chat_channel": 0,
+    "console_channel": 0,
+    "chat_webhook": "https://"
+  },
+  "minecraft" : {
+       "query ip" : "polarbub.net",
+       "pid file": "",
+       "logfile" : "",
+       "commands": {
+         "start"   : ["/bin/bash", "-c", ""],
+         "stop"    : ["/bin/bash", "-c", ""],
+         "command" : ["/bin/bash", "-c", ""]
+       },
+       "regexes": {
+         "join"       : ["^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) joined the game"],
+         "leave"      : ["^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) left the game"],
+         "disconnect" : ["^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) lost connection: "],
+         "death"      : ["^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}.+)"],
+         "message"    : []
+       }
+  }
+}
