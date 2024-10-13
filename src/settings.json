@@ -1,26 +1,91 @@
 {
   "discord": {
-    "token": "XXXXXXX",
-    "guild": 0,
-    "chat_channel": 0,
-    "console_channel": 0,
-    "chat_webhook": "https://"
+    "token": "XXXXXXX"
   },
-  "minecraft" : {
-       "query ip" : "polarbub.net",
-       "pid file": "",
-       "logfile" : "",
-       "commands": {
-         "start"   : ["/bin/bash", "-c", ""],
-         "stop"    : ["/bin/bash", "-c", ""],
-         "command" : ["/bin/bash", "-c", ""]
-       },
-       "regexes": {
-         "join"       : ["^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) joined the game"],
-         "leave"      : ["^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) left the game"],
-         "disconnect" : ["^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) lost connection: "],
-         "death"      : ["^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}.+)"],
-         "message"    : []
-       }
+  "minecraft": {
+    "SMP": {
+      "process": {
+        "query_ip": "mcsky.tech:25565",
+        "pid_file": "D:\\Programming\\PycharmProjects\\Mc-Bot\\check\\target.pid",
+        "log_file": "D:\\Programming\\PycharmProjects\\Mc-Bot\\check\\log",
+        "commands": {
+          "start": [
+            "/bin/bash",
+            "-c",
+            "echo start"
+          ],
+          "stop": [
+            "/bin/bash",
+            "-c",
+            "echo stop"
+          ],
+          "command": [
+            "/bin/bash",
+            "-c",
+            "echo cmd"
+          ]
+        }
+      },
+      "discord": {
+        "status": true,
+        "guild": 1295107157519237172,
+        "chat_channel": 1295107215857811617,
+        "console_channel": 1295107194957729944,
+        "chat_webhook": "https://",
+        "permissions": {
+          "console": {
+            "users": [],
+            "roles": []
+          },
+          "chat": {
+            "users": [],
+            "roles": []
+          }
+        }
+      },
+      "regexes": {
+        "join": [
+          "^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) joined the game"
+        ],
+        "leave": [
+          "^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) left the game"
+        ],
+        "disconnect": [
+          "^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: ([0-9A-z_]{3,16}) lost connection: "
+        ],
+        "death": [
+          "^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: (\\* [0-9A-z_]{3,16} .+)"
+        ],
+        "message": [
+          "^\\[\\d\\d:\\d\\d:\\d\\d] \\[Server thread\\/INFO\\]: <([0-9A-z_]{3,16})> (.+)"
+        ],
+        "ip_mask": [
+          "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}"
+        ]
+      },
+      "git": {
+        "enabled": true,
+        "repo_path": "",
+        "interval": 1800,
+        "warning": 30,
+        "commands": {
+          "warning": [
+            "tellraw @a Something"
+          ],
+          "before": [
+            "save-off",
+            "save-all -flush"
+          ],
+          "after": [
+            "save-on"
+          ]
+        },
+        "regexes": {
+          "before done": [
+            "^\\[\\d\\d:\\d\\d:\\d\\d\\] \\[Server thread\\/INFO\\]: Saved the game"
+          ]
+        }
+      }
+    }
   }
 }

@@ -1,0 +1,6 @@
+coloredlogs >= 15.0.1
+discord.py >= 2.4.0
+mcstatus >= 11.1.1
+GitPython >= 3.1.43
+watchdog>=5.0.3
+psutil>=6.0.0
