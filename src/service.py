@@ -42,6 +42,13 @@ def main():
         for server in mcServers:
             tasks.append(asyncio.create_task(server.run()))
 
+        async def delay_snc():
+            await bot.wait_until_ready()
+            await asyncio.sleep(0.5)
+            await bot.sync_commands()
+
+        tasks.append(asyncio.create_task(delay_snc()))
+
         await asyncio.gather(*tasks)
 
     # main loop ( read server output )

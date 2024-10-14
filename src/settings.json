@@ -8,7 +8,7 @@
         "query_ip": "mcsky.tech:25565",
         "pid_file": "D:\\Programming\\PycharmProjects\\Mc-Bot\\check\\target.pid",
         "log_file": "D:\\Programming\\PycharmProjects\\Mc-Bot\\check\\log",
-        "commands": {
+        "shell": {
           "start": [
             "/bin/bash",
             "-c",

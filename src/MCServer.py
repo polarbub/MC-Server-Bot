@@ -40,13 +40,17 @@ class MCServer:
         webhook: URL
         pass
 
-    loop: asyncio.AbstractEventLoop = None
     name: str
-    discord: Discord = Discord()
-    git_repo: git.Repo | None = None
     mcSettings: dict
-    online: bool = False
+
+    loop: asyncio.AbstractEventLoop = None
+    discord: Discord = Discord()
+
+    git_repo: git.Repo | None = None
     backup_sem: threading.Semaphore
+
+    online: bool = False
+    backup_enabled: bool = False
 
     console_thread: common.KillableThread | None = None
     backup_thread: common.KillableThread | None = None
@@ -167,10 +171,7 @@ class MCServer:
             if not self.online:
                 self.console_thread = common.KillableThread(target=self.reader_loop, daemon=True, name='Console Thread')
                 self.console_thread.start()
-                if self.git_repo:
-                    self.backup_thread = common.KillableThread(target=self.backup_loop, daemon=True,
-                                                               name='Backup Thread')
-                    self.backup_thread.start()
+                self.start_backup()
             self.online = True
             pass
 
@@ -181,8 +182,9 @@ class MCServer:
             if self.online:
                 if self.console_thread:
                     self.console_thread.kill()
-                if self.backup_thread:
-                    self.backup_thread.kill()
+
+                self.stop_backup()
+
                 if self.remove_backup_callbacks:
                     self.remove_backup_callbacks()
                     self.remove_backup_callbacks = None
@@ -200,11 +202,36 @@ class MCServer:
             else:
                 await interaction.response.send_message("Starting the server!", ephemeral=False)
                 asyncio.get_event_loop().run_in_executor(None, common.run_process, server_log,
-                                                         self.mcSettings['process']['commands']['start'])
+                                                         self.mcSettings['process']['shell']['start'])
                 return True
             pass
 
         await self.discord.bot.add_start_command(self.discord.guild, request_start)
+
+        async def handle_auto_backup_command(interaction: discord.Interaction, name: str, action: str):
+            if name != self.name:
+                return False
+
+            if action == "status":
+                status = "enabled" if self.backup_enabled else "disabled"
+                await interaction.response.send_message(f"Auto-backups for {self.name} are currently {status}.",
+                                                        ephemeral=False)
+            elif action in ["enable", "disable"]:
+
+                if action == 'enable':
+                    self.start_backup()
+                else:
+                    self.stop_backup()
+
+                status = "enabled" if self.backup_enabled else "disabled"
+                await interaction.response.send_message(f"Auto-backups for {self.name} are now {status}.",
+                                                        ephemeral=False)
+            else:
+                await interaction.response.send_message(f"Invalid action: {action}", ephemeral=True)
+            return True
+
+        await self.discord.bot.add_auto_backup_command(self.discord.guild, handle_auto_backup_command)
+
 
         def handle_message(guild, channel, author, content):
             if channel.id == self.discord.chat_channel.id:
@@ -271,8 +298,9 @@ class MCServer:
 
                         line += tmp
                         if line.endswith("\n"):
-                            self.event_emitter.emit('console_line', line)
+                            final_line = line.rstrip()
                             line = ''
+                            self.event_emitter.emit('console_line', final_line)
             except SystemExit:
                 raise
             except Exception as ex:
@@ -281,7 +309,25 @@ class MCServer:
             sleep(0.5)
         pass
 
-    def run_backup(self):
+    def start_backup(self):
+        if self.backup_thread and self.backup_thread.is_alive():
+            return
+
+        if self.git_repo and self.online:
+            self.backup_thread = common.KillableThread(target=self.backup_loop, daemon=True,
+                                                       name='Backup Thread')
+            self.backup_thread.start()
+            self.backup_enabled = True
+
+    def stop_backup(self):
+        if not self.backup_thread or not self.backup_thread.is_alive():
+            return
+
+        self.backup_thread.kill()
+        self.backup_thread = None
+        self.backup_enabled = False
+
+    def run_backup(self, message : str = "Timed Backup"):
         server_log.info("Starting backup!")
 
         self.backup_sem = threading.Semaphore()
@@ -296,7 +342,8 @@ class MCServer:
             self.remove_backup_callbacks = self.event_emitter.on('console_line', check_backup_done)
 
         for command in self.mcSettings['git']['commands']['before']:
-            common.exec_command(command)
+            cmd = command.format(message=message)
+            pass
 
         if len(self.mcSettings['git']['before done']) > 0:
             self.backup_sem.acquire()
@@ -304,12 +351,21 @@ class MCServer:
                 self.remove_backup_callbacks()
                 self.remove_backup_callbacks = None
 
-        # TODO: call git backup!
+        commit = None
+        try:
+            self.git_repo.git.add(A=True)
+
+            commit = self.git_repo.index.commit(message=message)
+        except Exception as ex:
+            server_log.exception("Exception backing up:", exc_info=ex)
+
+        short_sha = self.git_repo.git.rev_parse(commit.hexsha, short=4) if commit else "Failed!"
 
         for command in self.mcSettings['git']['commands']['after']:
-            common.exec_command(command)
+            cmd = command.format(message=message, commit=short_sha)
+            pass
 
-        server_log.info("Backup finished!")
+        server_log.info(f"Backup finished! {short_sha}")
 
     def backup_loop(self):
         global server_log

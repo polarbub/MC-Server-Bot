@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from collections import defaultdict
 from typing import Callable
 
@@ -50,7 +51,6 @@ class MCBot(discord.Client):
             if message.webhook_id:
                 return
 
-            z
             self.events.emit('message', message.guild, message.channel, message.author, message.content)
 
             pass
@@ -75,10 +75,38 @@ class MCBot(discord.Client):
                         return
                 await interaction.response.send_message(f"{name} is not a known server!", ephemeral=True)
 
-            await self.tree.sync(guild=guild)
+        callbacks.append(callback)
+
+    async def add_auto_backup_command(self, guild: discord.Guild, callback):
+        guild_dict = self.command_dict.get(guild.id)
+        if guild_dict is None:
+            guild_dict = {}
+            self.command_dict[guild.id] = guild_dict
+
+        callbacks = guild_dict.get('auto_backup')
+        if callbacks is None:
+            callbacks = []
+            guild_dict['auto_backup'] = callbacks
+
+            @self.tree.command(name="auto-backup", description="Manage automatic backup for a server", guild=guild)
+            @app_commands.choices(action=[
+                app_commands.Choice(name="Status", value="status"),
+                app_commands.Choice(name="Enable", value="enable"),
+                app_commands.Choice(name="Disable", value="disable")
+            ])
+            async def dynamic_command(interaction: discord.Interaction, name: str,
+                                      action: app_commands.Choice[str] = None):
+                action_value = action.value if action else "status"
+                for cb in callbacks:
+                    if await cb(interaction, name, action_value):
+                        return
+                await interaction.response.send_message(f"{name} is not a known server!", ephemeral=True)
 
         callbacks.append(callback)
 
+    async def sync_commands(self):
+        for guild in self.command_dict.keys():
+            await self.tree.sync(guild=discord.Object(id=guild))
 
     class ThrottledWriter:
         task : asyncio.Task | None
@@ -113,7 +141,7 @@ class MCBot(discord.Client):
             if len(self.message_buffer) + len(line) >= self.max_message_length:
                 await self.flush_buffer()
 
-            self.message_buffer += line
+            self.message_buffer += line + os.linesep
 
         def cancel(self):
             self.task.cancel()
