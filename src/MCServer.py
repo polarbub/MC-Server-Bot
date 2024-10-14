@@ -1,16 +1,15 @@
 import asyncio
+import json
 import logging
 import os
 import signal
 import threading
 import re as Regex
-import urllib
 import git
 
 from os.path import exists
-from time import sleep
+from time import sleep, time
 from typing import Callable
-from urllib.parse import ParseResult as URL
 
 import discord
 from discord.utils import escape_markdown, escape_mentions
@@ -19,7 +18,7 @@ import psutil
 from watchdog.observers import Observer
 
 import common
-from MCBot import MCBot
+from MCBot import MCBot, bot_log
 
 server_log = logging.getLogger('McBot.server ')
 common.setup_logger(server_log)
@@ -37,7 +36,7 @@ class MCServer:
         chat_channel: discord.TextChannel
         console_writer: MCBot.ThrottledWriter
         chat_writer: MCBot.ThrottledWriter
-        webhook: URL
+        webhook: discord.Webhook
         pass
 
     name: str
@@ -83,7 +82,8 @@ class MCServer:
         self.discord.guild = self.discord.bot.get_guild(self.mcSettings['discord']['guild'])
         self.discord.console_channel = self.discord.bot.get_channel(self.mcSettings['discord']['console_channel'])
         self.discord.chat_channel = self.discord.bot.get_channel(self.mcSettings['discord']['chat_channel'])
-        self.discord.webhook = urllib.parse.urlparse(self.mcSettings['discord']['chat_webhook'])
+        self.discord.webhook = discord.Webhook.from_url(self.mcSettings['discord']['chat_webhook'],
+                                                        client=self.discord.bot)
 
         self.discord.console_writer = self.discord.bot.get_throttled_writer(self.discord.console_channel)
         self.discord.chat_writer = self.discord.bot.get_throttled_writer(self.discord.chat_channel)
@@ -109,9 +109,12 @@ class MCServer:
 
         def check_join(line):
             match = next(
-                filter(lambda re: Regex.match(re, line, flags=Regex.MULTILINE), self.mcSettings['regexes']['join']),
+                filter(lambda m: m, map(lambda re: Regex.match(re, line, flags=Regex.MULTILINE),
+                                        self.mcSettings['regexes']['join'])),
                 None)
             if match:
+                username = match.group(1)
+                self.discord.bot.loop.create_task(self.discord.chat_writer.send_message(escape_markdown(username) + " Logged In!"))
                 pass
             pass
 
@@ -119,9 +122,12 @@ class MCServer:
 
         def check_leave(line):
             match = next(
-                filter(lambda re: Regex.match(re, line, flags=Regex.MULTILINE), self.mcSettings['regexes']['leave']),
+                filter(lambda m: m, map(lambda re: Regex.match(re, line, flags=Regex.MULTILINE),
+                                        self.mcSettings['regexes']['leave'])),
                 None)
             if match:
+                username = match.group(1)
+                self.discord.bot.loop.create_task(self.discord.chat_writer.send_message(escape_markdown(username) + " Logged Out!"))
                 pass
             pass
 
@@ -129,9 +135,12 @@ class MCServer:
 
         def check_disconnect(line):
             match = next(
-                filter(lambda re: Regex.match(re, line, flags=Regex.MULTILINE),
-                       self.mcSettings['regexes']['disconnect']), None)
+                filter(lambda m: m, map(lambda re: Regex.match(re, line, flags=Regex.MULTILINE),
+                                        self.mcSettings['regexes']['disconnect']))
+                , None)
             if match:
+                username = match.group(1)
+                self.discord.bot.loop.create_task(self.discord.chat_writer.send_message(escape_markdown(username) + " Disconnected!"))
                 pass
             pass
 
@@ -139,17 +148,21 @@ class MCServer:
 
         def check_death(line):
             match = next(
-                filter(lambda re: Regex.match(re, line, flags=Regex.MULTILINE), self.mcSettings['regexes']['death']),
+                filter(lambda m: m, map(lambda re: Regex.match(re, line, flags=Regex.MULTILINE),
+                                        self.mcSettings['regexes']['death'])),
                 None)
             if match:
+                death = match.group(1)
+                self.discord.bot.loop.create_task(self.discord.chat_writer.send_message(escape_markdown(death)))
                 pass
             pass
 
         self.event_emitter.on('console_line', check_death)
 
         def check_message(line):
-            match = next(
-                filter(lambda re: Regex.match(re, line, flags=Regex.MULTILINE), self.mcSettings['regexes']['message']),
+            match: Regex.Match = next(
+                filter(lambda m: m, map(lambda re: Regex.match(re, line, flags=Regex.MULTILINE),
+                                        self.mcSettings['regexes']['message'])),
                 None)
             if match:
                 username = match.group(1)
@@ -158,7 +171,8 @@ class MCServer:
                 async def new_chat_message():
                     head_url = await common.get_minecraft_avatar_url(username)
 
-                    await common.send_webhook_message(self.discord.webhook, username, head_url, content)
+                    await common.send_webhook_message(self.discord.webhook, username=username, avatar_url=head_url,
+                                                      content=content)
 
                 self.discord.bot.loop.create_task(new_chat_message())
                 pass
@@ -188,25 +202,12 @@ class MCServer:
                 if self.remove_backup_callbacks:
                     self.remove_backup_callbacks()
                     self.remove_backup_callbacks = None
+
+                self.loop.run_until_complete(self.new_backup("Server Stop"))
             self.online = False
             pass
 
         self.event_emitter.on('process_stop', on_stop)
-
-        async def request_start(interaction: discord.Interaction, name: str):
-            if name != self.name:
-                return False
-            if self.online:
-                await interaction.response.send_message("Server was already started", ephemeral=False)
-                return True
-            else:
-                await interaction.response.send_message("Starting the server!", ephemeral=False)
-                asyncio.get_event_loop().run_in_executor(None, common.run_process, server_log,
-                                                         self.mcSettings['process']['shell']['start'])
-                return True
-            pass
-
-        await self.discord.bot.add_start_command(self.discord.guild, request_start)
 
         async def handle_auto_backup_command(interaction: discord.Interaction, name: str, action: str):
             if name != self.name:
@@ -232,11 +233,77 @@ class MCServer:
 
         await self.discord.bot.add_auto_backup_command(self.discord.guild, handle_auto_backup_command)
 
+        async def handle_backup_command(interaction: discord.Interaction, name: str, action: str,
+                                        comment: str = None, commit_hash: str = None):
+            if name != self.name:
+                return False
 
-        def handle_message(guild, channel, author, content):
+            if not self.git_repo:
+                await interaction.response.send_message("Cannot create a backup without a git repository.",
+                                                        ephemeral=True)
+                return True
+
+            if action == "create":
+                if not self.online:
+                    await interaction.response.send_message("Cannot create a backup while the server is offline.",
+                                                            ephemeral=True)
+                    return True
+
+                if not comment:
+                    await interaction.response.send_message("Please provide a comment for the backup.", ephemeral=True)
+                    return True
+
+                await interaction.response.defer()
+                await self.run_backup(comment)
+                await interaction.followup.send(f"Backup created with comment: {comment}")
+
+            elif action == "restore":
+                if self.online:
+                    await interaction.response.send_message(
+                        "Cannot restore a backup while the server is online. Please stop the server first.",
+                        ephemeral=True)
+                    return True
+
+                if not commit_hash:
+                    await interaction.response.send_message("Please provide a commit hash to restore.", ephemeral=True)
+                    return True
+
+                await interaction.response.defer()
+                success, message = await self.restore_backup(commit_hash)
+                if success:
+                    await interaction.followup.send(f"Backup restored to commit: {commit_hash}\n{message}")
+                else:
+                    await interaction.followup.send(f"Failed to restore backup to commit: {commit_hash}\n{message}")
+
+            else:
+                await interaction.response.send_message(f"Invalid action: {action}", ephemeral=True)
+
+            return True
+
+        await self.discord.bot.add_backup_command(self.discord.guild, handle_backup_command)
+
+        def check_permissions(permissions: dict, target: discord.User | discord.Member):
+            if target.id in permissions['users']:
+                return True
+
+            if len(set(permissions['roles']).intersection(set([r.id for r in target.roles]))):
+                return True
+            pass
+
+        def handle_message(message: discord.Message, guild: discord.Guild, channel: discord.TextChannel, author: discord.User | discord.Member,
+                           content: str):
             if channel.id == self.discord.chat_channel.id:
-                pass
+                if check_permissions(self.mcSettings['discord']['permissions']['chat'], author):
+                    json_content = common.format_discord_message(message)
+                    json_string = json.dumps(json_content)
+                    bot_log.warning(f"Sending chat message : {json_string}")
+                    self.loop.create_task(self.send_cmd(f"execute if entity @a run tellraw @a {json_string}"))
+                    pass
             elif channel.id == self.discord.console_channel.id:
+                if len(content.splitlines()) == 1:
+                    if check_permissions(self.mcSettings['discord']['permissions']['console'], author):
+                        server_log.warning(f"User {author.name} Executed: {content}")
+                        self.loop.create_task(self.send_cmd(content))
                 pass
             pass
 
@@ -269,10 +336,6 @@ class MCServer:
         observer.start()
 
         stop_event = asyncio.Event()
-        from sys import platform
-        if platform == "linux" or platform == "linux2":
-            loop.add_signal_handler(signal.SIGINT, stop_event.set)
-            loop.add_signal_handler(signal.SIGTERM, stop_event.set)
 
         await stop_event.wait()
 
@@ -300,8 +363,13 @@ class MCServer:
                         if line.endswith("\n"):
                             final_line = line.rstrip()
                             line = ''
-                            self.event_emitter.emit('console_line', final_line)
-            except SystemExit:
+                            try:
+                                self.event_emitter.emit('console_line', final_line)
+                            except SystemExit | KeyboardInterrupt:
+                                raise
+                            except Exception as ex:
+                                server_log.exception("Exception reading console:", exc_info=ex)
+            except SystemExit | KeyboardInterrupt:
                 raise
             except Exception as ex:
                 server_log.exception("Exception reading console:", exc_info=ex)
@@ -327,8 +395,8 @@ class MCServer:
         self.backup_thread = None
         self.backup_enabled = False
 
-    def run_backup(self, message : str = "Timed Backup"):
-        server_log.info("Starting backup!")
+    async def new_backup(self, message: str = "Timed Backup"):
+        git_log.info("Starting backup!")
 
         self.backup_sem = threading.Semaphore()
 
@@ -343,6 +411,7 @@ class MCServer:
 
         for command in self.mcSettings['git']['commands']['before']:
             cmd = command.format(message=message)
+            await self.send_cmd(cmd)
             pass
 
         if len(self.mcSettings['git']['before done']) > 0:
@@ -355,37 +424,75 @@ class MCServer:
         try:
             self.git_repo.git.add(A=True)
 
-            commit = self.git_repo.index.commit(message=message)
+            if self.git_repo.is_dirty():
+                commit = self.git_repo.index.commit(message=message)
+        except SystemExit | KeyboardInterrupt:
+            raise
         except Exception as ex:
-            server_log.exception("Exception backing up:", exc_info=ex)
+            git_log.exception("Exception backing up:", exc_info=ex)
 
         short_sha = self.git_repo.git.rev_parse(commit.hexsha, short=4) if commit else "Failed!"
 
         for command in self.mcSettings['git']['commands']['after']:
             cmd = command.format(message=message, commit=short_sha)
+            await self.send_cmd(cmd)
             pass
 
-        server_log.info(f"Backup finished! {short_sha}")
+        git_log.info(f"Backup finished! {short_sha}")
+
+    async def restore_backup(self, commit_hash: str) -> tuple[bool, str]:
+        global git_log
+        if not self.git_repo:
+            return False, "Git repository not initialized"
+
+        try:
+            # Create a new branch name based on the current timestamp
+            timestamp = int(time())
+            new_branch_name = f"restore-{timestamp}"
+
+            await self.new_backup("Rollback")
+            # Create a new branch at the current HEAD
+            new_branch = self.git_repo.create_head(new_branch_name)
+
+            # Perform a hard reset to the specified commit
+            self.git_repo.git.reset('--hard', commit_hash)
+
+            git_log.info(f"Restored commit: {commit_hash}")
+            return True, f"Rollback to commit {commit_hash}. Original state preserved in '{new_branch.name}'."
+
+        except git.GitCommandError as e:
+            error_message = f"Failed to restore backup: {e}"
+            git_log.error(error_message)
+            return False, error_message
 
     def backup_loop(self):
-        global server_log
+        global git_log
         while True:
             try:
                 sleep(self.mcSettings['git']['interval'] - self.mcSettings['git']['warning'])
 
-                server_log.info("Sending backup Warning!")
+                git_log.info("Sending backup Warning!")
 
                 for command in self.mcSettings['git']['commands']['warning']:
-                    common.exec_command(command)
+                    self.loop.run_until_complete(self.send_cmd(command))
+
                 sleep(self.mcSettings['git']['warning'])
 
-                self.run_backup()
+                self.loop.run_until_complete(self.new_backup())
 
-            except SystemExit:
+            except SystemExit | KeyboardInterrupt:
                 if self.remove_backup_callbacks:
                     self.remove_backup_callbacks()
                     self.remove_backup_callbacks = None
                 raise
             except Exception as e:
-                server_log.exception("Error while backing up", exc_info=e)
+                git_log.exception("Error while backing up", exc_info=e)
         pass
+
+    async def send_cmd(self, command: str):
+        if not self.online:
+            return
+
+        await self.loop.run_in_executor(None, common.run_process,
+                                        *[arg.format(command=command) for arg in
+                                         self.mcSettings['process']['shell']['command']])

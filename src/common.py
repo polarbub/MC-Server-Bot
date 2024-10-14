@@ -1,28 +1,17 @@
 import ctypes
 import io
+import json
 import logging
 import subprocess
 import threading
+import re
+
 from typing import Callable, Any
 
 import aiohttp
 import coloredlogs
-
-settings: dict
-server_log: logging.Logger
-console_log: logging.Logger
-
-
-def run_process(log: logging.Logger, args: [str]):
-    proc = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
-        log.info(line)
-
-    for line in io.TextIOWrapper(proc.stderr, encoding="utf-8"):
-        log.error(line)
-    pass
-
+import discord
+from discord import Message, Member, Color
 
 def setup_logger(logger: logging.Logger, level: int = logging.DEBUG):
     coloredlogs.install(level=level, logger=logger, fmt="[%(asctime)s]\t%(name)s\t%(levelname)s\t%(message)s",
@@ -37,8 +26,31 @@ def setup_logger(logger: logging.Logger, level: int = logging.DEBUG):
         ))
     pass
 
+shell_log = logging.getLogger('McBot.shell  ')
+setup_logger(shell_log)
+
+def run_process(*args: [str]):
+    global shell_log
+    shell_log.warning("Executing command: %s", args)
+    proc = subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
+        shell_log.info(line.rstrip())
+
+    for line in io.TextIOWrapper(proc.stderr, encoding="utf-8"):
+        shell_log.error(line.rstrip())
+    pass
+
+
+
 
 async def get_minecraft_avatar_url(username):
+    return get_mcHeads_url(username)
+
+def get_mcHeads_url(username):
+    return f"https://mc-heads.net/avatar/{username}/128.png"
+
+async def get_crafatar_url(username):
     async with aiohttp.ClientSession() as session:
         # Step 1: Get the UUID from Mojang API
         mojang_api_url = f"https://api.mojang.com/users/profiles/minecraft/{username}"
@@ -49,24 +61,13 @@ async def get_minecraft_avatar_url(username):
                 uuid = data["id"]
 
                 # Step 2: Create the avatar URL (128x128 for Discord)
-                skin_head_url = f"https://crafatar.com/avatars/{uuid}?size=128"
+                skin_head_url = f"https://crafatar.com/avatars/{uuid}.png"
                 return skin_head_url
             else:
                 return None
 
-async def send_webhook_message(webhook_url, username, avatar_url = None, content = ""):
-    async with aiohttp.ClientSession() as session:
-
-        webhook_data = {
-            "username": username,
-            "avatar_url": avatar_url,
-            "content": content,
-            "allowed_mentions": {   # Prevent all mentions from being processed
-                "parse": []
-            }
-        }
-
-        await session.post(webhook_url, json=webhook_data)
+async def send_webhook_message(webhook : discord.Webhook, username, avatar_url = None, content =""):
+    await webhook.send(content=content, username=username, avatar_url=avatar_url, wait=True)
 
 class KillableThread(threading.Thread):
     def __init__(self, *args, **keywords):
@@ -133,3 +134,107 @@ class PIDFileHandler(FileSystemEventHandler):
             self.current_pid = None
         except ValueError:
             self.event_emitter.emit('error', f"Invalid PID in {self.pid_file}")
+
+def format_discord_message(message: Message) -> list:
+    json_message = []
+
+    # Discord prefix
+    json_message.append({"color": "#7289DA", "text": "[DISCORD]"})
+    json_message.append({"color": "white", "text": " <"})
+
+    # Author name and color
+    author = message.author
+    member = message.guild.get_member(author.id) if message.guild else None
+    rgb = get_member_color(member)
+    json_message.append({
+        "text": member.display_name if member else author.name,
+        "color": rgb,
+        "hoverEvent": {
+            "action": "show_text",
+            "value": str(author)
+        }
+    })
+
+    json_message.append({"color": "white", "text": "> "})
+
+    # Reply handling
+    if message.reference and message.reference.resolved:
+        reply_message = message.reference.resolved
+        json_message.append({"color": "white", "text": "in reply to "})
+        reply_author = reply_message.author
+        reply_member = reply_author if reply_author is discord.Member else None
+        reply_name = reply_member.display_name if reply_member else reply_author.name
+        reply_color = get_member_color(reply_member)
+
+        json_message.append({
+            "clickEvent": {
+                "action": "open_url",
+                "value": reply_message.jump_url
+            },
+            "hoverEvent": {
+                "action": "show_text",
+                "value": f"Click to open the message\n{reply_author}"
+            },
+            "underlined": True,
+            "color": reply_color,
+            "text": reply_name
+        })
+
+        json_message.append({"color": "white", "text": ": "})
+
+    # Message content with improved URL handling
+    msg_content = message.clean_content
+    url_pattern = re.compile(r'(https?://[!-~]+)')
+
+    segments = url_pattern.split(msg_content)
+    for segment in segments:
+        if url_pattern.match(segment):
+            json_message.append({
+                "clickEvent": {
+                    "action": "open_url",
+                    "value": segment
+                },
+                "hoverEvent": {
+                    "action": "show_text",
+                    "value": "Click to open link"
+                },
+                "underlined": True,
+                "color": "blue",
+                "text": segment
+            })
+        elif segment:  # Only add non-empty text segments
+            json_message.append({"color": "white", "text": segment})
+
+    # Attachments
+    if message.attachments:
+        if message.content:
+            json_message.append({"color": "gray", "text": " | "})
+        json_message.append({
+            "color": "gray",
+            "text": "Attachments: " if len(message.attachments) > 1 else "Attachment: "
+        })
+
+        for i, attachment in enumerate(message.attachments):
+            json_message.append({
+                "clickEvent": {
+                    "action": "open_url",
+                    "value": attachment.url
+                },
+                "hoverEvent": {
+                    "action": "show_text",
+                    "value": "Click to open attachment"
+                },
+                "underlined": True,
+                "color": "blue",
+                "text": attachment.filename
+            })
+            if i < len(message.attachments) - 1:
+                json_message.append({"color": "white", "text": ", "})
+
+    return json_message
+
+
+def get_member_color(member: Member) -> str:
+    if member and member.color != Color.default():
+        return f'#{member.color.value:06x}'
+    return "#FFFFFF"

@@ -8,7 +8,7 @@ import logging
 
 from MCBot import MCBot
 from MCServer import MCServer
-from src.common import setup_logger
+from common import setup_logger
 
 settings   : dict
 
@@ -35,6 +35,11 @@ def main():
         mcServers.append(mcserver)
 
     async def run_all():
+
+        loop = asyncio.get_event_loop()
+        loop.add_signal_handler(signal.SIGINT, exit_gracefully, signal.SIGINT, None)
+        loop.add_signal_handler(signal.SIGTERM, exit_gracefully, signal.SIGINT, None)
+
         tasks = []
         token = args.token if args.token else settings['discord']['token']
         tasks.append(asyncio.create_task(bot.start(token=token, reconnect=True)))
@@ -63,5 +68,6 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, exit_gracefully)
     signal.signal(signal.SIGTERM, exit_gracefully)
     main()
+    sys.exit(0)
     pass
 pass

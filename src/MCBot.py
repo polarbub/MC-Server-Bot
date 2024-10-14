@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import os
-from collections import defaultdict
 from typing import Callable
 
 from mcstatus import JavaServer
@@ -28,7 +27,9 @@ class MCBot(discord.Client):
         self.events = common.EventEmitter()
         self.status_task = None
         intents = discord.Intents.default()
+        intents.members = True
         intents.messages = True
+        intents.message_content = True
         self.log = bot_log
 
         super().__init__(intents=intents)
@@ -51,31 +52,11 @@ class MCBot(discord.Client):
             if message.webhook_id:
                 return
 
-            self.events.emit('message', message.guild, message.channel, message.author, message.content)
+            self.events.emit('message', message, message.guild, message.channel, message.author, message.content)
 
             pass
 
     command_dict : dict[int, dict[str, list[Callable]]] = {}
-
-    async def add_start_command(self, guild: discord.Guild, callback):
-
-        guild_dict = self.command_dict.get(guild.id)
-        if guild_dict is None:
-            guild_dict = {}
-            self.command_dict[guild.id] = guild_dict
-
-        callbacks = guild_dict.get('start')
-        if callbacks is None:
-            callbacks = []
-            guild_dict['start'] = callbacks
-            @self.tree.command(name="start", description="Start a server instance", guild=guild)
-            async def dynamic_command(interaction: discord.Interaction, name: str):
-                for cb in callbacks:
-                    if await cb(interaction, name):
-                        return
-                await interaction.response.send_message(f"{name} is not a known server!", ephemeral=True)
-
-        callbacks.append(callback)
 
     async def add_auto_backup_command(self, guild: discord.Guild, callback):
         guild_dict = self.command_dict.get(guild.id)
@@ -99,6 +80,36 @@ class MCBot(discord.Client):
                 action_value = action.value if action else "status"
                 for cb in callbacks:
                     if await cb(interaction, name, action_value):
+                        return
+                await interaction.response.send_message(f"{name} is not a known server!", ephemeral=True)
+
+        callbacks.append(callback)
+
+    async def add_backup_command(self, guild: discord.Guild, callback):
+        guild_dict = self.command_dict.get(guild.id)
+        if guild_dict is None:
+            guild_dict = {}
+            self.command_dict[guild.id] = guild_dict
+
+        callbacks = guild_dict.get('backup')
+        if callbacks is None:
+            callbacks = []
+            guild_dict['backup'] = callbacks
+
+            @self.tree.command(name="backup",
+                               description="Manage server backups",
+                               guild=guild)
+            @app_commands.choices(action=[
+                app_commands.Choice(name="Create (server must be online)", value="create"),
+                app_commands.Choice(name="Restore (server must be offline)", value="restore")
+            ])
+            async def dynamic_command(interaction: discord.Interaction, name: str,
+                                      action: app_commands.Choice[str],
+                                      comment: str = None,
+                                      commit_hash: str = None):
+                action_value = action.value
+                for cb in callbacks:
+                    if await cb(interaction, name, action_value, comment, commit_hash):
                         return
                 await interaction.response.send_message(f"{name} is not a known server!", ephemeral=True)
 
@@ -169,6 +180,8 @@ class MCBot(discord.Client):
 
                         query_log.info(f"Server Online with {status.players.online} players")
                         await self.update_bot_status(True, status.players.online, status.players.max)
+                    except SystemExit | KeyboardInterrupt:
+                        raise
                     except Exception:
                         query_log.warning("Server Offline")
                         await self.update_bot_status(False)
