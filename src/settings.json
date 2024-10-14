@@ -70,6 +70,10 @@
           "after": [
             "save-on",
             "say Backup complete with commit id {commit}, and with comment \"{message}\""
+          ],
+          "fail": [
+            "save-on",
+            "say Backup failed!"
           ]
         },
         "regexes": {

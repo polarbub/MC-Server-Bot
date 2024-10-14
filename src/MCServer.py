@@ -15,6 +15,7 @@ import discord
 from discord.utils import escape_markdown, escape_mentions
 
 import psutil
+from humanfriendly.terminal import message
 from watchdog.observers import Observer
 
 import common
@@ -182,18 +183,21 @@ class MCServer:
 
         def on_start(pid):
             server_log.info(f"Detected server start with PID: {pid}")
-            if not self.online:
+            was = self.online
+            self.online = True
+            if not was:
                 self.console_thread = common.KillableThread(target=self.reader_loop, daemon=True, name='Console Thread')
                 self.console_thread.start()
                 self.start_backup()
-            self.online = True
             pass
 
         self.event_emitter.on('process_start', on_start)
 
         def on_stop(pid):
             server_log.info(f"Detected server stop, old PID: {pid}")
-            if self.online:
+            was = self.online
+            self.online = False
+            if was:
                 if self.console_thread:
                     self.console_thread.kill()
 
@@ -203,8 +207,8 @@ class MCServer:
                     self.remove_backup_callbacks()
                     self.remove_backup_callbacks = None
 
-                self.loop.run_until_complete(self.new_backup("Server Stop"))
-            self.online = False
+                if not self.backup_running:
+                    self.loop.create_task(self._backup("Server Stop"))
             pass
 
         self.event_emitter.on('process_stop', on_stop)
@@ -254,8 +258,12 @@ class MCServer:
                     return True
 
                 await interaction.response.defer()
-                await self.run_backup(comment)
-                await interaction.followup.send(f"Backup created with comment: {comment}")
+                [status, id_] = await self.new_backup(comment)
+                if status:
+                    await interaction.followup.send(f"Backup created with comment '{comment}' and ID '{id_}'")
+                else:
+                    await interaction.followup.send(f"Backup failed!")
+
 
             elif action == "restore":
                 if self.online:
@@ -395,50 +403,73 @@ class MCServer:
         self.backup_thread = None
         self.backup_enabled = False
 
-    async def new_backup(self, message: str = "Timed Backup"):
-        git_log.info("Starting backup!")
+    backup_running : bool = False
 
-        self.backup_sem = threading.Semaphore()
+    async def _backup(self, message: str) -> git.Commit | None:
+        await self.loop.run_in_executor(None, self.git_repo.git.add, "-A")
 
-        if len(self.mcSettings['git']['before done']) > 0:
-            def check_backup_done(line):
-                match = next(filter(lambda regex: Regex.match(regex, line, flags=Regex.MULTILINE),
-                                    self.mcSettings['git']['before done']))
-                if match:
-                    self.backup_sem.release()
+        if self.git_repo.is_dirty():
+            commit = await self.loop.run_in_executor(None, lambda m : self.git_repo.index.commit(message=m), message)
+            return commit
+        return None
 
-            self.remove_backup_callbacks = self.event_emitter.on('console_line', check_backup_done)
-
-        for command in self.mcSettings['git']['commands']['before']:
-            cmd = command.format(message=message)
-            await self.send_cmd(cmd)
-            pass
-
-        if len(self.mcSettings['git']['before done']) > 0:
-            self.backup_sem.acquire()
-            if self.remove_backup_callbacks:
-                self.remove_backup_callbacks()
-                self.remove_backup_callbacks = None
-
-        commit = None
+    async def new_backup(self, message: str = "Timed Backup") -> [bool, str]:
+        if self.backup_running:
+            git_log.warning("Backup already running!")
+            return False, None
         try:
-            self.git_repo.git.add(A=True)
+            self.backup_running = True
+            git_log.info("Starting backup!")
 
-            if self.git_repo.is_dirty():
-                commit = self.git_repo.index.commit(message=message)
-        except SystemExit | KeyboardInterrupt:
-            raise
-        except Exception as ex:
-            git_log.exception("Exception backing up:", exc_info=ex)
+            self.backup_sem = threading.Semaphore(value=0)
 
-        short_sha = self.git_repo.git.rev_parse(commit.hexsha, short=4) if commit else "Failed!"
+            if len(self.mcSettings['git']['regexes']['before done']) > 0:
+                def check_backup_done(line):
+                    match = next(filter(lambda m: m, map(lambda regex: Regex.match(regex, line, flags=Regex.MULTILINE),
+                                        self.mcSettings['git']['regexes']['before done'])), None)
+                    if match:
+                        self.backup_sem.release()
 
-        for command in self.mcSettings['git']['commands']['after']:
-            cmd = command.format(message=message, commit=short_sha)
-            await self.send_cmd(cmd)
-            pass
+                self.remove_backup_callbacks = self.event_emitter.on('console_line', check_backup_done)
 
-        git_log.info(f"Backup finished! {short_sha}")
+            for command in self.mcSettings['git']['commands']['before']:
+                cmd = command.format(message=message)
+                await self.send_cmd(cmd)
+                pass
+
+            status = True
+            if len(self.mcSettings['git']['regexes']['before done']) > 0:
+                status = await self.loop.run_in_executor(None, self.backup_sem.acquire, True, 15)
+                if self.remove_backup_callbacks:
+                    self.remove_backup_callbacks()
+                    self.remove_backup_callbacks = None
+
+            if not status:
+                git_log.info(f"Backup failed!")
+                for command in self.mcSettings['git']['commands']['fail']:
+                    await self.send_cmd(command)
+                    pass
+                return False, None
+
+            commit = None
+            try:
+                commit = await self._backup(message)
+            except SystemExit | KeyboardInterrupt:
+                raise
+            except Exception as ex:
+                git_log.exception("Exception backing up:", exc_info=ex)
+
+            short_sha = self.git_repo.git.rev_parse(commit.hexsha, short=6) if commit else "Failed!"
+
+            for command in self.mcSettings['git']['commands']['after']:
+                cmd = command.format(message=message, commit=short_sha)
+                await self.send_cmd(cmd)
+                pass
+
+            git_log.info(f"Backup finished! {short_sha}")
+            return True, short_sha
+        finally:
+            self.backup_running = False
 
     async def restore_backup(self, commit_hash: str) -> tuple[bool, str]:
         global git_log
