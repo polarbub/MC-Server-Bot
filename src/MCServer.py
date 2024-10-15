@@ -210,8 +210,24 @@ class MCServer:
                     self.remove_backup_callbacks()
                     self.remove_backup_callbacks = None
 
+                async def extra_backup():
+                    if self.git_repo:
+                        git_log.warning("Server stopped Backing up!")
+                        commit = None
+                        try:
+                            commit = await self._backup("Server Stop")
+                        except SystemExit | KeyboardInterrupt:
+                            raise
+                        except Exception as ex:
+                            git_log.exception("Exception backing up:", exc_info=ex)
+
+                        short_sha = self.git_repo.git.rev_parse(commit.hexsha, short=6) if commit else "Failed!"
+
+                        self.discord.bot.loop.create_task(self.discord.console_writer.send_message(f"Extra Backup after server Stop: {short_sha}"))
+                        git_log.info(f"Finished Backup: {short_sha}")
+
                 if not self.backup_running:
-                    self.loop.create_task(self._backup("Server Stop"))
+                    self.loop.create_task(extra_backup())
             pass
 
         self.event_emitter.on('process_stop', on_stop)
