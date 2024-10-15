@@ -1,6 +1,5 @@
 import ctypes
 import io
-import json
 import logging
 import subprocess
 import threading

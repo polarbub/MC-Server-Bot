@@ -2,20 +2,23 @@ import asyncio
 import json
 import logging
 import os
-import signal
 import threading
+import pause
+import croniter
+import cron_descriptor
 import re as Regex
+
 import git
 
+from datetime import datetime, timedelta
 from os.path import exists
-from time import sleep, time
+from time import time
 from typing import Callable
 
 import discord
 from discord.utils import escape_markdown, escape_mentions
 
 import psutil
-from humanfriendly.terminal import message
 from watchdog.observers import Observer
 
 import common
@@ -213,12 +216,33 @@ class MCServer:
 
         self.event_emitter.on('process_stop', on_stop)
 
+        def check_permissions(permissions: dict, target: discord.User | discord.Member):
+            if target.id in permissions['users']:
+                return True
+
+            if len(set(permissions['roles']).intersection(set([r.id for r in target.roles]))):
+                return True
+            pass
+
         async def handle_auto_backup_command(interaction: discord.Interaction, name: str, action: str):
             if name != self.name:
                 return False
 
+            if not check_permissions(self.mcSettings['discord']['permissions']['backup'], interaction.user):
+                await interaction.response.send_message("You are not allowed to use this command!.", ephemeral=True)
+                return True
+
+            cron_txt = "Invalid Expression"
+            if croniter.croniter.is_valid(self.mcSettings['git']['cron']):
+                descriptor = cron_descriptor.ExpressionDescriptor(
+                    self.mcSettings['git']['cron'],
+                    casing_type=cron_descriptor.CasingTypeEnum.Sentence,
+                    use_24hour_time_format=True
+                )
+                cron_txt = descriptor.get_description()
+
             if action == "status":
-                status = "enabled" if self.backup_enabled else "disabled"
+                status = cron_txt if self.backup_enabled else "disabled"
                 await interaction.response.send_message(f"Auto-backups for {self.name} are currently {status}.",
                                                         ephemeral=False)
             elif action in ["enable", "disable"]:
@@ -228,7 +252,7 @@ class MCServer:
                 else:
                     self.stop_backup()
 
-                status = "enabled" if self.backup_enabled else "disabled"
+                status = cron_txt if self.backup_enabled else "disabled"
                 await interaction.response.send_message(f"Auto-backups for {self.name} are now {status}.",
                                                         ephemeral=False)
             else:
@@ -241,6 +265,10 @@ class MCServer:
                                         comment: str = None, commit_hash: str = None):
             if name != self.name:
                 return False
+
+            if not check_permissions(self.mcSettings['discord']['permissions']['backup'], interaction.user):
+                await interaction.response.send_message("You are not allowed to use this command!.", ephemeral=True)
+                return True
 
             if not self.git_repo:
                 await interaction.response.send_message("Cannot create a backup without a git repository.",
@@ -290,13 +318,6 @@ class MCServer:
 
         await self.discord.bot.add_backup_command(self.discord.guild, handle_backup_command)
 
-        def check_permissions(permissions: dict, target: discord.User | discord.Member):
-            if target.id in permissions['users']:
-                return True
-
-            if len(set(permissions['roles']).intersection(set([r.id for r in target.roles]))):
-                return True
-            pass
 
         def handle_message(message: discord.Message, guild: discord.Guild, channel: discord.TextChannel, author: discord.User | discord.Member,
                            content: str):
@@ -320,7 +341,7 @@ class MCServer:
         await self.monitor_process(self.mcSettings['process']['pid_file'])
 
     async def monitor_process(self, pid_file):
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         async def watch_process(pid):
             try:
@@ -357,14 +378,14 @@ class MCServer:
             try:
                 if not exists(self.mcSettings['process']['log_file']):
                     server_log.warning("Log File not found! retrying in 1s")
-                    sleep(1)
+                    pause.sleep(1)
                     continue
 
                 with open(self.mcSettings['process']['log_file'], 'r') as fp:
                     while True:
                         tmp = fp.readline()
                         if not tmp:
-                            sleep(0.1)
+                            pause.sleep(0.1)
                             continue
 
                         line += tmp
@@ -382,7 +403,7 @@ class MCServer:
             except Exception as ex:
                 server_log.exception("Exception reading console:", exc_info=ex)
                 pass
-            sleep(0.5)
+            pause.sleep(0.5)
         pass
 
     def start_backup(self):
@@ -406,14 +427,16 @@ class MCServer:
     backup_running : bool = False
 
     async def _backup(self, message: str) -> git.Commit | None:
-        await self.loop.run_in_executor(None, self.git_repo.git.add, "-A")
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, self.git_repo.git.add, "-A")
 
         if self.git_repo.is_dirty():
-            commit = await self.loop.run_in_executor(None, lambda m : self.git_repo.index.commit(message=m), message)
+            commit = await loop.run_in_executor(None, lambda m : self.git_repo.index.commit(message=m), message)
             return commit
         return None
 
     async def new_backup(self, message: str = "Timed Backup") -> [bool, str]:
+        loop = asyncio.get_running_loop()
         if self.backup_running:
             git_log.warning("Backup already running!")
             return False, None
@@ -439,7 +462,7 @@ class MCServer:
 
             status = True
             if len(self.mcSettings['git']['regexes']['before done']) > 0:
-                status = await self.loop.run_in_executor(None, self.backup_sem.acquire, True, 15)
+                status = await loop.run_in_executor(None, self.backup_sem.acquire, True, 15)
                 if self.remove_backup_callbacks:
                     self.remove_backup_callbacks()
                     self.remove_backup_callbacks = None
@@ -498,18 +521,31 @@ class MCServer:
 
     def backup_loop(self):
         global git_log
+
+        if not croniter.croniter.is_valid(self.mcSettings['git']['cron']):
+            git_log.error("Invalid cron expression %s", self.mcSettings['git']['cron'])
+            return
+
         while True:
             try:
-                sleep(self.mcSettings['git']['interval'] - self.mcSettings['git']['warning'])
+                citer = croniter.croniter(self.mcSettings['git']['cron'], datetime.now())
+
+                next_backup = citer.get_next(datetime)
+
+                next_warning = next_backup - timedelta(seconds=self.mcSettings['git']['warning'])
+
+                git_log.warning("Next Backup at %s", next_backup)
+
+                pause.until(next_warning)
 
                 git_log.info("Sending backup Warning!")
 
                 for command in self.mcSettings['git']['commands']['warning']:
-                    self.loop.run_until_complete(self.send_cmd(command))
+                    asyncio.run(self.send_cmd(command))
 
-                sleep(self.mcSettings['git']['warning'])
+                pause.until(next_backup)
 
-                self.loop.run_until_complete(self.new_backup())
+                asyncio.run(self.new_backup())
 
             except SystemExit | KeyboardInterrupt:
                 if self.remove_backup_callbacks:
@@ -521,9 +557,10 @@ class MCServer:
         pass
 
     async def send_cmd(self, command: str):
+        loop = asyncio.get_running_loop()
         if not self.online:
             return
 
-        await self.loop.run_in_executor(None, common.run_process,
+        await loop.run_in_executor(None, common.run_process,
                                         *[arg.format(command=command) for arg in
                                          self.mcSettings['process']['shell']['command']])

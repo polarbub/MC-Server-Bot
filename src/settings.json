@@ -23,6 +23,10 @@
         "console_channel": 1295107194957729944,
         "chat_webhook": "[WEBHOOK]",
         "permissions": {
+          "backup": {
+            "users": [],
+            "roles": [1295368869787078698]
+          },
           "console": {
             "users": [],
             "roles": [1295368869787078698]
@@ -57,6 +61,7 @@
         "enabled": true,
         "repo_path": "",
         "interval": 1800,
+        "cron": "*/30 * * * *",
         "warning": 30,
         "commands": {
           "warning": [
