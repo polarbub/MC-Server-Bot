@@ -7,9 +7,9 @@ import pause
 import croniter
 import cron_descriptor
 import re as Regex
-
 import git
 
+from tzlocal import get_localzone
 from datetime import datetime, timedelta
 from os.path import exists
 from time import time
@@ -546,11 +546,17 @@ class MCServer:
             try:
                 citer = croniter.croniter(self.mcSettings['git']['cron'], datetime.now())
 
-                next_backup = citer.get_next(datetime)
+                next_backup : datetime = citer.get_next(datetime)
 
-                next_warning = next_backup - timedelta(seconds=self.mcSettings['git']['warning'])
+                next_backup = next_backup.replace(tzinfo=get_localzone())
 
-                git_log.warning("Next Backup at %s", next_backup)
+                next_warning : datetime = next_backup - timedelta(seconds=self.mcSettings['git']['warning'])
+
+                git_log.warning("Next Backup at %s", next_backup.strftime("%d-%b-%Y %I:%M %p %Z"))
+
+                for command in self.mcSettings['git']['commands']['schedule']:
+                    cmd = command.format(schedule=next_backup.strftime("%d-%b-%Y %I:%M %p %Z"))
+                    asyncio.run(self.send_cmd(cmd))
 
                 pause.until(next_warning)
 

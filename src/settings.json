@@ -64,6 +64,9 @@
         "cron": "*/30 * * * *",
         "warning": 30,
         "commands": {
+          "schedule": [
+            "say Next backup at {schedule}."
+          ],
           "warning": [
             "say Backup in 30 seconds."
           ],

@@ -7,7 +7,6 @@ import re
 
 from typing import Callable, Any
 
-import aiohttp
 import coloredlogs
 import discord
 from discord import Message, Member, Color
@@ -48,22 +47,6 @@ async def get_minecraft_avatar_url(username):
 
 def get_mcHeads_url(username):
     return f"https://mc-heads.net/avatar/{username}/128.png"
-
-async def get_crafatar_url(username):
-    async with aiohttp.ClientSession() as session:
-        # Step 1: Get the UUID from Mojang API
-        mojang_api_url = f"https://api.mojang.com/users/profiles/minecraft/{username}"
-
-        async with session.get(mojang_api_url) as response:
-            if response.status == 200:
-                data = await response.json()
-                uuid = data["id"]
-
-                # Step 2: Create the avatar URL (128x128 for Discord)
-                skin_head_url = f"https://crafatar.com/avatars/{uuid}.png"
-                return skin_head_url
-            else:
-                return None
 
 async def send_webhook_message(webhook : discord.Webhook, username, avatar_url = None, content =""):
     await webhook.send(content=content, username=username, avatar_url=avatar_url, wait=True)
