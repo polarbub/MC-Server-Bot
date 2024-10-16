@@ -49,7 +49,7 @@ def get_mcHeads_url(username):
     return f"https://mc-heads.net/avatar/{username}/128.png"
 
 async def send_webhook_message(webhook : discord.Webhook, username, avatar_url = None, content =""):
-    await webhook.send(content=content, username=username, avatar_url=avatar_url, wait=True)
+    await webhook.send(content=content, username=username, avatar_url=avatar_url, wait=True, allowed_mentions=discord.AllowedMentions.none())
 
 class KillableThread(threading.Thread):
     def __init__(self, *args, **keywords):

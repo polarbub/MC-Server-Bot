@@ -118,7 +118,8 @@ class MCServer:
                 None)
             if match:
                 username = match.group(1)
-                self.discord.bot.loop.create_task(self.discord.chat_writer.send_message(escape_markdown(username) + " Logged In!"))
+                self.discord.bot.loop.create_task(common.send_webhook_message(self.discord.webhook, username="[Server]",
+                                                                              content=escape_markdown(username) + " joined the game"))
                 pass
             pass
 
@@ -131,7 +132,8 @@ class MCServer:
                 None)
             if match:
                 username = match.group(1)
-                self.discord.bot.loop.create_task(self.discord.chat_writer.send_message(escape_markdown(username) + " Logged Out!"))
+                self.discord.bot.loop.create_task(common.send_webhook_message(self.discord.webhook, username="[Server]",
+                                                                              content=escape_markdown(username) + " left the game"))
                 pass
             pass
 
@@ -144,7 +146,8 @@ class MCServer:
                 , None)
             if match:
                 username = match.group(1)
-                self.discord.bot.loop.create_task(self.discord.chat_writer.send_message(escape_markdown(username) + " Disconnected!"))
+                self.discord.bot.loop.create_task(common.send_webhook_message(self.discord.webhook, username="[Server]",
+                                                                              content=escape_markdown(username) + " Disconnected!"))
                 pass
             pass
 
@@ -157,7 +160,8 @@ class MCServer:
                 None)
             if match:
                 death = match.group(1)
-                self.discord.bot.loop.create_task(self.discord.chat_writer.send_message(escape_markdown(death)))
+                self.discord.bot.loop.create_task(common.send_webhook_message(self.discord.webhook, username="[Server]",
+                                                      content=escape_markdown(death)))
                 pass
             pass
 

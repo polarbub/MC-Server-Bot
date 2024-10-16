@@ -1,4 +1,5 @@
 import asyncio
+import collections
 import logging
 import os
 from typing import Callable
@@ -123,6 +124,7 @@ class MCBot(discord.Client):
         task : asyncio.Task | None
         channel : discord.TextChannel
         message_buffer : str
+        message_queue : collections.deque[str]
         max_message_length: int
         flush_interval: float
 
@@ -130,13 +132,24 @@ class MCBot(discord.Client):
             self.task = None
             self.channel = channel
             self.message_buffer = ""
+            self.message_queue = collections.deque()
             self.max_message_length = max_message_length
             self.flush_interval = flush_interval
             pass
 
         async def flush_buffer(self):
+            self.enqueue_buffer()
+
+            queue_size = len(self.message_queue)
+            if queue_size > 0:
+                message = self.message_queue.popleft()
+                asyncio.create_task(self.channel.send(message))
+                if queue_size > 1:
+                    bot_log.warning("Throttling %d messages! to %s in guild %s", queue_size - 1, self.channel.name, self.channel.guild.name)
+
+        def enqueue_buffer(self):
             if self.message_buffer:
-                asyncio.create_task(self.channel.send(self.message_buffer))
+                self.message_queue.append(self.message_buffer)
                 self.message_buffer = ""  # Clear buffer after sending
 
         # Background task to flush buffer periodically
@@ -148,9 +161,10 @@ class MCBot(discord.Client):
         async def send_message(self, line):
             if not self.task or self.task.cancelled() or self.task.done():
                 return
-            # If the buffer exceeds the max message length, flush it immediately
+
+            # If the buffer exceeds the max message length, enqueue it immediately
             if len(self.message_buffer) + len(line) >= self.max_message_length:
-                await self.flush_buffer()
+                self.enqueue_buffer()
 
             self.message_buffer += line + os.linesep
 
