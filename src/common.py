@@ -12,12 +12,16 @@ import discord
 from discord import Message, Member, Color
 
 def setup_logger(logger: logging.Logger, level: int = logging.DEBUG):
+    logging.addLevelName(11, "STDOUT")
+    logging.addLevelName(41, "STDERR")
     coloredlogs.install(level=level, logger=logger, fmt="[%(asctime)s]\t%(name)s\t%(levelname)s\t%(message)s",
                         level_styles=dict(
                             debug=dict(color='black', bright=True),
                             info=dict(),
                             warning=dict(color='yellow'),
-                            error=dict(color='red')
+                            error=dict(color='red'),
+                            stdout=dict(color='black', bright=True),
+                            stderr=dict(color='red')
                         ), field_styles=dict(
             asctime=dict(color='green'),
             levelname=dict(bold=True),
@@ -33,10 +37,10 @@ def run_process(*args: [str]):
     proc = subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
-        shell_log.info(line.rstrip())
+        shell_log.log(11, line.rstrip())
 
     for line in io.TextIOWrapper(proc.stderr, encoding="utf-8"):
-        shell_log.error(line.rstrip())
+        shell_log.log(41, line.rstrip())
     pass
 
 

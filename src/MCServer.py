@@ -9,8 +9,7 @@ import cron_descriptor
 import re as Regex
 import git
 
-from tzlocal import get_localzone
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from os.path import exists
 from time import time
 from typing import Callable
@@ -34,13 +33,13 @@ common.setup_logger(git_log)
 
 class MCServer:
     class Discord:
-        bot: MCBot
-        guild: discord.Guild
-        console_channel: discord.TextChannel
-        chat_channel: discord.TextChannel
-        console_writer: MCBot.ThrottledWriter
-        chat_writer: MCBot.ThrottledWriter
-        webhook: discord.Webhook
+        bot: MCBot | None = None
+        guild: discord.Guild | None = None
+        console_channel: discord.TextChannel | None = None
+        chat_channel: discord.TextChannel | None = None
+        console_writer: MCBot.ThrottledWriter | None = None
+        chat_writer: MCBot.ThrottledWriter | None = None
+        webhook: discord.Webhook | None = None
         pass
 
     name: str
@@ -69,12 +68,13 @@ class MCServer:
 
         self.discord.bot = bot
 
-        try:
-            self.git_repo = git.Repo(self.mcSettings['git']['repo_path'])
-        except git.InvalidGitRepositoryError as e:
-            git_log.exception("Specified git repo path is not valid", exc_info=e)
-        except git.NoSuchPathError as e:
-            git_log.exception("Specified git repo path does not exist", exc_info=e)
+        if self.mcSettings['git']['repo_path']:
+            try:
+                self.git_repo = git.Repo(self.mcSettings['git']['repo_path'])
+            except git.InvalidGitRepositoryError as e:
+                git_log.exception(f"[{self.name}] Specified git repo path is not valid", exc_info=e)
+            except git.NoSuchPathError as e:
+                git_log.exception(f"[{self.name}] Specified git repo path does not exist", exc_info=e)
 
         pass
 
@@ -89,13 +89,19 @@ class MCServer:
         self.discord.webhook = discord.Webhook.from_url(self.mcSettings['discord']['chat_webhook'],
                                                         client=self.discord.bot)
 
-        self.discord.console_writer = self.discord.bot.get_throttled_writer(self.discord.console_channel)
-        self.discord.chat_writer = self.discord.bot.get_throttled_writer(self.discord.chat_channel)
+
+        if self.mcSettings['discord']['console_channel']:
+            self.discord.console_writer = self.discord.bot.get_throttled_writer(self.discord.console_channel)
+        if self.mcSettings['discord']['chat_channel']:
+            self.discord.chat_writer = self.discord.bot.get_throttled_writer(self.discord.chat_channel)
 
         if self.mcSettings['discord']['status']:
             self.discord.bot.link_server(self)
 
         def on_console(line):
+            if not self.discord.console_writer:
+                return
+
             escaped_line = escape_markdown(line)
             escaped_line = escape_mentions(escaped_line)
             censored_line = escaped_line
@@ -112,6 +118,9 @@ class MCServer:
         self.event_emitter.on('console_line', on_console)
 
         def check_join(line):
+            if not self.discord.chat_writer:
+                return
+
             match = next(
                 filter(lambda m: m, map(lambda re: Regex.match(re, line, flags=Regex.MULTILINE),
                                         self.mcSettings['regexes']['join'])),
@@ -126,6 +135,9 @@ class MCServer:
         self.event_emitter.on('console_line', check_join)
 
         def check_leave(line):
+            if not self.discord.chat_writer:
+                return
+
             match = next(
                 filter(lambda m: m, map(lambda re: Regex.match(re, line, flags=Regex.MULTILINE),
                                         self.mcSettings['regexes']['leave'])),
@@ -140,6 +152,9 @@ class MCServer:
         self.event_emitter.on('console_line', check_leave)
 
         def check_disconnect(line):
+            if not self.discord.chat_writer:
+                return
+
             match = next(
                 filter(lambda m: m, map(lambda re: Regex.match(re, line, flags=Regex.MULTILINE),
                                         self.mcSettings['regexes']['disconnect']))
@@ -154,6 +169,9 @@ class MCServer:
         self.event_emitter.on('console_line', check_disconnect)
 
         def check_death(line):
+            if not self.discord.chat_writer:
+                return
+
             match = next(
                 filter(lambda m: m, map(lambda re: Regex.match(re, line, flags=Regex.MULTILINE),
                                         self.mcSettings['regexes']['death'])),
@@ -168,6 +186,9 @@ class MCServer:
         self.event_emitter.on('console_line', check_death)
 
         def check_message(line):
+            if not self.discord.chat_writer:
+                return
+
             match: Regex.Match = next(
                 filter(lambda m: m, map(lambda re: Regex.match(re, line, flags=Regex.MULTILINE),
                                         self.mcSettings['regexes']['message'])),
@@ -189,7 +210,7 @@ class MCServer:
         self.event_emitter.on('console_line', check_message)
 
         def on_start(pid):
-            server_log.info(f"Detected server start with PID: {pid}")
+            server_log.info(f"[{self.name}] Detected server start with PID: {pid}")
             was = self.online
             self.online = True
             if not was:
@@ -201,7 +222,7 @@ class MCServer:
         self.event_emitter.on('process_start', on_start)
 
         def on_stop(pid):
-            server_log.info(f"Detected server stop, old PID: {pid}")
+            server_log.info(f"[{self.name}] Detected server stop, old PID: {pid}")
             was = self.online
             self.online = False
             if was:
@@ -216,19 +237,19 @@ class MCServer:
 
                 async def extra_backup():
                     if self.git_repo:
-                        git_log.warning("Server stopped Backing up!")
+                        git_log.warning(f"[{self.name}] Server stopped Backing up!")
                         commit = None
                         try:
                             commit = await self._backup("Server Stop")
                         except SystemExit | KeyboardInterrupt:
                             raise
                         except Exception as ex:
-                            git_log.exception("Exception backing up:", exc_info=ex)
+                            git_log.exception(f"[{self.name}] Exception backing up:", exc_info=ex)
 
                         short_sha = self.git_repo.git.rev_parse(commit.hexsha, short=6) if commit else "Failed!"
 
                         self.discord.bot.loop.create_task(self.discord.console_writer.send_message(f"Extra Backup after server Stop: {short_sha}"))
-                        git_log.info(f"Finished Backup: {short_sha}")
+                        git_log.info(f"[{self.name}] Finished Backup: {short_sha}")
 
                 if not self.backup_running:
                     self.loop.create_task(extra_backup())
@@ -351,7 +372,7 @@ class MCServer:
             elif channel.id == self.discord.console_channel.id:
                 if len(content.splitlines()) == 1:
                     if check_permissions(self.mcSettings['discord']['permissions']['console'], author):
-                        server_log.warning(f"User {author.name} Executed: {content}")
+                        server_log.warning(f"[{self.name}] User {author.name} Executed: {content}")
                         self.loop.create_task(self.send_cmd(content))
                 pass
             pass
@@ -374,7 +395,7 @@ class MCServer:
 
         def on_new_pid(pid):
             if not self.watcher_task or self.watcher_task.done():
-                server_log.info(f"Pid file updated: {pid}")
+                server_log.info(f"[{self.name}] Pid file updated: {pid}")
                 self.watcher_task = self.loop.create_task(watch_process(pid))
 
         self.event_emitter.on('new_pid', on_new_pid)
@@ -397,7 +418,7 @@ class MCServer:
         while True:
             try:
                 if not exists(self.mcSettings['process']['log_file']):
-                    server_log.warning("Log File not found! retrying in 1s")
+                    server_log.warning(f"[{self.name}] Log File not found! retrying in 1s")
                     pause.sleep(1)
                     continue
 
@@ -417,11 +438,11 @@ class MCServer:
                             except SystemExit | KeyboardInterrupt:
                                 raise
                             except Exception as ex:
-                                server_log.exception("Exception reading console:", exc_info=ex)
+                                server_log.exception(f"[{self.name}] Exception reading console:", exc_info=ex)
             except SystemExit | KeyboardInterrupt:
                 raise
             except Exception as ex:
-                server_log.exception("Exception reading console:", exc_info=ex)
+                server_log.exception(f"[{self.name}] Exception reading console:", exc_info=ex)
                 pass
             pause.sleep(0.5)
         pass
@@ -458,11 +479,11 @@ class MCServer:
     async def new_backup(self, message: str = "Timed Backup") -> [bool, str]:
         loop = asyncio.get_running_loop()
         if self.backup_running:
-            git_log.warning("Backup already running!")
+            git_log.warning(f"[{self.name}] Backup already running!")
             return False, None
         try:
             self.backup_running = True
-            git_log.info("Starting backup!")
+            git_log.info(f"[{self.name}] Starting backup!")
 
             self.backup_sem = threading.Semaphore(value=0)
 
@@ -488,7 +509,7 @@ class MCServer:
                     self.remove_backup_callbacks = None
 
             if not status:
-                git_log.info(f"Backup failed!")
+                git_log.info(f"[{self.name}] Backup failed!")
                 for command in self.mcSettings['git']['commands']['fail']:
                     await self.send_cmd(command)
                     pass
@@ -500,7 +521,7 @@ class MCServer:
             except SystemExit | KeyboardInterrupt:
                 raise
             except Exception as ex:
-                git_log.exception("Exception backing up:", exc_info=ex)
+                git_log.exception(f"[{self.name}] Exception backing up:", exc_info=ex)
 
             short_sha = self.git_repo.git.rev_parse(commit.hexsha, short=6) if commit else "Failed!"
 
@@ -509,7 +530,7 @@ class MCServer:
                 await self.send_cmd(cmd)
                 pass
 
-            git_log.info(f"Backup finished! {short_sha}")
+            git_log.info(f"[{self.name}] Backup finished! {short_sha}")
             return True, short_sha
         finally:
             self.backup_running = False
@@ -531,32 +552,33 @@ class MCServer:
             # Perform a hard reset to the specified commit
             self.git_repo.git.reset('--hard', commit_hash)
 
-            git_log.info(f"Restored commit: {commit_hash}")
+            git_log.info(f"[{self.name}] Restored commit: {commit_hash}")
             return True, f"Rollback to commit {commit_hash}. Original state preserved in '{new_branch.name}'."
 
         except git.GitCommandError as e:
             error_message = f"Failed to restore backup: {e}"
-            git_log.error(error_message)
+            git_log.error(f"[{self.name}] {error_message}")
             return False, error_message
 
     def backup_loop(self):
         global git_log
 
         if not croniter.croniter.is_valid(self.mcSettings['git']['cron']):
-            git_log.error("Invalid cron expression %s", self.mcSettings['git']['cron'])
+            git_log.error("[%s] Invalid cron expression %s", self.name, self.mcSettings['git']['cron'])
             return
 
         while True:
             try:
-                citer = croniter.croniter(self.mcSettings['git']['cron'], datetime.now())
+                citer = croniter.croniter(self.mcSettings['git']['cron'], datetime.now(UTC))
 
                 next_backup : datetime = citer.get_next(datetime)
 
-                next_backup = next_backup.replace(tzinfo=get_localzone())
+                #next_backup = next_backup.replace(tzinfo=get_localzone())
+                #next_backup = next_backup.replace(tzinfo=datetime.UTC)
 
                 next_warning : datetime = next_backup - timedelta(seconds=self.mcSettings['git']['warning'])
 
-                git_log.warning("Next Backup at %s", next_backup.strftime("%d-%b-%Y %I:%M %p %Z"))
+                git_log.warning("[%s] Next Backup at %s", self.name, next_backup.strftime("%d-%b-%Y %I:%M %p %Z"))
 
                 for command in self.mcSettings['git']['commands']['schedule']:
                     cmd = command.format(schedule=next_backup.strftime("%d-%b-%Y %I:%M %p %Z"))
@@ -564,7 +586,7 @@ class MCServer:
 
                 pause.until(next_warning)
 
-                git_log.info("Sending backup Warning!")
+                git_log.info(f"[{self.name}] Sending backup Warning!")
 
                 for command in self.mcSettings['git']['commands']['warning']:
                     asyncio.run(self.send_cmd(command))
@@ -579,7 +601,7 @@ class MCServer:
                     self.remove_backup_callbacks = None
                 raise
             except Exception as e:
-                git_log.exception("Error while backing up", exc_info=e)
+                git_log.exception(f"[{self.name}] Error while backing up", exc_info=e)
         pass
 
     async def send_cmd(self, command: str):

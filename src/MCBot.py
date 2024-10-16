@@ -143,7 +143,7 @@ class MCBot(discord.Client):
             queue_size = len(self.message_queue)
             if queue_size > 0:
                 message = self.message_queue.popleft()
-                asyncio.create_task(self.channel.send(message))
+                await self.channel.send(message)
                 if queue_size > 1:
                     bot_log.warning("Throttling %d messages! to %s in guild %s", queue_size - 1, self.channel.name, self.channel.guild.name)
 
