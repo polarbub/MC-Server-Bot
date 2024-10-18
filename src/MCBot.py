@@ -194,7 +194,7 @@ class MCBot(discord.Client):
 
                         query_log.info(f"Server Online with {status.players.online} players")
                         await self.update_bot_status(True, status.players.online, status.players.max)
-                    except SystemExit | KeyboardInterrupt:
+                    except (SystemExit, KeyboardInterrupt):
                         raise
                     except Exception:
                         query_log.warning("Server Offline")

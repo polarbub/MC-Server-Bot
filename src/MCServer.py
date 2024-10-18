@@ -68,7 +68,7 @@ class MCServer:
 
         self.discord.bot = bot
 
-        if self.mcSettings['git']['repo_path']:
+        if self.mcSettings['git'].get('enabled', False) and self.mcSettings['git']['repo_path']:
             try:
                 self.git_repo = git.Repo(self.mcSettings['git']['repo_path'])
             except git.InvalidGitRepositoryError as e:
@@ -86,7 +86,10 @@ class MCServer:
         self.discord.guild = self.discord.bot.get_guild(self.mcSettings['discord']['guild'])
         self.discord.console_channel = self.discord.bot.get_channel(self.mcSettings['discord']['console_channel'])
         self.discord.chat_channel = self.discord.bot.get_channel(self.mcSettings['discord']['chat_channel'])
-        self.discord.webhook = discord.Webhook.from_url(self.mcSettings['discord']['chat_webhook'],
+
+
+        if self.mcSettings['discord']['chat_webhook']:
+            self.discord.webhook = discord.Webhook.from_url(self.mcSettings['discord']['chat_webhook'],
                                                         client=self.discord.bot)
 
 
@@ -118,7 +121,7 @@ class MCServer:
         self.event_emitter.on('console_line', on_console)
 
         def check_join(line):
-            if not self.discord.chat_writer:
+            if not self.discord.chat_writer or not self.discord.webhook:
                 return
 
             match = next(
@@ -135,7 +138,7 @@ class MCServer:
         self.event_emitter.on('console_line', check_join)
 
         def check_leave(line):
-            if not self.discord.chat_writer:
+            if not self.discord.chat_writer or not self.discord.webhook:
                 return
 
             match = next(
@@ -152,7 +155,7 @@ class MCServer:
         self.event_emitter.on('console_line', check_leave)
 
         def check_disconnect(line):
-            if not self.discord.chat_writer:
+            if not self.discord.chat_writer or not self.discord.webhook:
                 return
 
             match = next(
@@ -169,7 +172,7 @@ class MCServer:
         self.event_emitter.on('console_line', check_disconnect)
 
         def check_death(line):
-            if not self.discord.chat_writer:
+            if not self.discord.chat_writer or not self.discord.webhook:
                 return
 
             match = next(
@@ -186,7 +189,7 @@ class MCServer:
         self.event_emitter.on('console_line', check_death)
 
         def check_message(line):
-            if not self.discord.chat_writer:
+            if not self.discord.chat_writer or not self.discord.webhook:
                 return
 
             match: Regex.Match = next(
@@ -241,7 +244,7 @@ class MCServer:
                         commit = None
                         try:
                             commit = await self._backup("Server Stop")
-                        except SystemExit | KeyboardInterrupt:
+                        except (SystemExit, KeyboardInterrupt):
                             raise
                         except Exception as ex:
                             git_log.exception(f"[{self.name}] Exception backing up:", exc_info=ex)
@@ -362,14 +365,14 @@ class MCServer:
 
         def handle_message(message: discord.Message, guild: discord.Guild, channel: discord.TextChannel, author: discord.User | discord.Member,
                            content: str):
-            if channel.id == self.discord.chat_channel.id:
+            if self.discord.chat_channel and channel.id == self.discord.chat_channel.id:
                 if check_permissions(self.mcSettings['discord']['permissions']['chat'], author):
                     json_content = common.format_discord_message(message)
                     json_string = json.dumps(json_content)
                     bot_log.warning(f"Sending chat message : {json_string}")
                     self.loop.create_task(self.send_cmd(f"execute if entity @a run tellraw @a {json_string}"))
                     pass
-            elif channel.id == self.discord.console_channel.id:
+            elif self.discord.console_channel and channel.id == self.discord.console_channel.id:
                 if len(content.splitlines()) == 1:
                     if check_permissions(self.mcSettings['discord']['permissions']['console'], author):
                         server_log.warning(f"[{self.name}] User {author.name} Executed: {content}")
@@ -435,11 +438,11 @@ class MCServer:
                             line = ''
                             try:
                                 self.event_emitter.emit('console_line', final_line)
-                            except SystemExit | KeyboardInterrupt:
+                            except (SystemExit, KeyboardInterrupt):
                                 raise
                             except Exception as ex:
                                 server_log.exception(f"[{self.name}] Exception reading console:", exc_info=ex)
-            except SystemExit | KeyboardInterrupt:
+            except (SystemExit, KeyboardInterrupt):
                 raise
             except Exception as ex:
                 server_log.exception(f"[{self.name}] Exception reading console:", exc_info=ex)
@@ -518,7 +521,7 @@ class MCServer:
             commit = None
             try:
                 commit = await self._backup(message)
-            except SystemExit | KeyboardInterrupt:
+            except (SystemExit, KeyboardInterrupt):
                 raise
             except Exception as ex:
                 git_log.exception(f"[{self.name}] Exception backing up:", exc_info=ex)
@@ -595,7 +598,7 @@ class MCServer:
 
                 asyncio.run(self.new_backup())
 
-            except SystemExit | KeyboardInterrupt:
+            except (SystemExit, KeyboardInterrupt):
                 if self.remove_backup_callbacks:
                     self.remove_backup_callbacks()
                     self.remove_backup_callbacks = None
