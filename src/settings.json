@@ -11,8 +11,8 @@
         "shell": {
           "command": [
             "/bin/bash",
-            "-c",
-            "echo {command}"
+            "cmd.sh",
+            "{command}"
           ]
         }
       },
@@ -58,10 +58,13 @@
         ]
       },
       "git": {
-        "enabled": true,
         "repo_path": "",
-        "interval": 1800,
-        "cron": "*/30 * * * *",
+        "enabled": true,
+        "auto": "no",
+        "interval": {
+            "timezone": "Etc/UTC",
+            "cron": "*/30 * * * *"
+        },
         "warning": 30,
         "commands": {
           "schedule": [

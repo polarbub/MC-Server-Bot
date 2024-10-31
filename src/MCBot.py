@@ -106,11 +106,10 @@ class MCBot(discord.Client):
             ])
             async def dynamic_command(interaction: discord.Interaction, name: str,
                                       action: app_commands.Choice[str],
-                                      comment: str = None,
-                                      commit_hash: str = None):
+                                      argument: str):
                 action_value = action.value
                 for cb in callbacks:
-                    if await cb(interaction, name, action_value, comment, commit_hash):
+                    if await cb(interaction, name, action_value, argument):
                         return
                 await interaction.response.send_message(f"{name} is not a known server!", ephemeral=True)
 

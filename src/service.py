@@ -7,7 +7,7 @@ import json
 import logging
 
 from MCBot import MCBot
-from MCServer import MCServer
+from MCServer import MCServer, server_list
 from common import setup_logger
 
 settings   : dict
@@ -29,7 +29,8 @@ def main():
 
     bot = MCBot()
 
-    mcServers = []
+    mcServers = server_list
+
     for name, mcSettings in dict(settings["minecraft"]).items():
         mcserver = MCServer(name, mcSettings, bot)
         mcServers.append(mcserver)

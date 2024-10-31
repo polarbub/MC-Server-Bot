@@ -9,7 +9,8 @@ import cron_descriptor
 import re as Regex
 import git
 
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
+from dateutil import tz
 from os.path import exists
 from time import time
 from typing import Callable
@@ -30,6 +31,7 @@ common.setup_logger(console_log)
 git_log = logging.getLogger('McBot.git    ')
 common.setup_logger(git_log)
 
+server_list = []
 
 class MCServer:
     class Discord:
@@ -46,7 +48,7 @@ class MCServer:
     mcSettings: dict
 
     loop: asyncio.AbstractEventLoop = None
-    discord: Discord = Discord()
+    discord: Discord | None = None
 
     git_repo: git.Repo | None = None
     backup_sem: threading.Semaphore
@@ -62,6 +64,7 @@ class MCServer:
     watcher_task: asyncio.Task | None = None
 
     def __init__(self, name: str, mc_settings: dict, bot: MCBot) -> None:
+        self.discord = MCServer.Discord()
         self.name = name
         self.mcSettings = mc_settings
         self.event_emitter = common.EventEmitter()
@@ -219,7 +222,8 @@ class MCServer:
             if not was:
                 self.console_thread = common.KillableThread(target=self.reader_loop, daemon=True, name='Console Thread')
                 self.console_thread.start()
-                self.start_backup()
+                if self.mcSettings.get('git', {}).get('auto', 'no') == 'on':
+                    self.start_backup()
             pass
 
         self.event_emitter.on('process_start', on_start)
@@ -276,10 +280,14 @@ class MCServer:
                 await interaction.response.send_message("You are not allowed to use this command!.", ephemeral=True)
                 return True
 
+            if not self.git_repo or self.mcSettings.get('git', {}).get('auto', 'no') == 'no':
+                await interaction.response.send_message(f"Auto-backups cannot be used on {self.name}", ephemeral=True)
+                return True
+
             cron_txt = "Invalid Expression"
             if croniter.croniter.is_valid(self.mcSettings['git']['cron']):
                 descriptor = cron_descriptor.ExpressionDescriptor(
-                    self.mcSettings['git']['cron'],
+                    self.mcSettings['git']['interval']['cron'],
                     casing_type=cron_descriptor.CasingTypeEnum.Sentence,
                     use_24hour_time_format=True
                 )
@@ -306,7 +314,7 @@ class MCServer:
         await self.discord.bot.add_auto_backup_command(self.discord.guild, handle_auto_backup_command)
 
         async def handle_backup_command(interaction: discord.Interaction, name: str, action: str,
-                                        comment: str = None, commit_hash: str = None):
+                                        argument: str = None):
             if name != self.name:
                 return False
 
@@ -315,48 +323,48 @@ class MCServer:
                 return True
 
             if not self.git_repo:
-                await interaction.response.send_message("Cannot create a backup without a git repository.",
+                await interaction.response.send_message(f"[{self.name}] Cannot create a backup without a git repository.",
                                                         ephemeral=True)
                 return True
 
             if action == "create":
                 if not self.online:
-                    await interaction.response.send_message("Cannot create a backup while the server is offline.",
+                    await interaction.response.send_message(f"[{self.name}] Cannot create a backup while the server is offline.",
                                                             ephemeral=True)
                     return True
 
-                if not comment:
-                    await interaction.response.send_message("Please provide a comment for the backup.", ephemeral=True)
+                if not argument:
+                    await interaction.response.send_message(f"[{self.name}] Please provide a comment for the backup.", ephemeral=True)
                     return True
 
                 await interaction.response.defer()
-                [status, id_] = await self.new_backup(comment)
+                [status, id_] = await self.new_backup(argument)
                 if status:
-                    await interaction.followup.send(f"Backup created with comment '{comment}' and ID '{id_}'")
+                    await interaction.followup.send(f"[{self.name}] Backup created with comment '{argument}' and ID '{id_}'")
                 else:
-                    await interaction.followup.send(f"Backup failed!")
+                    await interaction.followup.send(f"[{self.name}] Backup failed!")
 
 
             elif action == "restore":
                 if self.online:
                     await interaction.response.send_message(
-                        "Cannot restore a backup while the server is online. Please stop the server first.",
+                        f"[{self.name}] Cannot restore a backup while the server is online. Please stop the server first.",
                         ephemeral=True)
                     return True
 
-                if not commit_hash:
-                    await interaction.response.send_message("Please provide a commit hash to restore.", ephemeral=True)
+                if not argument:
+                    await interaction.response.send_message(f"[{self.name}] Please provide a commit hash to restore.", ephemeral=True)
                     return True
 
                 await interaction.response.defer()
-                success, message = await self.restore_backup(commit_hash)
+                success, message = await self.restore_backup(argument)
                 if success:
-                    await interaction.followup.send(f"Backup restored to commit: {commit_hash}\n{message}")
+                    await interaction.followup.send(f"[{self.name}] Backup restored to commit: {argument}\n{message}")
                 else:
-                    await interaction.followup.send(f"Failed to restore backup to commit: {commit_hash}\n{message}")
+                    await interaction.followup.send(f"[{self.name}] Failed to restore backup to commit: {argument}\n{message}")
 
             else:
-                await interaction.response.send_message(f"Invalid action: {action}", ephemeral=True)
+                await interaction.response.send_message(f"[{self.name}] Invalid action: {action}", ephemeral=True)
 
             return True
 
@@ -454,7 +462,7 @@ class MCServer:
         if self.backup_thread and self.backup_thread.is_alive():
             return
 
-        if self.git_repo and self.online:
+        if self.git_repo and self.online and self.mcSettings.get('git', {}).get('auto', 'no') != 'no':
             self.backup_thread = common.KillableThread(target=self.backup_loop, daemon=True,
                                                        name='Backup Thread')
             self.backup_thread.start()
@@ -566,18 +574,15 @@ class MCServer:
     def backup_loop(self):
         global git_log
 
-        if not croniter.croniter.is_valid(self.mcSettings['git']['cron']):
-            git_log.error("[%s] Invalid cron expression %s", self.name, self.mcSettings['git']['cron'])
+        if not croniter.croniter.is_valid(self.mcSettings['git']['interval']['cron']):
+            git_log.error("[%s] Invalid cron expression %s", self.name, self.mcSettings['git']['interval']['cron'])
             return
 
         while True:
             try:
-                citer = croniter.croniter(self.mcSettings['git']['cron'], datetime.now(UTC))
+                citer = croniter.croniter(self.mcSettings['git']['interval']['cron'], datetime.now(tz.gettz(self.mcSettings['git']['interval']['timezone'])))
 
                 next_backup : datetime = citer.get_next(datetime)
-
-                #next_backup = next_backup.replace(tzinfo=get_localzone())
-                #next_backup = next_backup.replace(tzinfo=datetime.UTC)
 
                 next_warning : datetime = next_backup - timedelta(seconds=self.mcSettings['git']['warning'])
 
