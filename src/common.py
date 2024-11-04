@@ -11,10 +11,32 @@ import coloredlogs
 import discord
 from discord import Message, Member, Color
 
+def get_markdown_stripper():
+    from markdown import Markdown
+    from io import StringIO
+
+    def unmark_element(element, stream=None):
+        if stream is None:
+            stream = StringIO()
+        if element.text:
+            stream.write(element.text)
+        for sub in element:
+            unmark_element(sub, stream)
+        if element.tail:
+            stream.write(element.tail)
+        return stream.getvalue()
+
+    # patching Markdown
+    Markdown.output_formats["plain"] = unmark_element
+    __md = Markdown(output_format="plain")
+    __md.stripTopLevelTags = False
+    return __md
+
 def setup_logger(logger: logging.Logger, level: int = logging.DEBUG):
     logging.addLevelName(11, "STDOUT")
     logging.addLevelName(41, "STDERR")
     coloredlogs.install(level=level, logger=logger, fmt="[%(asctime)s]\t%(name)s\t%(levelname)s\t%(message)s",
+                        isatty=True,
                         level_styles=dict(
                             debug=dict(color='black', bright=True),
                             info=dict(),
@@ -169,7 +191,8 @@ def format_discord_message(message: Message) -> list:
         json_message.append({"color": "white", "text": ": "})
 
     # Message content with improved URL handling
-    msg_content = message.clean_content
+    md = get_markdown_stripper()
+    msg_content = md.convert(str(message.clean_content))
     url_pattern = re.compile(r'(https?://[!-~]+)')
 
     segments = url_pattern.split(msg_content)
