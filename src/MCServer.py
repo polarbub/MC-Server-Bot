@@ -3,6 +3,8 @@ import json
 import logging
 import os
 import threading
+from threading import Event
+
 import pause
 import croniter
 import cron_descriptor
@@ -56,8 +58,10 @@ class MCServer:
     online: bool = False
     backup_enabled: bool = False
 
-    console_thread: common.KillableThread | None = None
-    backup_thread: common.KillableThread | None = None
+    console_thread: threading.Thread | None = None
+    console_stopEvent: threading.Event | None = None
+    backup_thread: threading.Thread | None = None
+    backup_stopEvent: threading.Event | None = None
     remove_backup_callbacks: Callable[[], None] | None = None
 
     event_emitter: common.EventEmitter
@@ -220,8 +224,10 @@ class MCServer:
             was = self.online
             self.online = True
             if not was:
-                self.console_thread = common.KillableThread(target=self.reader_loop, daemon=True, name='Console Thread')
+                self.console_stopEvent = Event()
+                self.console_thread = threading.Thread(target=self.reader_loop, daemon=True, name='Console Thread', args=[self.console_stopEvent])
                 self.console_thread.start()
+
                 if self.mcSettings.get('git', {}).get('auto', 'no') == 'on':
                     self.start_backup()
             pass
@@ -232,15 +238,15 @@ class MCServer:
             server_log.info(f"[{self.name}] Detected server stop, old PID: {pid}")
             was = self.online
             self.online = False
-            if was:
+            if was and self.git_repo:
                 if self.console_thread:
-                    self.console_thread.kill()
+                    self.console_stopEvent.set()
+                    self.console_stopEvent = None
+                    self.console_thread = None
 
                 self.stop_backup()
 
-                if self.remove_backup_callbacks:
-                    self.remove_backup_callbacks()
-                    self.remove_backup_callbacks = None
+                self.on_stop_autobackup()
 
                 async def extra_backup():
                     if self.git_repo:
@@ -255,7 +261,8 @@ class MCServer:
 
                         short_sha = self.git_repo.git.rev_parse(commit.hexsha, short=6) if commit else "Failed!"
 
-                        self.discord.bot.loop.create_task(self.discord.console_writer.send_message(f"Extra Backup after server Stop: {short_sha}"))
+                        if self.discord.console_writer:
+                            self.discord.bot.loop.create_task(self.discord.console_writer.send_message(f"Extra Backup after server Stop: {short_sha}"))
                         git_log.info(f"[{self.name}] Finished Backup: {short_sha}")
 
                 if not self.backup_running:
@@ -423,14 +430,16 @@ class MCServer:
         observer.stop()
         observer.join()
 
-    def reader_loop(self):
+    def reader_loop(self, stopEvent: Event):
         global server_log
         line = ''
-        while True:
+        while not stopEvent.is_set():
             try:
                 if not exists(self.mcSettings['process']['log_file']):
                     server_log.warning(f"[{self.name}] Log File not found! retrying in 1s")
                     pause.sleep(1)
+                    if stopEvent.is_set():
+                        return
                     continue
 
                 with open(self.mcSettings['process']['log_file'], 'r') as fp:
@@ -463,17 +472,19 @@ class MCServer:
             return
 
         if self.git_repo and self.online and self.mcSettings.get('git', {}).get('auto', 'no') != 'no':
-            self.backup_thread = common.KillableThread(target=self.backup_loop, daemon=True,
-                                                       name='Backup Thread')
+            self.backup_stopEvent = Event()
+            self.backup_thread = threading.Thread(target=self.backup_loop, daemon=True,
+                                                       name='Backup Thread', args=[self.backup_stopEvent])
             self.backup_thread.start()
             self.backup_enabled = True
 
     def stop_backup(self):
-        if not self.backup_thread or not self.backup_thread.is_alive():
+        if not self.backup_thread:
             return
 
-        self.backup_thread.kill()
+        self.backup_stopEvent.set()
         self.backup_thread = None
+        self.backup_stopEvent = None
         self.backup_enabled = False
 
     backup_running : bool = False
@@ -515,9 +526,7 @@ class MCServer:
             status = True
             if len(self.mcSettings['git']['regexes']['before done']) > 0:
                 status = await loop.run_in_executor(None, self.backup_sem.acquire, True, 15)
-                if self.remove_backup_callbacks:
-                    self.remove_backup_callbacks()
-                    self.remove_backup_callbacks = None
+                self.on_stop_autobackup()
 
             if not status:
                 git_log.info(f"[{self.name}] Backup failed!")
@@ -571,14 +580,14 @@ class MCServer:
             git_log.error(f"[{self.name}] {error_message}")
             return False, error_message
 
-    def backup_loop(self):
+    def backup_loop(self, stopEvent: Event):
         global git_log
 
         if not croniter.croniter.is_valid(self.mcSettings['git']['interval']['cron']):
             git_log.error("[%s] Invalid cron expression %s", self.name, self.mcSettings['git']['interval']['cron'])
             return
 
-        while True:
+        while not stopEvent.is_set():
             try:
                 citer = croniter.croniter(self.mcSettings['git']['interval']['cron'], datetime.now(tz.gettz(self.mcSettings['git']['interval']['timezone'])))
 
@@ -593,6 +602,8 @@ class MCServer:
                     asyncio.run(self.send_cmd(cmd))
 
                 pause.until(next_warning)
+                if stopEvent.is_set():
+                    return
 
                 git_log.info(f"[{self.name}] Sending backup Warning!")
 
@@ -600,17 +611,22 @@ class MCServer:
                     asyncio.run(self.send_cmd(command))
 
                 pause.until(next_backup)
+                if stopEvent.is_set():
+                    return
 
                 asyncio.run(self.new_backup())
 
             except (SystemExit, KeyboardInterrupt):
-                if self.remove_backup_callbacks:
-                    self.remove_backup_callbacks()
-                    self.remove_backup_callbacks = None
+                self.on_stop_autobackup()
                 raise
             except Exception as e:
                 git_log.exception(f"[{self.name}] Error while backing up", exc_info=e)
         pass
+
+    def on_stop_autobackup(self):
+        if self.remove_backup_callbacks:
+            self.remove_backup_callbacks()
+            self.remove_backup_callbacks = None
 
     async def send_cmd(self, command: str):
         loop = asyncio.get_running_loop()

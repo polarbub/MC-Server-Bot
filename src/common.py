@@ -77,26 +77,6 @@ def get_mcHeads_url(username):
 async def send_webhook_message(webhook : discord.Webhook, username, avatar_url = None, content =""):
     await webhook.send(content=content, username=username, avatar_url=avatar_url, wait=True, allowed_mentions=discord.AllowedMentions.none())
 
-class KillableThread(threading.Thread):
-    def __init__(self, *args, **keywords):
-        threading.Thread.__init__(self, *args, **keywords)
-
-    def get_id(self):
-        # returns id of the respective thread
-        if hasattr(self, '_thread_id'):
-            return self._thread_id
-        for id, thread in threading._active.items():
-            if thread is self:
-                self._thread_id = id
-                return id
-
-    def kill(self):
-        thread_id = self.get_id()
-        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, ctypes.py_object(SystemExit))
-        if res > 1:
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
-            return False
-        return True
 
 from collections import defaultdict
 
